@@ -1,0 +1,64 @@
+import { createStore } from "@tanstack/react-store";
+import { z } from "zod";
+import { jiraBaseUrlSchema } from "./jira-url";
+
+const STORAGE_KEY = "better-jira:settings";
+
+const settingsSchema = z.object({
+  apiToken: z.string().nullable(),
+  baseUrl: jiraBaseUrlSchema.nullable(),
+  boardId: z.number().nullable(),
+  hiddenColumns: z.array(z.string()).nullable(),
+});
+
+type Settings = z.infer<typeof settingsSchema>;
+
+const defaults: Settings = {
+  apiToken: null,
+  baseUrl: null,
+  boardId: null,
+  hiddenColumns: null,
+};
+
+/**
+ * Anything unreadable — absent, hand-edited, or written by an older shape of
+ * this store — falls back to the defaults rather than throwing, so a bad entry
+ * costs the user a re-run of setup instead of a blank page.
+ */
+function readSettings(): Settings {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return defaults;
+
+    const result = settingsSchema.safeParse(JSON.parse(raw));
+    return result.success ? result.data : defaults;
+  } catch {
+    return defaults;
+  }
+}
+
+export const store = createStore<Settings>(defaults);
+
+// The server keeps the defaults: localStorage is browser-only, and a
+// module-level store on the server is shared by every request anyway, so
+// credentials must never land in it.
+if (typeof window !== "undefined") {
+  // Reading at module load rather than in an effect means the value is already
+  // in place before the first render and before any route guard reads it.
+  store.setState(readSettings);
+
+  store.subscribe((settings) => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    } catch {
+      // A blocked or full quota shouldn't take the app down; the settings just
+      // stay in memory for this tab.
+    }
+  });
+
+  // A null key means the whole store was cleared, which counts as a change here.
+  window.addEventListener("storage", (event) => {
+    if (event.key !== STORAGE_KEY && event.key !== null) return;
+    store.setState(readSettings);
+  });
+}

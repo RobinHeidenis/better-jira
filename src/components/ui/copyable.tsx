@@ -1,0 +1,42 @@
+import { CheckIcon, type LucideIcon } from "lucide-react";
+import { useState } from "react";
+import { cn } from "#/lib/utils.ts";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
+
+export const Copyable = ({
+  value,
+  icon: Icon,
+  size = 14,
+  tooltip = "Copy to clipboard",
+  className,
+}: {
+  value: string;
+  icon: LucideIcon;
+  size?: number;
+  tooltip?: string;
+  className?: string;
+}) => {
+  const [isCopied, setIsCopied] = useState(false);
+
+  const copy = () => {
+    navigator.clipboard.writeText(value);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
+  };
+
+  return (
+    <Tooltip>
+      {/* Radix renders a bare <button>, which defaults to type="submit" and
+          would post any form this ends up inside. */}
+      <TooltipTrigger
+        aria-label={tooltip}
+        className={cn("cursor-pointer", className)}
+        onClick={copy}
+        type="button"
+      >
+        {isCopied ? <CheckIcon size={size} /> : <Icon size={size} />}
+      </TooltipTrigger>
+      <TooltipContent>{tooltip}</TooltipContent>
+    </Tooltip>
+  );
+};
