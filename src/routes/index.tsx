@@ -12,10 +12,12 @@ function Home() {
 
   if (!completedAccountSetup) {
     navigate({ to: "/setup/account" });
+    return;
   }
 
   if (!completedBoardSetup) {
     navigate({ to: "/setup/board" });
+    return;
   }
 
   return (
