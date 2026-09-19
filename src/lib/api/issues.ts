@@ -69,7 +69,6 @@ const boardIssuesSchema = z.object({
   nextPageToken: z.string().nullish(),
 });
 
-/** Only what a card renders; the default is every navigable field. */
 const fields = [
   "summary",
   "status",
@@ -81,25 +80,8 @@ const fields = [
   "parent",
 ] as const;
 
-/**
- * Token pagination can't be parallelised — each page needs the previous page's
- * token — so every extra page is another serial round trip through the server
- * function to Jira. Far better to ask for a big page and usually get the whole
- * board in one. The endpoint's documented ceiling is 5000.
- */
 const PAGE_SIZE = 1000;
 
-/**
- * Issues for a board, keyed by status id.
- *
- * Status id rather than name, because that's what the board configuration maps
- * its columns by: several statuses can share one column, and a column's title
- * ("Code review") is unrelated to the status category ("In Progress").
- *
- * A plain object rather than a `Map` so it survives being JSON-serialised into
- * the persisted query cache, and so React Query's structural sharing can keep
- * references stable across refetches.
- */
 export const getBoardIssues = async (
   boardId: number,
   jql: string,
@@ -145,9 +127,9 @@ export const getBoardIssues = async (
   return issuesByStatusId;
 };
 
-export const boardIssuesOptions = (boardId: number, jql: string) => {
+export const boardIssuesOptions = (boardId: number, jql: string, cacheKey = '') => {
   return queryOptions({
-    queryKey: ["boards", boardId, "issues"],
+    queryKey: ["boards", boardId, "issues", cacheKey],
     queryFn: (context) => getBoardIssues(boardId, jql, context),
   });
 };

@@ -23,11 +23,9 @@ export function RoleChip({
       ) : (
         <UserCheckIcon aria-hidden="true" />
       )}
-      <Avatar className="size-[18px] shrink-0 rounded-none after:content-none">
-        <AvatarImage src={src} alt="" className="rounded-none" />
-        <AvatarFallback className="rounded-none text-[9px]">
-          {initials}
-        </AvatarFallback>
+      <Avatar rounded={false} className="size-[18px]">
+        <AvatarImage src={src} alt="" />
+        <AvatarFallback className="text-[9px]">{initials}</AvatarFallback>
       </Avatar>
       <span className="sr-only">
         {role === "developer" ? "Developer" : "Assignee"}: {name}

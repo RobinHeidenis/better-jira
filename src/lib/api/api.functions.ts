@@ -16,6 +16,7 @@ const jiraRequestSchema = z.object({
   method: z.string().optional(),
   headers: z.record(z.string(), z.string()).optional(),
   body: z.string().optional(),
+  query: z.record(z.string(), z.string()).optional(),
   endpointType: z
     .enum(["jira", "atlassian", "software"])
     .optional()
@@ -53,25 +54,28 @@ export const jiraRequest = createServerFn({ method: "POST" })
 
     const endpoint = `${apiPrefixes[data.endpointType]}/${data.endpoint}`;
 
-    const response = await fetch(`${base}/${endpoint}`, {
-      method: data.method ?? "GET",
-      headers: {
-        Accept: "application/json",
-        ...data.headers,
-        // The stored token is base64("email:token") — Jira Cloud's basic auth
-        // credential, not a bearer token.
-        Authorization: `Basic ${data.apiToken}`,
+    const params = new URLSearchParams(data.query).toString();
+    const response = await fetch(
+      `${base}/${endpoint}${params ? `?${params}` : ""}`,
+      {
+        method: data.method ?? "GET",
+        headers: {
+          Accept: "application/json",
+          ...data.headers,
+          Authorization: `Basic ${data.apiToken}`,
+        },
+        body: data.body,
       },
-      body: data.body,
-    });
+    );
+
+    const responseText = await response.text();
 
     if (!response.ok) {
+      console.log(responseText);
       throw new Error(
         `Jira request failed: ${response.status} ${response.statusText}`,
       );
     }
 
-    // The caller owns the response shape: schemas are Zod objects and can't
-    // cross the RPC boundary, so validation stays on the calling side.
-    return (await response.json()) as JsonValue;
+    return (await JSON.parse(responseText)) as JsonValue;
   });

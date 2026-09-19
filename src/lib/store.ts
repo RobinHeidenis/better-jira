@@ -8,16 +8,28 @@ const settingsSchema = z.object({
   apiToken: z.string().nullable(),
   baseUrl: jiraBaseUrlSchema.nullable(),
   boardId: z.number().nullable(),
+  project: z.string().nullable(),
   hiddenColumns: z.array(z.string()).nullable(),
+  developerField: z.string().nullable(),
+  includeDevTickets: z.boolean().nullable(),
+  filter: z
+    .object({
+      users: z.array(z.string()).nullish(),
+    })
+    .nullable(),
 });
 
-type Settings = z.infer<typeof settingsSchema>;
+export type Settings = z.infer<typeof settingsSchema>;
 
 const defaults: Settings = {
   apiToken: null,
   baseUrl: null,
   boardId: null,
+  project: null,
   hiddenColumns: null,
+  developerField: null,
+  includeDevTickets: null,
+  filter: null,
 };
 
 /**

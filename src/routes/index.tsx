@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useSelector } from "@tanstack/react-store";
-import { BoardColumns } from "#/components/board-columns";
+import { Board } from "#/components/board.tsx";
 import { store } from "#/lib/store";
 
 export const Route = createFileRoute("/")({ component: Home });
@@ -21,8 +21,8 @@ function Home() {
   }
 
   return (
-    <div className="p-8 min-h-full flex gap-2">
-      <BoardColumns />
+    <div className="p-8 min-h-full flex-col gap-2">
+      <Board />
     </div>
   );
 }

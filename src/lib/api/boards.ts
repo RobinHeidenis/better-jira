@@ -8,6 +8,9 @@ export const boardSchema = z.object({
   id: z.number(),
   name: z.string(),
   type: z.string(),
+  location: z.object({
+    projectKey: z.string(),
+  }),
 });
 
 const allBoardsSchema = z.object({

@@ -23,6 +23,7 @@ import { Spinner } from "./ui/spinner";
 
 const BOARD_STEP = "board";
 const COLUMNS_STEP = "visibleColumns";
+const FILTERING_STEP = "filtering";
 
 type SetupChoice = {
   value: string;
@@ -63,10 +64,6 @@ export const BoardSetupForm = ({
   const [boardId, setBoardId] = useState<number | null>(null);
   const [activeStep, setActiveStep] = useState<string>(BOARD_STEP);
 
-  // Mounted from the first render but held idle until a board is picked, so
-  // the fetch starts the moment the user chooses rather than when they hit
-  // Next — most of the time the columns are already there by the time the
-  // step comes into view.
   const {
     data: configuration,
     isLoading,
@@ -108,6 +105,17 @@ export const BoardSetupForm = ({
         defaultChecked: true,
       })),
     },
+    {
+      name: FILTERING_STEP,
+      required: true,
+      multiple: false,
+      prompt:
+        "When filtering by user, do you want to see only tickets that are assigned to them, or also developed by them?",
+      choices: [
+        { label: "Only tickets assigned to them", value: "hide" },
+        { label: "Also tickets they developed", value: "show" },
+      ],
+    },
   ];
 
   // The columns step can't be answered before its choices exist. The
@@ -127,6 +135,9 @@ export const BoardSetupForm = ({
     store.setState((state) => ({
       ...state,
       boardId: Number(answers.get(BOARD_STEP)),
+      project: boardList.find((board) => board.id === boardId)!.location
+        .projectKey,
+      includeDevTickets: answers.get(FILTERING_STEP) === "show",
       hiddenColumns: columns
         .map((column) => column.name)
         .filter((name) => !visible.has(name)),

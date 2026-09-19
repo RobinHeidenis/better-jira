@@ -10,6 +10,7 @@ export type JiraRequestOptions = {
   method?: string;
   headers?: Record<string, string>;
   body?: string;
+  query?: Record<string, string>;
 };
 
 export const request = async <TSchema extends z.ZodType>(
