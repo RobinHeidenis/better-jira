@@ -9,6 +9,8 @@ import {
 } from "./ui/select";
 import { useQuery } from "@tanstack/react-query";
 import { versionOptions } from "#/lib/api/versions.ts";
+import { useSelector } from "@tanstack/react-store";
+import { store } from "#/lib/store.ts";
 
 const renderVersions = (versionIds: string[]) => {
   const { data: versions } = useQuery({
@@ -22,9 +24,26 @@ const renderVersions = (versionIds: string[]) => {
 
 export const VersionFilter = () => {
   const { data: versions } = useQuery(versionOptions());
+  const savedSelectedVersions = useSelector(
+    store,
+    (state) => state.filter?.versions,
+  );
+
+  const updateFilters = (selectedVersions: string[]) =>
+    store.setState((state) => ({
+      ...state,
+      filter: {
+        ...state.filter,
+        versions: selectedVersions,
+      },
+    }));
 
   return (
-    <Select multiple>
+    <Select
+      multiple
+      onValueChange={updateFilters}
+      defaultValue={savedSelectedVersions}
+    >
       <SelectTrigger>
         <MilestoneIcon />
         <SelectValue>{renderVersions}</SelectValue>

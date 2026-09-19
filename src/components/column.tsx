@@ -6,10 +6,9 @@ import { IssueCard } from "./issue-card";
 import { CardTitle } from "./ui/card";
 import { Separator } from "./ui/separator";
 import { Skeleton } from "./ui/skeleton";
-import type z from "zod";
 
 const anyFiltersEnabled = (filters: Settings["filter"]) => {
-  return filters?.users?.length;
+  return filters?.users?.length || filters?.versions?.length;
 };
 
 export const Column = ({
@@ -53,6 +52,15 @@ export const Column = ({
           } else if (!assigneeInFilters) {
             return false;
           }
+        }
+
+        if (
+          filters?.versions?.length &&
+          !issue.fields.fixVersions?.some((version) =>
+            filters.versions?.includes(version.id),
+          )
+        ) {
+          return false;
         }
 
         return true;

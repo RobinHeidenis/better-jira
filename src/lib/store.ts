@@ -15,6 +15,7 @@ const settingsSchema = z.object({
   filter: z
     .object({
       users: z.array(z.string()).nullish(),
+      versions: z.array(z.string()).nullish(),
     })
     .nullable(),
 });

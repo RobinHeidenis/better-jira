@@ -17,6 +17,14 @@ export const jiraIssueSchema = z.object({
         name: z.string(),
       }),
     }),
+    fixVersions: z
+      .array(
+        z.object({
+          id: z.string(),
+          name: z.string(),
+        }),
+      )
+      .nullish(),
     assignee: z
       .object({
         accountId: z.string(),
@@ -78,6 +86,7 @@ const fields = [
   "issuetype",
   "customfield_10031",
   "parent",
+  "fixVersions",
 ] as const;
 
 const PAGE_SIZE = 1000;
@@ -127,7 +136,11 @@ export const getBoardIssues = async (
   return issuesByStatusId;
 };
 
-export const boardIssuesOptions = (boardId: number, jql: string, cacheKey = '') => {
+export const boardIssuesOptions = (
+  boardId: number,
+  jql: string,
+  cacheKey = "",
+) => {
   return queryOptions({
     queryKey: ["boards", boardId, "issues", cacheKey],
     queryFn: (context) => getBoardIssues(boardId, jql, context),
