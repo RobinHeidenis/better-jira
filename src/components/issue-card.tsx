@@ -49,7 +49,11 @@ export const IssueCard = ({
             </Link>
           </CardDescription>
         ) : null}
-        <CardTitle>{issue.fields.summary}</CardTitle>
+        <CardTitle>
+          <Link underlined={false} href={`/issue/${issue.key}`}>
+            {issue.fields.summary}
+          </Link>
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex items-end gap-2 justify-between">
@@ -83,7 +87,11 @@ export const IssueCard = ({
                 </TooltipTrigger>
                 <TooltipContent>Medium</TooltipContent>
               </Tooltip>
-              <Badge className="!px-1 !py-0.5">1</Badge>
+              {issue.fields.customfield_10028 ? (
+                <Badge className="!px-1 !py-0.5">
+                  {issue.fields.customfield_10028}
+                </Badge>
+              ) : null}
             </div>
           </div>
 

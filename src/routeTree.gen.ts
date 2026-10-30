@@ -10,12 +10,18 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as IssueIssueIdRouteImport } from './routes/issue/$issueId'
 import { Route as SetupAccountRouteImport } from './routes/setup/account'
 import { Route as SetupBoardRouteImport } from './routes/setup/board'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IssueIssueIdRoute = IssueIssueIdRouteImport.update({
+  id: '/issue/$issueId',
+  path: '/issue/$issueId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SetupAccountRoute = SetupAccountRouteImport.update({
@@ -31,30 +37,34 @@ const SetupBoardRoute = SetupBoardRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/issue/$issueId': typeof IssueIssueIdRoute
   '/setup/account': typeof SetupAccountRoute
   '/setup/board': typeof SetupBoardRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/issue/$issueId': typeof IssueIssueIdRoute
   '/setup/account': typeof SetupAccountRoute
   '/setup/board': typeof SetupBoardRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/issue/$issueId': typeof IssueIssueIdRoute
   '/setup/account': typeof SetupAccountRoute
   '/setup/board': typeof SetupBoardRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/setup/account' | '/setup/board'
+  fullPaths: '/' | '/issue/$issueId' | '/setup/account' | '/setup/board'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/setup/account' | '/setup/board'
-  id: '__root__' | '/' | '/setup/account' | '/setup/board'
+  to: '/' | '/issue/$issueId' | '/setup/account' | '/setup/board'
+  id: '__root__' | '/' | '/issue/$issueId' | '/setup/account' | '/setup/board'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  IssueIssueIdRoute: typeof IssueIssueIdRoute
   SetupAccountRoute: typeof SetupAccountRoute
   SetupBoardRoute: typeof SetupBoardRoute
 }
@@ -66,6 +76,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/issue/$issueId': {
+      id: '/issue/$issueId'
+      path: '/issue/$issueId'
+      fullPath: '/issue/$issueId'
+      preLoaderRoute: typeof IssueIssueIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/setup/account': {
@@ -87,6 +104,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  IssueIssueIdRoute: IssueIssueIdRoute,
   SetupAccountRoute: SetupAccountRoute,
   SetupBoardRoute: SetupBoardRoute,
 }

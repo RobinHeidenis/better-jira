@@ -3,7 +3,7 @@ import { queryOptions } from "@tanstack/react-query";
 import { z } from "zod";
 import { request } from "./api";
 
-export const jiraIssueSchema = z.object({
+export const jiraBoardIssueSchema = z.object({
   id: z.string(),
   key: z.string(),
   fields: z.looseObject({
@@ -43,6 +43,7 @@ export const jiraIssueSchema = z.object({
         }),
       })
       .nullish(),
+    customfield_10028: z.number().nullish(), // story points
     // Both are optional per-project: a project can have its priority field
     // hidden, and unassigned issues send `assignee: null`.
     priority: z
@@ -66,13 +67,13 @@ export const jiraIssueSchema = z.object({
   }),
 });
 
-export type JiraIssue = z.infer<typeof jiraIssueSchema>;
+export type JiraBoardIssue = z.infer<typeof jiraBoardIssueSchema>;
 
 /** Issues grouped by the id of the status they're in. */
-export type IssuesByStatusId = Record<string, JiraIssue[]>;
+export type IssuesByStatusId = Record<string, JiraBoardIssue[]>;
 
 const boardIssuesSchema = z.object({
-  issues: z.array(jiraIssueSchema),
+  issues: z.array(jiraBoardIssueSchema),
   // Absent on the last page — see the pagination loop below.
   nextPageToken: z.string().nullish(),
 });
@@ -85,6 +86,7 @@ const fields = [
   "labels",
   "issuetype",
   "customfield_10031",
+  "customfield_10028",
   "parent",
   "fixVersions",
 ] as const;
@@ -144,5 +146,85 @@ export const boardIssuesOptions = (
   return queryOptions({
     queryKey: ["boards", boardId, "issues", cacheKey],
     queryFn: (context) => getBoardIssues(boardId, jql, context),
+  });
+};
+
+const jiraIssueSchema = jiraBoardIssueSchema.extend({
+  id: z.string(),
+  key: z.string(),
+  fields: z.looseObject({
+    summary: z.string(),
+    // `statusCategory` is the coarse To Do / In Progress / Done grouping and
+    // lives under `status`, alongside the project's own status name.
+    status: z.object({
+      id: z.string(),
+      name: z.string(),
+      statusCategory: z.object({
+        name: z.string(),
+      }),
+    }),
+    fixVersions: z
+      .array(
+        z.object({
+          id: z.string(),
+          name: z.string(),
+        }),
+      )
+      .nullish(),
+    assignee: z
+      .object({
+        accountId: z.string(),
+        displayName: z.string(),
+        avatarUrls: z.object({
+          "48x48": z.string().nullish(),
+        }),
+      })
+      .nullable(),
+    customfield_10031: z
+      .object({
+        accountId: z.string(),
+        displayName: z.string(),
+        avatarUrls: z.object({
+          "48x48": z.string().nullish(),
+        }),
+      })
+      .nullish(),
+    customfield_10028: z.number().nullish(), // story points
+    // Both are optional per-project: a project can have its priority field
+    // hidden, and unassigned issues send `assignee: null`.
+    priority: z
+      .object({
+        name: z.string(),
+      })
+      .nullable(),
+    labels: z.array(z.string()),
+    issuetype: z.object({
+      name: z.string(),
+    }),
+    parent: z
+      .object({
+        id: z.string(),
+        key: z.string(),
+        fields: z.object({
+          summary: z.string(),
+        }),
+      })
+      .optional(),
+    description: z.object({
+      type: z.string(),
+      version: z.number(),
+      content: z.any(),
+    }),
+  }),
+});
+
+export const getIssue = async (issueId: string) => {
+  return await request(`issue/${issueId}`, jiraIssueSchema, "atlassian");
+};
+
+export const issueOptions = (issueId: string) => {
+  return queryOptions({
+    queryKey: ["issue", issueId],
+    queryFn: () => getIssue(issueId),
   });
 };
