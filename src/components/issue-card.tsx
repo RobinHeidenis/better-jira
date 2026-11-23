@@ -1,11 +1,5 @@
 import { useSelector } from "@tanstack/react-store";
-import {
-  BookmarkIcon,
-  CornerLeftUpIcon,
-  EqualIcon,
-  HashIcon,
-  LinkIcon,
-} from "lucide-react";
+import { CornerLeftUpIcon, HashIcon, LinkIcon } from "lucide-react";
 import { Badge } from "#/components/ui/badge";
 import {
   Card,
@@ -22,12 +16,40 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "#/components/ui/tooltip";
-import type { JiraBoardIssue } from "#/lib/api/issues";
+import {
+  issueDeveloper,
+  issueStoryPoints,
+  type JiraBoardIssue,
+} from "#/lib/api/issues";
 import { jiraIssueUrl } from "#/lib/jira-url";
 import { store } from "#/lib/store";
+import { initials } from "#/lib/utils";
 
-export const IssueCard = ({ issue }: { issue: JiraBoardIssue }) => {
+const FieldIcon = ({ name, iconUrl }: { name: string; iconUrl?: string }) => {
+  if (!iconUrl) return null;
+  return (
+    <Tooltip>
+      <TooltipTrigger>
+        <img src={iconUrl} alt={name} className="size-4" />
+      </TooltipTrigger>
+      <TooltipContent>{name}</TooltipContent>
+    </Tooltip>
+  );
+};
+
+export const IssueCard = ({
+  issue,
+  developerField,
+  storyPointsField,
+}: {
+  issue: JiraBoardIssue;
+  developerField: string | null;
+  storyPointsField: string | null;
+}) => {
   const baseUrl = useSelector(store, (state) => state.baseUrl);
+  const developer = issueDeveloper(issue, developerField);
+  const storyPoints = issueStoryPoints(issue, storyPointsField);
+  const assigneeName = issue.fields.assignee?.displayName ?? "Unassigned";
 
   return (
     <Card>
@@ -68,58 +90,47 @@ export const IssueCard = ({ issue }: { issue: JiraBoardIssue }) => {
                 />
               )}
             </div>
-            <div className="flex items-start gap-2">
-              <Tooltip>
-                <TooltipTrigger>
-                  <BookmarkIcon size={20} />
-                </TooltipTrigger>
-                <TooltipContent>Story</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger>
-                  <EqualIcon size={20} />
-                </TooltipTrigger>
-                <TooltipContent>Medium</TooltipContent>
-              </Tooltip>
-              {issue.fields.customfield_10028 ? (
-                <Badge className="!px-1 !py-0.5">
-                  {issue.fields.customfield_10028}
-                </Badge>
+            <div className="flex items-center gap-2">
+              <FieldIcon
+                name={issue.fields.issuetype.name}
+                iconUrl={issue.fields.issuetype.iconUrl}
+              />
+              {issue.fields.priority ? (
+                <FieldIcon
+                  name={issue.fields.priority.name}
+                  iconUrl={issue.fields.priority.iconUrl}
+                />
+              ) : null}
+              {storyPoints !== null ? (
+                <Badge className="!px-1 !py-0.5">{storyPoints}</Badge>
               ) : null}
             </div>
           </div>
 
           <div className="flex flex-col items-center gap-2">
+            {developer ? (
+              <Tooltip>
+                <TooltipTrigger>
+                  <RoleChip
+                    name={developer.displayName}
+                    initials={initials(developer.displayName)}
+                    kind="developer"
+                    src={developer.avatarUrls["48x48"] ?? ""}
+                  />
+                </TooltipTrigger>
+                <TooltipContent>{developer.displayName}</TooltipContent>
+              </Tooltip>
+            ) : null}
             <Tooltip>
               <TooltipTrigger>
                 <RoleChip
-                  name={
-                    issue.fields.customfield_10031?.displayName ??
-                    "Unknown User"
-                  }
-                  initials="RH"
-                  kind="developer"
-                  src={
-                    issue.fields.customfield_10031?.avatarUrls?.["48x48"] ?? ""
-                  }
-                />
-              </TooltipTrigger>
-              <TooltipContent>
-                {issue.fields.customfield_10031?.displayName ?? "Unknown User"}
-              </TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger>
-                <RoleChip
-                  name={issue.fields.assignee?.displayName ?? "Unknown User"}
-                  initials="JZ"
+                  name={assigneeName}
+                  initials={initials(assigneeName)}
                   kind="assignee"
-                  src={issue.fields.assignee?.avatarUrls?.["48x48"] ?? ""}
+                  src={issue.fields.assignee?.avatarUrls["48x48"] ?? ""}
                 />
               </TooltipTrigger>
-              <TooltipContent>
-                {issue.fields.assignee?.displayName ?? "Unknown User"}
-              </TooltipContent>
+              <TooltipContent>{assigneeName}</TooltipContent>
             </Tooltip>
           </div>
         </div>

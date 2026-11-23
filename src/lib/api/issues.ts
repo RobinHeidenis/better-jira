@@ -3,6 +3,14 @@ import { queryOptions } from "@tanstack/react-query";
 import { z } from "zod";
 import { request } from "./api";
 
+const jiraUserSchema = z.object({
+  accountId: z.string(),
+  displayName: z.string(),
+  avatarUrls: z.object({
+    "48x48": z.string().nullish(),
+  }),
+});
+
 export const jiraBoardIssueSchema = z.object({
   id: z.string(),
   key: z.string(),
@@ -25,35 +33,19 @@ export const jiraBoardIssueSchema = z.object({
         }),
       )
       .nullish(),
-    assignee: z
-      .object({
-        accountId: z.string(),
-        displayName: z.string(),
-        avatarUrls: z.object({
-          "48x48": z.string().nullish(),
-        }),
-      })
-      .nullable(),
-    customfield_10031: z
-      .object({
-        accountId: z.string(),
-        displayName: z.string(),
-        avatarUrls: z.object({
-          "48x48": z.string().nullish(),
-        }),
-      })
-      .nullish(),
-    customfield_10028: z.number().nullish(), // story points
+    assignee: jiraUserSchema.nullable(),
     // Both are optional per-project: a project can have its priority field
     // hidden, and unassigned issues send `assignee: null`.
     priority: z
       .object({
         name: z.string(),
+        iconUrl: z.string().optional(),
       })
       .nullable(),
     labels: z.array(z.string()),
     issuetype: z.object({
       name: z.string(),
+      iconUrl: z.string().optional(),
     }),
     parent: z
       .object({
@@ -68,6 +60,32 @@ export const jiraBoardIssueSchema = z.object({
 });
 
 export type JiraBoardIssue = z.infer<typeof jiraBoardIssueSchema>;
+
+/** The site-specific custom fields the user picked during board setup. */
+export type CustomFieldIds = {
+  developerField: string | null;
+  storyPointsField: string | null;
+};
+
+// Custom fields are keyed by a per-site id, so they can't be part of the
+// static schema and are parsed out of the loose `fields` object instead.
+const readCustomField = <TSchema extends z.ZodType>(
+  issue: JiraBoardIssue,
+  fieldId: string | null,
+  schema: TSchema,
+): z.infer<TSchema> | null => {
+  if (!fieldId) return null;
+  const result = schema.safeParse(issue.fields[fieldId]);
+  return result.success ? result.data : null;
+};
+
+export const issueDeveloper = (issue: JiraBoardIssue, fieldId: string | null) =>
+  readCustomField(issue, fieldId, jiraUserSchema);
+
+export const issueStoryPoints = (
+  issue: JiraBoardIssue,
+  fieldId: string | null,
+) => readCustomField(issue, fieldId, z.number());
 
 /** Issues grouped by the id of the status they're in. */
 export type IssuesByStatusId = Record<string, JiraBoardIssue[]>;
@@ -85,25 +103,29 @@ const fields = [
   "priority",
   "labels",
   "issuetype",
-  "customfield_10031",
-  "customfield_10028",
   "parent",
   "fixVersions",
-] as const;
+];
 
 const PAGE_SIZE = 1000;
 
 export const getBoardIssues = async (
   boardId: number,
   jql: string,
+  customFields: CustomFieldIds,
   { client, queryKey }: QueryFunctionContext<QueryKey>,
 ) => {
   const issuesByStatusId: IssuesByStatusId = {};
+  const requestedFields = [
+    ...fields,
+    customFields.developerField,
+    customFields.storyPointsField,
+  ].filter((field) => field !== null);
 
   let pageToken: string | undefined;
   do {
     const params = new URLSearchParams({
-      fields: fields.join(","),
+      fields: requestedFields.join(","),
       maxResults: String(PAGE_SIZE),
       jql,
     });
@@ -141,11 +163,11 @@ export const getBoardIssues = async (
 export const boardIssuesOptions = (
   boardId: number,
   jql: string,
-  cacheKey = "",
+  customFields: CustomFieldIds,
 ) => {
   return queryOptions({
-    queryKey: ["boards", boardId, "issues", cacheKey],
-    queryFn: (context) => getBoardIssues(boardId, jql, context),
+    queryKey: ["boards", boardId, "issues", customFields],
+    queryFn: (context) => getBoardIssues(boardId, jql, customFields, context),
   });
 };
 

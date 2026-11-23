@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import type z from "zod";
 import { boardConfigurationOptions, type boardSchema } from "#/lib/api/boards";
+import { fieldsOptions, type JiraField } from "#/lib/api/fields";
 import { store } from "#/lib/store";
 import {
   Questionnaire,
@@ -24,6 +25,16 @@ import { Spinner } from "./ui/spinner";
 const BOARD_STEP = "board";
 const COLUMNS_STEP = "visibleColumns";
 const FILTERING_STEP = "filtering";
+const DEVELOPER_STEP = "developerField";
+const STORY_POINTS_STEP = "storyPointsField";
+
+const customFieldsOfType = (fields: JiraField[] | undefined, type: string) =>
+  (fields ?? []).filter((field) => field.custom && field.schema?.type === type);
+
+const stringAnswer = (answers: FormData, name: string) => {
+  const value = answers.get(name);
+  return typeof value === "string" && value ? value : null;
+};
 
 type SetupChoice = {
   value: string;
@@ -69,6 +80,11 @@ export const BoardSetupForm = ({
     isLoading,
     error,
   } = useQuery(boardConfigurationOptions(boardId, true));
+  const {
+    data: fields,
+    isLoading: isFieldsLoading,
+    error: fieldsError,
+  } = useQuery(fieldsOptions());
   const navigate = useNavigate();
 
   const columns = configuration?.columnConfig.columns ?? [];
@@ -106,15 +122,50 @@ export const BoardSetupForm = ({
       })),
     },
     {
+      name: DEVELOPER_STEP,
+      required: false,
+      prompt: "Which field holds the developer of a ticket?",
+      description:
+        "A user field, separate from the assignee. Skip this if your tickets don't have one.",
+      pending: isFieldsLoading,
+      failure: fieldsError
+        ? `Couldn't load Jira's fields: ${fieldsError.message}`
+        : undefined,
+      choices: customFieldsOfType(fields, "user").map((field) => ({
+        value: field.id,
+        label: field.name,
+        description: field.id,
+      })),
+    },
+    {
       name: FILTERING_STEP,
       required: true,
       multiple: false,
       prompt:
         "When filtering by user, do you want to see only tickets that are assigned to them, or also developed by them?",
+      description: "Only applies if you picked a developer field.",
       choices: [
         { label: "Only tickets assigned to them", value: "hide" },
         { label: "Also tickets they developed", value: "show" },
       ],
+    },
+    {
+      name: STORY_POINTS_STEP,
+      required: false,
+      prompt: "Which field holds story points?",
+      description:
+        "A number field. The board's own estimation field is preselected. Skip this to hide story points.",
+      pending: isFieldsLoading,
+      failure: fieldsError
+        ? `Couldn't load Jira's fields: ${fieldsError.message}`
+        : undefined,
+      choices: customFieldsOfType(fields, "number").map((field) => ({
+        key: `${boardId}:${field.id}`,
+        value: field.id,
+        label: field.name,
+        description: field.id,
+        defaultChecked: field.id === configuration?.estimation?.field.fieldId,
+      })),
     },
   ];
 
@@ -122,7 +173,10 @@ export const BoardSetupForm = ({
   // questionnaire already refuses to advance past an unanswered required step,
   // but disabling the buttons says "still loading" instead of "you got it
   // wrong".
-  const waitingOnColumns = activeStep === COLUMNS_STEP && isLoading;
+  const waitingOnColumns =
+    (activeStep === COLUMNS_STEP && isLoading) ||
+    ((activeStep === DEVELOPER_STEP || activeStep === STORY_POINTS_STEP) &&
+      isFieldsLoading);
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -140,6 +194,8 @@ export const BoardSetupForm = ({
       boardId: board.id,
       project: board.location.projectKey,
       includeDevTickets: answers.get(FILTERING_STEP) === "show",
+      developerField: stringAnswer(answers, DEVELOPER_STEP),
+      storyPointsField: stringAnswer(answers, STORY_POINTS_STEP),
       hiddenColumns: columns
         .map((column) => column.name)
         .filter((name) => !visible.has(name)),

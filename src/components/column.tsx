@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useSelector } from "@tanstack/react-store";
-import { boardIssuesOptions } from "#/lib/api/issues";
+import { boardIssuesOptions, issueDeveloper } from "#/lib/api/issues";
 import { type Settings, store } from "#/lib/store";
 import { IssueCard } from "./issue-card";
 import { CardTitle } from "./ui/card";
@@ -27,8 +27,13 @@ export const Column = ({
     store,
     (state) => state.includeDevTickets,
   );
+  const developerField = useSelector(store, (state) => state.developerField);
+  const storyPointsField = useSelector(
+    store,
+    (state) => state.storyPointsField,
+  );
   const { data: issuesByStatusId, isPending } = useQuery(
-    boardIssuesOptions(boardId, jql),
+    boardIssuesOptions(boardId, jql, { developerField, storyPointsField }),
   );
 
   const columnIssues = statusIds.flatMap(
@@ -41,11 +46,11 @@ export const Column = ({
           const assigneeInFilters = filters.users.includes(
             issue.fields.assignee?.accountId ?? "",
           );
-          if (includeDevTickets) {
+          if (includeDevTickets && developerField) {
             if (
               !assigneeInFilters &&
               !filters.users.includes(
-                issue.fields.customfield_10031?.accountId ?? "",
+                issueDeveloper(issue, developerField)?.accountId ?? "",
               )
             ) {
               return false;
@@ -84,7 +89,12 @@ export const Column = ({
               <Skeleton key={index} className="h-32 w-full" />
             ))
           : filteredColumnIssues.map((issue) => (
-              <IssueCard key={issue.id} issue={issue} />
+              <IssueCard
+                key={issue.id}
+                issue={issue}
+                developerField={developerField}
+                storyPointsField={storyPointsField}
+              />
             ))}
       </div>
     </div>
