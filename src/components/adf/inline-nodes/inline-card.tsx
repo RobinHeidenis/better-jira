@@ -14,7 +14,7 @@ export const InlineCardNode = ({
   return (
     <Badge
       variant="outline"
-      className="max-w-full align-middle"
+      className="mx-1 max-w-full align-middle"
       render={
         <a href={href} target="_blank" rel="noreferrer" title={href}>
           <img
