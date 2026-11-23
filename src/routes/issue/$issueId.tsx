@@ -1,12 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Adf } from "#/components/adf/block-nodes/adf";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardTitle,
-} from "#/components/ui/card";
+import { Card, CardContent, CardTitle } from "#/components/ui/card";
 import { Link } from "#/components/ui/link";
 import { Spinner } from "#/components/ui/spinner";
 import { issueOptions } from "#/lib/api/issues";

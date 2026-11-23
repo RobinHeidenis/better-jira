@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
 import { useSelector } from "@tanstack/react-store";
 import {
   BookmarkIcon,
@@ -7,7 +6,6 @@ import {
   HashIcon,
   LinkIcon,
 } from "lucide-react";
-import type z from "zod";
 import { Badge } from "#/components/ui/badge";
 import {
   Card,
@@ -24,15 +22,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "#/components/ui/tooltip";
-import type { jiraIssueSchema } from "#/lib/api/issues";
+import type { JiraBoardIssue } from "#/lib/api/issues";
 import { jiraIssueUrl } from "#/lib/jira-url";
 import { store } from "#/lib/store";
 
-export const IssueCard = ({
-  issue,
-}: {
-  issue: z.infer<typeof jiraIssueSchema>;
-}) => {
+export const IssueCard = ({ issue }: { issue: JiraBoardIssue }) => {
   const baseUrl = useSelector(store, (state) => state.baseUrl);
 
   return (

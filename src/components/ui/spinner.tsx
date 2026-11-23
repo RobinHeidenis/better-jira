@@ -1,7 +1,10 @@
 import { RiLoaderLine } from "@remixicon/react";
 import { cn } from "#/lib/utils.ts";
 
-function Spinner({ className, ...props }: React.ComponentProps<"svg">) {
+function Spinner({
+  className,
+  ...props
+}: React.ComponentProps<typeof RiLoaderLine>) {
   return (
     <RiLoaderLine
       data-slot="spinner"

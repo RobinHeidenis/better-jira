@@ -1,7 +1,10 @@
 import type { HeadingNode as HeadingNodeType } from "#/lib/adf";
+import { InlineNode } from "./inline-nodes/inline-node";
 
 export const HeadingNode = ({ node }: { node: HeadingNodeType }) => {
-  const content = node.content?.map((item) => item.text).join(" ");
+  const content = node.content?.map((child, index) => (
+    <InlineNode key={index} node={child} />
+  ));
   switch (node.attrs.level) {
     case 1:
       return <h1 className="text-xl/relaxed font-bold">{content}</h1>;
