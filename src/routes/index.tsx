@@ -16,7 +16,7 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   return (
-    <div className="p-8 min-h-full flex-col gap-2">
+    <div className="flex h-full flex-col p-8">
       <Board />
     </div>
   );

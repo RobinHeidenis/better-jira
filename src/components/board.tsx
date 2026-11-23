@@ -16,7 +16,7 @@ export const Board = () => {
   return (
     <>
       <BoardFilters />
-      <div className="min-h-full flex gap-2 overflow-y-scroll mt-5">
+      <div className="mt-5 flex min-h-0 flex-1 gap-2 overflow-x-auto">
         {board.columnConfig.columns.map((column) => (
           <Column
             boardId={boardId}
