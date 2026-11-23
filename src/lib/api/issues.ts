@@ -150,71 +150,15 @@ export const boardIssuesOptions = (
 };
 
 const jiraIssueSchema = jiraBoardIssueSchema.extend({
-  id: z.string(),
-  key: z.string(),
-  fields: z.looseObject({
-    summary: z.string(),
-    // `statusCategory` is the coarse To Do / In Progress / Done grouping and
-    // lives under `status`, alongside the project's own status name.
-    status: z.object({
-      id: z.string(),
-      name: z.string(),
-      statusCategory: z.object({
-        name: z.string(),
-      }),
-    }),
-    fixVersions: z
-      .array(
-        z.object({
-          id: z.string(),
-          name: z.string(),
-        }),
-      )
-      .nullish(),
-    assignee: z
+  fields: jiraBoardIssueSchema.shape.fields.extend({
+    // Null when the issue has no description at all.
+    description: z
       .object({
-        accountId: z.string(),
-        displayName: z.string(),
-        avatarUrls: z.object({
-          "48x48": z.string().nullish(),
-        }),
+        type: z.string(),
+        version: z.number(),
+        content: z.any(),
       })
       .nullable(),
-    customfield_10031: z
-      .object({
-        accountId: z.string(),
-        displayName: z.string(),
-        avatarUrls: z.object({
-          "48x48": z.string().nullish(),
-        }),
-      })
-      .nullish(),
-    customfield_10028: z.number().nullish(), // story points
-    // Both are optional per-project: a project can have its priority field
-    // hidden, and unassigned issues send `assignee: null`.
-    priority: z
-      .object({
-        name: z.string(),
-      })
-      .nullable(),
-    labels: z.array(z.string()),
-    issuetype: z.object({
-      name: z.string(),
-    }),
-    parent: z
-      .object({
-        id: z.string(),
-        key: z.string(),
-        fields: z.object({
-          summary: z.string(),
-        }),
-      })
-      .optional(),
-    description: z.object({
-      type: z.string(),
-      version: z.number(),
-      content: z.any(),
-    }),
   }),
 });
 

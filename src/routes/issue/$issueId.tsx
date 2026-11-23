@@ -64,7 +64,11 @@ function RouteComponent() {
             </Breadcrumb>
             <CardTitle className="text-lg">{issue.fields.summary}</CardTitle>
             <div className="overflow-y-scroll mt-4 w-[80ch]">
-              <Adf content={issue.fields.description.content} />
+              {issue.fields.description ? (
+                <Adf content={issue.fields.description.content} />
+              ) : (
+                <p className="text-muted-foreground">No description</p>
+              )}
             </div>
           </CardContent>
         </Card>
