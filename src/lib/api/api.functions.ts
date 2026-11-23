@@ -45,6 +45,8 @@ type JsonValue =
   | JsonValue[]
   | { [key: string]: JsonValue };
 
+const MAX_ERROR_BODY = 500;
+
 // POST rather than GET: a GET server function encodes its payload into the
 // request URL, which would put the API token in logs and browser history.
 export const jiraRequest = createServerFn({ method: "POST" })
@@ -71,9 +73,12 @@ export const jiraRequest = createServerFn({ method: "POST" })
     const responseText = await response.text();
 
     if (!response.ok) {
-      console.log(responseText);
+      const body =
+        responseText.length > MAX_ERROR_BODY
+          ? `${responseText.slice(0, MAX_ERROR_BODY)}…`
+          : responseText;
       throw new Error(
-        `Jira request failed: ${response.status} ${response.statusText}`,
+        `Jira request failed: ${response.status} ${response.statusText}${body ? `: ${body}` : ""}`,
       );
     }
 

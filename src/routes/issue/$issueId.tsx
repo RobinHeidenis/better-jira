@@ -21,7 +21,6 @@ export const Route = createFileRoute("/issue/$issueId")({
 function RouteComponent() {
   const { issueId } = Route.useParams();
   const { data: issue } = useQuery(issueOptions(issueId));
-  console.dir(issue);
   return (
     <div className="h-screen w-full flex justify-center">
       {issue ? (
