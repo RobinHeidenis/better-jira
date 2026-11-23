@@ -1,6 +1,11 @@
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
-import { QueryCache, QueryClient } from "@tanstack/react-query";
+import {
+  defaultShouldDehydrateQuery,
+  QueryCache,
+  QueryClient,
+} from "@tanstack/react-query";
 import { persistQueryClient } from "@tanstack/react-query-persist-client";
+import { isAttachmentContentQuery } from "#/lib/api/attachments";
 
 const CACHE_KEY = "better-jira:query-cache";
 
@@ -41,6 +46,11 @@ export function getContext() {
         key: CACHE_KEY,
       }),
       maxAge: DAY,
+      dehydrateOptions: {
+        shouldDehydrateQuery: (query) =>
+          defaultShouldDehydrateQuery(query) &&
+          !isAttachmentContentQuery(query.queryKey),
+      },
     });
   }
 

@@ -64,7 +64,11 @@ function RouteComponent() {
             <CardTitle className="text-lg">{issue.fields.summary}</CardTitle>
             <div className="overflow-y-scroll mt-4 w-[80ch]">
               {issue.fields.description ? (
-                <Adf content={issue.fields.description.content} />
+                <Adf
+                  content={issue.fields.description.content}
+                  attachments={issue.fields.attachment}
+                  issueKey={issue.key}
+                />
               ) : (
                 <p className="text-muted-foreground">No description</p>
               )}

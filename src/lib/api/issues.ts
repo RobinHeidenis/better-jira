@@ -2,6 +2,7 @@ import type { QueryFunctionContext, QueryKey } from "@tanstack/react-query";
 import { queryOptions } from "@tanstack/react-query";
 import { z } from "zod";
 import { request } from "./api";
+import { attachmentSchema } from "./attachments";
 
 const jiraUserSchema = z.object({
   accountId: z.string(),
@@ -181,6 +182,8 @@ const jiraIssueSchema = jiraBoardIssueSchema.extend({
         content: z.any(),
       })
       .nullable(),
+    // A malformed attachment list shouldn't stop the issue from loading.
+    attachment: z.array(attachmentSchema).nullish().catch(null),
   }),
 });
 

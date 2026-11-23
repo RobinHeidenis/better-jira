@@ -8,6 +8,8 @@ import { DecisionListNode } from "./decision-list";
 import { ExpandNode } from "./expand";
 import { HeadingNode } from "./heading";
 import { LinkCardNode } from "./link-card";
+import { MediaGroupNode } from "./media-group";
+import { MediaSingleNode } from "./media-single";
 import { OrderedListNode } from "./ordered-list";
 import { PanelNode } from "./panel";
 import { ParagraphNode } from "./paragraph";
@@ -41,6 +43,10 @@ export const BlockNode = ({ node }: { node: BlockNodeType }) => {
       return <TaskListNode node={node} />;
     case "decisionList":
       return <DecisionListNode node={node} />;
+    case "mediaSingle":
+      return <MediaSingleNode node={node} />;
+    case "mediaGroup":
+      return <MediaGroupNode node={node} />;
     case "blockCard":
     case "embedCard":
       return <LinkCardNode node={node} />;
@@ -52,5 +58,6 @@ export const BlockNode = ({ node }: { node: BlockNodeType }) => {
     case "bodiedSyncBlock":
       return <ContainerNode node={node} />;
   }
-  return <UnsupportedBlock type={node.type} />;
+  // Exhaustive by type, but the data is unvalidated and may hold anything.
+  return <UnsupportedBlock type={(node as { type?: unknown }).type} />;
 };

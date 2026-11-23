@@ -3,6 +3,7 @@ import { UnsupportedInline } from "../unsupported";
 import { DateNode } from "./date";
 import { EmojiNode } from "./emoji";
 import { InlineCardNode } from "./inline-card";
+import { MediaInlineNode } from "./media-inline";
 import { MentionNode } from "./mention";
 import { StatusNode } from "./status";
 import { TextNode } from "./text";
@@ -17,6 +18,8 @@ export const InlineNode = ({ node }: { node: InlineNodeType }) => {
       return <br />;
     case "inlineCard":
       return <InlineCardNode node={node} />;
+    case "mediaInline":
+      return <MediaInlineNode node={node} />;
     case "mention":
       return <MentionNode node={node} />;
     case "placeholder":
@@ -27,6 +30,8 @@ export const InlineNode = ({ node }: { node: InlineNodeType }) => {
       return <StatusNode node={node} />;
     case "text":
       return <TextNode node={node} />;
+    case "inlineExtension":
+      return <UnsupportedInline type={node.type} />;
   }
-  return <UnsupportedInline type={node.type} />;
+  return <UnsupportedInline type={(node as { type?: unknown }).type} />;
 };
