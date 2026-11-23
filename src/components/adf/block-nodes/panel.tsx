@@ -34,15 +34,20 @@ const iconColorMap = {
   warning: "text-yellow-500",
 };
 
+// The JSON schema also allows "tip" and "custom", which the Jira docs omit.
+const panelTypeOf = (value: unknown): keyof typeof iconMap =>
+  typeof value === "string" && Object.hasOwn(iconMap, value)
+    ? (value as keyof typeof iconMap)
+    : "info";
+
 export const PanelNode = ({ node }: { node: z.infer<typeof panelNode> }) => {
-  const Icon = iconMap[node.attrs?.panelType];
+  const panelType = panelTypeOf(node.attrs?.panelType);
+  const Icon = iconMap[panelType];
 
   return (
-    <Card
-      className={`${colorMap[node.attrs?.panelType]} !border-2 my-2 ring-0`}
-    >
+    <Card className={`${colorMap[panelType]} !border-2 my-2 ring-0`}>
       <CardContent className="flex gap-2">
-        <Icon className={`w-6 -ml-2 ${iconColorMap[node.attrs?.panelType]}`} />
+        <Icon className={`w-6 -ml-2 ${iconColorMap[panelType]}`} />
         <div>
           {node.content?.map((child, index) => (
             <BlockNode key={index} node={child} />

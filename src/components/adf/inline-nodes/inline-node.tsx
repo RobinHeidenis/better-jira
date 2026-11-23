@@ -19,6 +19,10 @@ export const InlineNode = ({ node }: { node: InlineNodeType }) => {
       return <InlineCardNode node={node} />;
     case "mention":
       return <MentionNode node={node} />;
+    case "placeholder":
+      return (
+        <span className="text-muted-foreground italic">{node.attrs?.text}</span>
+      );
     case "status":
       return <StatusNode node={node} />;
     case "text":

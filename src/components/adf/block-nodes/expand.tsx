@@ -7,10 +7,14 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "#/components/ui/collapsible";
-import type { expandNode } from "#/lib/adf/block-nodes";
+import type { expandNode, nestedExpandNode } from "#/lib/adf/block-nodes";
 import { BlockNode } from "./block-node";
 
-export const ExpandNode = ({ node }: { node: z.infer<typeof expandNode> }) => {
+export const ExpandNode = ({
+  node,
+}: {
+  node: z.infer<typeof expandNode> | z.infer<typeof nestedExpandNode>;
+}) => {
   const [open, setOpen] = useState(false);
 
   return (
@@ -26,7 +30,7 @@ export const ExpandNode = ({ node }: { node: z.infer<typeof expandNode> }) => {
             ) : (
               <ChevronRightIcon className="-ml-1" />
             )}
-            {node.attrs.title ?? "Expand content"}
+            {node.attrs?.title || "Expand content"}
           </Button>
         }
       />

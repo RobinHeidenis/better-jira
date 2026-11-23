@@ -1,18 +1,21 @@
 import type z from "zod";
 import { Badge } from "#/components/ui/badge";
 import type { inlineCardNode } from "#/lib/adf/inline-nodes";
+import { safeUrl } from "#/lib/adf/sanitize";
 
 export const InlineCardNode = ({
   node,
 }: {
   node: z.infer<typeof inlineCardNode>;
 }) => {
-  const { hostname } = new URL(node.attrs.url);
+  const href = safeUrl(node.attrs?.url);
+  if (!href) return <span>{String(node.attrs?.url ?? "")}</span>;
+  const { hostname } = new URL(href);
   return (
     <Badge
       variant="outline"
       render={
-        <a href={node.attrs.url}>
+        <a href={href}>
           <img
             alt=""
             className="-ml-1"

@@ -3,9 +3,11 @@ import { UnsupportedBlock } from "../unsupported";
 import { BlockquoteNode } from "./blockquote";
 import { BulletListNode } from "./bullet-list";
 import { CodeBlockNode } from "./code-block";
+import { ContainerNode } from "./container";
 import { DecisionListNode } from "./decision-list";
 import { ExpandNode } from "./expand";
 import { HeadingNode } from "./heading";
+import { LinkCardNode } from "./link-card";
 import { OrderedListNode } from "./ordered-list";
 import { PanelNode } from "./panel";
 import { ParagraphNode } from "./paragraph";
@@ -21,6 +23,7 @@ export const BlockNode = ({ node }: { node: BlockNodeType }) => {
     case "codeBlock":
       return <CodeBlockNode node={node} />;
     case "expand":
+    case "nestedExpand":
       return <ExpandNode node={node} />;
     case "heading":
       return <HeadingNode node={node} />;
@@ -38,6 +41,16 @@ export const BlockNode = ({ node }: { node: BlockNodeType }) => {
       return <TaskListNode node={node} />;
     case "decisionList":
       return <DecisionListNode node={node} />;
+    case "blockCard":
+    case "embedCard":
+      return <LinkCardNode node={node} />;
+    case "extension":
+    case "bodiedExtension":
+    case "multiBodiedExtension":
+    case "extensionFrame":
+    case "syncBlock":
+    case "bodiedSyncBlock":
+      return <ContainerNode node={node} />;
   }
   return <UnsupportedBlock type={node.type} />;
 };
