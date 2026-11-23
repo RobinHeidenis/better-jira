@@ -74,14 +74,14 @@ export const Column = ({
     : columnIssues;
 
   return (
-    <div className="flex w-80 shrink-0 flex-col bg-card/30 p-4">
+    <div className="w-80 shrink-0 bg-card/30 p-4">
       <CardTitle>
         {name}
         {!isPending &&
           ` (${filteredColumnIssues.length !== columnIssues.length ? `${filteredColumnIssues.length} / ` : ""}${columnIssues.length})`}
       </CardTitle>
       <Separator className="my-4" />
-      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto">
+      <div className="space-y-4">
         {isPending
           ? // A fixed few, since the real count isn't known until the first
             // page of issues arrives.
