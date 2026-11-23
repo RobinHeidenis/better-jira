@@ -58,10 +58,15 @@ export const IssueCard = ({
           <CardDescription>
             <Link
               href={`/issue/${issue.fields.parent?.key}`}
-              className="flex items-center gap-2"
+              className="flex items-start gap-2"
             >
-              <CornerLeftUpIcon size={13} />
-              {issue.fields.parent.fields.summary}
+              <CornerLeftUpIcon size={13} className="mt-[0.2em] shrink-0" />
+              <span
+                className="line-clamp-2"
+                title={issue.fields.parent.fields.summary}
+              >
+                {issue.fields.parent.fields.summary}
+              </span>
             </Link>
           </CardDescription>
         ) : null}
