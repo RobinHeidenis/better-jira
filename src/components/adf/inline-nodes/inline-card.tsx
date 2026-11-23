@@ -14,15 +14,16 @@ export const InlineCardNode = ({
   return (
     <Badge
       variant="outline"
+      className="max-w-full align-middle"
       render={
-        <a href={href}>
+        <a href={href} target="_blank" rel="noreferrer" title={href}>
           <img
             alt=""
             className="-ml-1"
             src={`https://icons.duckduckgo.com/ip3/${hostname}.ico`}
             width={12}
           />
-          {node.attrs.url}
+          <span className="truncate">{hostname.replace(/^www\./, "")}</span>
         </a>
       }
     />
