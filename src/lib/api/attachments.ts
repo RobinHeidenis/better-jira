@@ -85,6 +85,17 @@ export const findAttachment = (
   return matches.length === 1 ? matches[0] : undefined;
 };
 
+const MEDIA_FILE_PATH = /\/file\/([0-9a-f-]{36})\//i;
+
+/** The media-services file id inside a signed Jira attachment URL. */
+export const mediaFileId = (url: string) => {
+  try {
+    return new URL(url).pathname.match(MEDIA_FILE_PATH)?.[1]?.toLowerCase();
+  } catch {
+    return undefined;
+  }
+};
+
 export const formatFileSize = (bytes: number) => {
   if (!Number.isFinite(bytes) || bytes < 0) return "";
   if (bytes < 1024) return `${bytes} B`;

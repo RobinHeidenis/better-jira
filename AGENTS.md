@@ -73,7 +73,7 @@ There is one file per resource in `src/lib/api/`. Each defines a Zod schema, a f
 Zod node schemas are in `src/lib/adf/` (`block-nodes.ts`, `inline-nodes.ts`). `src/components/adf/adf.tsx` renders a document, with one React component per node type in `src/components/adf/block-nodes/` and `src/components/adf/inline-nodes/`.
 
 - The description is never validated against these schemas (`description.content` is `z.any()`), so components must tolerate missing or odd attrs. Unknown types render the muted "Unsupported content" placeholder from `unsupported.tsx`, and an error boundary per top-level node catches the rest. Pass URLs and colours through `src/lib/adf/sanitize.ts`.
-- Media nodes are matched to the issue's attachments by filename (passed to `<Adf>` and read via `adf-context.tsx`). Their bytes come through the `jiraAttachmentContent` server function (10 MB cap) and stay out of the persisted query cache.
+- Media nodes are matched to the issue's attachments in `use-media-attachment.ts`: by filename first, then by the media file id inside each attachment's signed URL. Attachments are passed to `<Adf>` and read via `adf-context.tsx`. Images come through the `jiraAttachmentContent` server function as base64 (10 MB cap). Videos stream from the signed URL that `jiraAttachmentUrl` returns. Both stay out of the persisted query cache.
 
 ### Custom fields
 

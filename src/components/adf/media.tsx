@@ -22,7 +22,6 @@ import {
   attachmentContentOptions,
   attachmentDataUrl,
   attachmentUrlOptions,
-  findAttachment,
   formatFileSize,
 } from "#/lib/api/attachments";
 import { jiraIssueUrl } from "#/lib/jira-url";
@@ -30,6 +29,7 @@ import { store } from "#/lib/store";
 import { cn } from "#/lib/utils";
 import { useAdfContext } from "./adf-context";
 import { UnsupportedInline } from "./unsupported";
+import { useMediaAttachment } from "./use-media-attachment";
 
 type MediaAttrs = NonNullable<MediaNode["attrs"]>;
 export type MediaDisplay = "single" | "thumbnail";
@@ -256,8 +256,10 @@ export const MediaItem = ({
   node: MediaNode;
   display: MediaDisplay;
 }) => {
-  const { attachments } = useAdfContext();
   const attrs = node.attrs;
+  const { attachment, isPending } = useMediaAttachment(
+    attrs?.type === "external" ? undefined : attrs,
+  );
 
   if (attrs?.type === "external") {
     const src = safeUrl(attrs.url);
@@ -272,7 +274,13 @@ export const MediaItem = ({
     );
   }
 
-  const attachment = findAttachment(attachments, attrs?.alt);
+  if (isPending) {
+    return display === "thumbnail" ? (
+      <Skeleton className="h-24 w-32" />
+    ) : (
+      <Skeleton className="h-48 w-full" />
+    );
+  }
   if (!attachment) return <JiraFileChip name={displayName(attrs?.alt)} />;
   if (attachment.mimeType.startsWith("image/")) {
     return (
