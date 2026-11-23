@@ -1,4 +1,4 @@
-import type { ParagraphNode as ParagraphNodeType } from "#/lib/adf";
+import type { ParagraphNode as ParagraphNodeType } from "#/lib/adf/block-nodes";
 import { InlineNode } from "./inline-nodes/inline-node";
 
 export const ParagraphNode = ({ node }: { node: ParagraphNodeType }) => {

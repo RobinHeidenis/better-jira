@@ -1,4 +1,4 @@
-import type { HeadingNode as HeadingNodeType } from "#/lib/adf";
+import type { HeadingNode as HeadingNodeType } from "#/lib/adf/block-nodes";
 import { InlineNode } from "./inline-nodes/inline-node";
 
 export const HeadingNode = ({ node }: { node: HeadingNodeType }) => {

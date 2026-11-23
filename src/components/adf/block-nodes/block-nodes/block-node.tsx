@@ -1,6 +1,6 @@
 import type z from "zod";
-import { blockNodeTypes } from "#/lib/adf";
 import type { blockNode } from "#/lib/adf/block-nodes";
+import { blockNodeTypes } from "#/lib/adf/block-nodes";
 import { HeadingNode } from "../heading";
 import { ParagraphNode } from "../paragraph";
 import { BlockquoteNode } from "./blockquote";
