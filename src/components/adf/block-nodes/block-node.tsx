@@ -1,14 +1,14 @@
 import type z from "zod";
 import type { blockNode } from "#/lib/adf/block-nodes";
 import { blockNodeTypes } from "#/lib/adf/block-nodes";
-import { HeadingNode } from "../heading";
-import { ParagraphNode } from "../paragraph";
 import { BlockquoteNode } from "./blockquote";
 import { BulletListNode } from "./bullet-list";
 import { CodeBlockNode } from "./code-block";
 import { ExpandNode } from "./expand";
+import { HeadingNode } from "./heading";
 import { OrderedListNode } from "./ordered-list";
 import { PanelNode } from "./panel";
+import { ParagraphNode } from "./paragraph";
 
 export const BlockNode = ({ node }: { node: z.infer<typeof blockNode> }) => {
   switch (node.type) {

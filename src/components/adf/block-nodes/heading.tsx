@@ -1,5 +1,5 @@
 import type { HeadingNode as HeadingNodeType } from "#/lib/adf/block-nodes";
-import { InlineNode } from "./inline-nodes/inline-node";
+import { InlineNode } from "../inline-nodes/inline-node";
 
 export const HeadingNode = ({ node }: { node: HeadingNodeType }) => {
   const content = node.content?.map((child, index) => (
