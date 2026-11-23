@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useSelector } from "@tanstack/react-store";
 import { boardIssuesOptions } from "#/lib/api/issues";
-import { store, type Settings } from "#/lib/store";
+import { type Settings, store } from "#/lib/store";
 import { IssueCard } from "./issue-card";
 import { CardTitle } from "./ui/card";
 import { Separator } from "./ui/separator";
@@ -12,15 +12,16 @@ const anyFiltersEnabled = (filters: Settings["filter"]) => {
 };
 
 export const Column = ({
+  boardId,
   name,
   statusIds,
   jql,
 }: {
+  boardId: number;
   name: string;
   statusIds: string[];
   jql: string;
 }) => {
-  const boardId = useSelector(store, (state) => state.boardId)!;
   const filters = useSelector(store, (state) => state.filter);
   const includeDevTickets = useSelector(
     store,

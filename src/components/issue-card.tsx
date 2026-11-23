@@ -98,7 +98,7 @@ export const IssueCard = ({ issue }: { issue: JiraBoardIssue }) => {
                     "Unknown User"
                   }
                   initials="RH"
-                  role="developer"
+                  kind="developer"
                   src={
                     issue.fields.customfield_10031?.avatarUrls?.["48x48"] ?? ""
                   }
@@ -113,7 +113,7 @@ export const IssueCard = ({ issue }: { issue: JiraBoardIssue }) => {
                 <RoleChip
                   name={issue.fields.assignee?.displayName ?? "Unknown User"}
                   initials="JZ"
-                  role="assignee"
+                  kind="assignee"
                   src={issue.fields.assignee?.avatarUrls?.["48x48"] ?? ""}
                 />
               </TooltipTrigger>

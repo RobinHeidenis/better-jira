@@ -14,6 +14,7 @@ export const InlineCardNode = ({
       render={
         <a href={node.attrs.url}>
           <img
+            alt=""
             className="-ml-1"
             src={`https://icons.duckduckgo.com/ip3/${hostname}.ico`}
             width={12}

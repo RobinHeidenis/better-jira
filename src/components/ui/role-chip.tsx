@@ -6,19 +6,19 @@ export function RoleChip({
   name,
   initials,
   src,
-  role,
+  kind,
 }: {
   name: string;
   initials: string;
   src?: string;
-  role: "developer" | "assignee";
+  kind: "developer" | "assignee";
 }) {
   return (
     <Badge
       variant="outline"
       className="h-6 gap-1.5 rounded-none py-0 pl-1.5 pr-0.5 text-muted-foreground [&>svg]:size-3.5"
     >
-      {role === "developer" ? (
+      {kind === "developer" ? (
         <Code2Icon aria-hidden="true" />
       ) : (
         <UserCheckIcon aria-hidden="true" />
@@ -28,7 +28,7 @@ export function RoleChip({
         <AvatarFallback className="text-[9px]">{initials}</AvatarFallback>
       </Avatar>
       <span className="sr-only">
-        {role === "developer" ? "Developer" : "Assignee"}: {name}
+        {kind === "developer" ? "Developer" : "Assignee"}: {name}
       </span>
     </Badge>
   );

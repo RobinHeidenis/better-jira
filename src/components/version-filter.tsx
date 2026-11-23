@@ -1,4 +1,8 @@
+import { useQuery } from "@tanstack/react-query";
+import { useSelector } from "@tanstack/react-store";
 import { MilestoneIcon } from "lucide-react";
+import { versionOptions } from "#/lib/api/versions.ts";
+import { store } from "#/lib/store.ts";
 import {
   Select,
   SelectContent,
@@ -7,10 +11,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { useQuery } from "@tanstack/react-query";
-import { versionOptions } from "#/lib/api/versions.ts";
-import { useSelector } from "@tanstack/react-store";
-import { store } from "#/lib/store.ts";
 
 const renderVersions = (versionIds: string[]) => {
   const { data: versions } = useQuery({

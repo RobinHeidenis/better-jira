@@ -46,7 +46,7 @@ type SetupStep = {
     placeholder?: string;
     type?: QuestionnaireInputType;
   };
-  schema: z.ZodType<any>;
+  schema: z.ZodType;
 };
 
 const items: ReadonlyArray<SetupStep> = [

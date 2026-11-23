@@ -1,5 +1,9 @@
-import { usersOptions } from "#/lib/api/users";
 import { useQuery } from "@tanstack/react-query";
+import { useSelector } from "@tanstack/react-store";
+import { UserIcon } from "lucide-react";
+import { usersOptions } from "#/lib/api/users";
+import { store } from "#/lib/store.ts";
+import { Avatar, AvatarFallback, AvatarGroup, AvatarImage } from "./ui/avatar";
 import {
   Select,
   SelectContent,
@@ -8,12 +12,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { UserIcon } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarGroup, AvatarImage } from "./ui/avatar";
-import { useSelector } from "@tanstack/react-store";
-import { store } from "#/lib/store.ts";
 
-const renderSelectedUsers = (value: string[]) => {
+const SelectedUsers = ({ value }: { value: string[] }) => {
   const { data: users } = useQuery({
     ...usersOptions(),
     select: (data) => data.filter((user) => value.includes(user.accountId)),
@@ -22,7 +22,7 @@ const renderSelectedUsers = (value: string[]) => {
   return (
     <AvatarGroup>
       {users?.map((user) => (
-        <Avatar size="sm">
+        <Avatar key={user.accountId} size="sm">
           <AvatarImage src={user.avatarUrls["48x48"]} />
           <AvatarFallback>AA</AvatarFallback>
         </Avatar>
@@ -52,7 +52,9 @@ export const UserFilter = () => {
     >
       <SelectTrigger>
         <UserIcon data-icon="start" />
-        <SelectValue>{renderSelectedUsers}</SelectValue>
+        <SelectValue>
+          {(value: string[]) => <SelectedUsers value={value} />}
+        </SelectValue>
       </SelectTrigger>
       <SelectContent alignItemWithTrigger={false} className="min-w-48">
         <SelectGroup>

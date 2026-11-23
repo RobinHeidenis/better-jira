@@ -39,7 +39,7 @@ export const PanelNode = ({ node }: { node: z.infer<typeof panelNode> }) => {
 
   return (
     <Card
-      className={colorMap[node.attrs?.panelType] + " !border-2 my-2 ring-0"}
+      className={`${colorMap[node.attrs?.panelType]} !border-2 my-2 ring-0`}
     >
       <CardContent className="flex gap-2">
         <Icon className={`w-6 -ml-2 ${iconColorMap[node.attrs?.panelType]}`} />

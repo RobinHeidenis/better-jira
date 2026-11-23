@@ -1,7 +1,7 @@
-import { z } from "zod";
-import { request } from "./api";
 import { queryOptions } from "@tanstack/react-query";
+import { z } from "zod";
 import { store } from "../store";
+import { request } from "./api";
 
 const userSchema = z.object({
   accountId: z.string(),
@@ -22,7 +22,9 @@ const getUsersResponseSchema = z.object({
 });
 
 export const getUsers = async () => {
-  const projectKey = store.get().project!;
+  const { project: projectKey } = store.get();
+  if (!projectKey)
+    throw new Error("No project configured — finish board setup first.");
   return (
     await request("user/search/query", getUsersResponseSchema, "atlassian", {
       query: { query: `is assignee of ${projectKey}` },

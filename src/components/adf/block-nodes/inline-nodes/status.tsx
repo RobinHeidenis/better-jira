@@ -21,7 +21,7 @@ export const StatusNode = ({ node }: { node: z.infer<typeof statusNode> }) => {
       }
       style={
         isHex
-          ? { backgroundColor: node.attrs.color, color: 'black' }
+          ? { backgroundColor: node.attrs.color, color: "black" }
           : undefined
       }
       variant="outline"

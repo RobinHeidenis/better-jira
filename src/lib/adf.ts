@@ -1,5 +1,5 @@
 import z from "zod";
-import { inlineNode, inlineNodeTypes } from './adf/inline-nodes';
+import { inlineNode, inlineNodeTypes } from "./adf/inline-nodes";
 
 export const blockNodeTypes = z.enum([
   "blockquote",

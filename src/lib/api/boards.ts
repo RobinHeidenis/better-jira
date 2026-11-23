@@ -115,7 +115,7 @@ export const getBoardConfiguration = async (
     return result;
   }
 
-  const hiddenColumns = store.get().hiddenColumns!;
+  const hiddenColumns = store.get().hiddenColumns ?? [];
 
   const fiilteredColumns = result.columnConfig.columns.filter(
     (column) => !hiddenColumns.includes(column.name),

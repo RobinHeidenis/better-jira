@@ -8,7 +8,7 @@ import { BulletListNode } from "./bullet-list";
 import { CodeBlockNode } from "./code-block";
 import { ExpandNode } from "./expand";
 import { OrderedListNode } from "./ordered-list";
-import { PanelNode } from './panel';
+import { PanelNode } from "./panel";
 
 export const BlockNode = ({ node }: { node: z.infer<typeof blockNode> }) => {
   switch (node.type) {

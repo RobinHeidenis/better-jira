@@ -1,7 +1,7 @@
-import { z } from "zod";
-import { request } from "./api";
 import { queryOptions } from "@tanstack/react-query";
+import { z } from "zod";
 import { store } from "../store";
+import { request } from "./api";
 
 const versionSchema = z.object({
   id: z.string(),
@@ -15,7 +15,9 @@ const getVersionsResponseSchema = z.object({
 });
 
 export const getVersions = async () => {
-  const projectKey = store.get().project!;
+  const { project: projectKey } = store.get();
+  if (!projectKey)
+    throw new Error("No project configured — finish board setup first.");
   return (
     await request(
       `project/${projectKey}/version`,

@@ -132,11 +132,13 @@ export const BoardSetupForm = ({
     // hidden, which is what the board actually needs to know.
     const visible = new Set(answers.getAll(COLUMNS_STEP).map(String));
 
+    const board = boardList.find((board) => board.id === boardId);
+    if (!board) return;
+
     store.setState((state) => ({
       ...state,
-      boardId: Number(answers.get(BOARD_STEP)),
-      project: boardList.find((board) => board.id === boardId)!.location
-        .projectKey,
+      boardId: board.id,
+      project: board.location.projectKey,
       includeDevTickets: answers.get(FILTERING_STEP) === "show",
       hiddenColumns: columns
         .map((column) => column.name)
