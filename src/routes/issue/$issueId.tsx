@@ -1,10 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Adf } from "#/components/adf/adf";
-import { Card, CardContent, CardTitle } from "#/components/ui/card";
-import { Link } from "#/components/ui/link";
-import { Spinner } from "#/components/ui/spinner";
-import { issueOptions } from "#/lib/api/issues";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -12,7 +8,11 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
+} from "#/components/ui/breadcrumb";
+import { Card, CardContent, CardTitle } from "#/components/ui/card";
+import { Link } from "#/components/ui/link";
+import { Spinner } from "#/components/ui/spinner";
+import { issueOptions } from "#/lib/api/issues";
 
 export const Route = createFileRoute("/issue/$issueId")({
   component: RouteComponent,
