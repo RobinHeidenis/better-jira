@@ -5,8 +5,14 @@ import {
 } from "@remixicon/react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSelector } from "@tanstack/react-store";
-import { type CSSProperties, useState } from "react";
+import { type ComponentProps, type CSSProperties, useState } from "react";
 import { Badge } from "#/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogTrigger,
+} from "#/components/ui/dialog";
 import { Skeleton } from "#/components/ui/skeleton";
 import type { MediaNode } from "#/lib/adf/block-nodes";
 import { safeUrl } from "#/lib/adf/sanitize";
@@ -142,6 +148,32 @@ const imageClass = (display: MediaDisplay) =>
     ? "block h-auto w-full rounded-md"
     : "h-24 w-auto max-w-48 rounded-md object-cover";
 
+const ZoomableImage = ({
+  display,
+  alt,
+  ...props
+}: ComponentProps<"img"> & { display: MediaDisplay }) => (
+  <Dialog>
+    <DialogTrigger
+      className={cn(
+        "cursor-zoom-in rounded-md",
+        display === "single" ? "block w-full" : "inline-block",
+      )}
+      aria-label={alt ? `View ${alt} larger` : "View image larger"}
+    >
+      <img alt={alt} {...props} className={imageClass(display)} />
+    </DialogTrigger>
+    <DialogContent className="w-auto max-w-[95vw] bg-transparent p-0 ring-0 sm:max-w-[95vw]">
+      <DialogTitle className="sr-only">{alt || "Image"}</DialogTitle>
+      <img
+        alt={alt}
+        {...props}
+        className="max-h-[90vh] max-w-[95vw] rounded-md object-contain"
+      />
+    </DialogContent>
+  </Dialog>
+);
+
 const AttachmentImage = ({
   attachment,
   attrs,
@@ -167,11 +199,11 @@ const AttachmentImage = ({
   if (isError || !data) return <JiraFileChip name={attachment.filename} />;
 
   return (
-    <img
+    <ZoomableImage
       src={attachmentDataUrl(data)}
       alt={attachment.filename}
       title={attachment.filename}
-      className={imageClass(display)}
+      display={display}
     />
   );
 };
@@ -190,11 +222,11 @@ export const MediaItem = ({
     const src = safeUrl(attrs.url);
     if (!src) return <UnsupportedInline type="media" />;
     return (
-      <img
+      <ZoomableImage
         src={src}
         alt={attrs.alt ?? ""}
         referrerPolicy="no-referrer"
-        className={imageClass(display)}
+        display={display}
       />
     );
   }
