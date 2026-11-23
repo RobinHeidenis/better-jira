@@ -30,7 +30,7 @@ export const LinkCardNode = ({
       href={href}
       target="_blank"
       rel="noreferrer"
-      className="my-2 flex items-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-muted"
+      className="my-2 flex items-center gap-2 rounded-md border px-3 py-2 hover:bg-muted"
     >
       <img
         alt=""

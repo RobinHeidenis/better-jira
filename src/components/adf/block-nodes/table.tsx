@@ -72,7 +72,7 @@ export const TableNode = ({ node }: { node: z.infer<typeof tableNode> }) => {
   return (
     <div className="my-2 w-full overflow-x-auto">
       <table
-        className="min-w-full border-collapse border text-sm"
+        className="min-w-full border-collapse border"
         style={fixed ? { width: totalWidth, tableLayout: "fixed" } : undefined}
       >
         {fixed ? (

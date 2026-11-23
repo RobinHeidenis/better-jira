@@ -52,7 +52,7 @@ export const MediaSingleNode = ({
     >
       <MediaItem node={media} display="single" />
       {caption?.type === "caption" && caption.content?.length ? (
-        <figcaption className="mt-1 text-center text-sm text-muted-foreground">
+        <figcaption className="mt-1 text-center text-muted-foreground">
           {caption.content.map((child, index) =>
             child ? <InlineNode key={index} node={child} /> : null,
           )}
