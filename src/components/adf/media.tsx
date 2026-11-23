@@ -21,6 +21,7 @@ import {
   attachmentBlob,
   attachmentContentOptions,
   attachmentDataUrl,
+  attachmentUrlOptions,
   findAttachment,
   formatFileSize,
 } from "#/lib/api/attachments";
@@ -208,6 +209,46 @@ const AttachmentImage = ({
   );
 };
 
+const AttachmentVideo = ({
+  attachment,
+  attrs,
+  display,
+}: {
+  attachment: Attachment;
+  attrs: MediaAttrs | undefined;
+  display: MediaDisplay;
+}) => {
+  const { data, isPending, isError } = useQuery(
+    attachmentUrlOptions(attachment.id),
+  );
+
+  if (isPending) {
+    if (display === "thumbnail") return <Skeleton className="h-24 w-32" />;
+    const ratio = aspectRatio(attrs);
+    return (
+      <div className={cn("w-full", !ratio.aspectRatio && "h-48")} style={ratio}>
+        <Skeleton className="size-full" />
+      </div>
+    );
+  }
+  if (isError || !data) return <JiraFileChip name={attachment.filename} />;
+
+  return (
+    // biome-ignore lint/a11y/useMediaCaption: Jira attachments have no caption tracks.
+    <video
+      src={data.url}
+      controls
+      preload="metadata"
+      title={attachment.filename}
+      className={
+        display === "single"
+          ? "block h-auto w-full rounded-md bg-black"
+          : "h-24 w-auto max-w-48 rounded-md bg-black"
+      }
+    />
+  );
+};
+
 export const MediaItem = ({
   node,
   display,
@@ -236,6 +277,15 @@ export const MediaItem = ({
   if (attachment.mimeType.startsWith("image/")) {
     return (
       <AttachmentImage
+        attachment={attachment}
+        attrs={attrs}
+        display={display}
+      />
+    );
+  }
+  if (attachment.mimeType.startsWith("video/")) {
+    return (
+      <AttachmentVideo
         attachment={attachment}
         attrs={attrs}
         display={display}

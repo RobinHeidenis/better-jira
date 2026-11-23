@@ -147,6 +147,36 @@ export const jiraAttachmentContent = createServerFn({ method: "POST" })
     };
   });
 
+/**
+ * Where Jira serves an attachment from: a short-lived signed media URL, read
+ * from the redirect without downloading the file. Media elements can stream
+ * from it directly, which matters for videos too large to proxy as base64.
+ */
+export const jiraAttachmentUrl = createServerFn({ method: "POST" })
+  .validator(jiraAttachmentContentSchema)
+  .handler(async ({ data }) => {
+    const base = data.baseUrl.replace(/\/+$/, "");
+    const response = await fetch(
+      `${base}/rest/api/3/attachment/content/${data.attachmentId}`,
+      {
+        headers: { Authorization: `Basic ${data.apiToken}` },
+        redirect: "manual",
+      },
+    );
+    await response.body?.cancel();
+
+    const location = response.headers.get("location");
+    if (response.status < 300 || response.status >= 400 || !location) {
+      throw requestError("Jira attachment URL request", response, "");
+    }
+
+    const url = new URL(location, base);
+    if (url.protocol !== "https:") {
+      throw new Error("Jira attachment URL request failed: not an https URL");
+    }
+    return { url: url.toString() };
+  });
+
 function requestError(label: string, response: Response, text: string) {
   const body =
     text.length > MAX_ERROR_BODY ? `${text.slice(0, MAX_ERROR_BODY)}…` : text;
