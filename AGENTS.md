@@ -70,16 +70,15 @@ There is one file per resource in `src/lib/api/`. Each defines a Zod schema, a f
 
 ### ADF (Atlassian Document Format)
 
-Zod node schemas are in `src/lib/adf/` (`block-nodes.ts`, `inline-nodes.ts`). One React component per node type lives under `src/components/adf/block-nodes/`. Node types that aren't supported yet fall through to a placeholder in `block-node.tsx`. `src/lib/adf.ts` is an older duplicate. Use `src/lib/adf/`.
+Zod node schemas are in `src/lib/adf/` (`block-nodes.ts`, `inline-nodes.ts`). `src/components/adf/adf.tsx` renders a document, with one React component per node type in `src/components/adf/block-nodes/` and `src/components/adf/inline-nodes/`. Node types that aren't supported yet fall through to a placeholder in `block-node.tsx`.
+
+### Custom fields
+
+Custom field ids differ per Jira site. The developer and story points fields are picked during board setup and stored as `developerField` and `storyPointsField`. `src/lib/api/issues.ts` requests them by id and parses them out of the loose `fields` object (`issueDeveloper`, `issueStoryPoints`). When a setting is null, the UI hides that part.
 
 ## Known debt (don't copy these patterns)
 
-- `customfield_10031` (developer) and `customfield_10028` (story points) are hardcoded in `issues.ts`, `column.tsx` and `issue-card.tsx`, even though the `developerField` setting exists.
-- `issue-card.tsx` has hardcoded initials ("RH"/"JZ") and hardcoded Story/Medium icons.
-- `jiraIssueSchema` in `issues.ts` repeats every field of the schema it extends.
-- `/` calls `navigate()` during render instead of using `beforeLoad` with `redirect`.
-- Some files still use `@/` imports and `lucide-react` icons.
-- Two `@tanstack/query-core` versions are installed, which breaks types in `root-provider.tsx`.
+- Some files still use `lucide-react` icons.
 
 <!-- intent-skills:start -->
 ## Skill Loading
