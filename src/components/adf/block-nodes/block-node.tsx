@@ -8,6 +8,7 @@ import { HeadingNode } from "./heading";
 import { OrderedListNode } from "./ordered-list";
 import { PanelNode } from "./panel";
 import { ParagraphNode } from "./paragraph";
+import { TableNode } from "./table";
 
 export const BlockNode = ({ node }: { node: BlockNodeType }) => {
   switch (node.type) {
@@ -29,6 +30,8 @@ export const BlockNode = ({ node }: { node: BlockNodeType }) => {
       return <ParagraphNode node={node} />;
     case "rule":
       return <hr className="my-5 text-stone-500" />;
+    case "table":
+      return <TableNode node={node} />;
   }
   return <UnsupportedBlock type={node.type} />;
 };
