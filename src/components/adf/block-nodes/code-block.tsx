@@ -21,7 +21,7 @@ export const CodeBlockNode = ({
           <CodeBlockCopyButton value={textContent} />
         </CodeBlockActions>
         <CodeBlockContent
-          lineNumbers={node.attrs.hideLineNumbers !== false}
+          lineNumbers={!node.attrs?.hideLineNumbers}
           wrap={node.attrs.wrap ?? false}
         >
           {textContent}
