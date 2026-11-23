@@ -3,12 +3,14 @@ import { UnsupportedBlock } from "../unsupported";
 import { BlockquoteNode } from "./blockquote";
 import { BulletListNode } from "./bullet-list";
 import { CodeBlockNode } from "./code-block";
+import { DecisionListNode } from "./decision-list";
 import { ExpandNode } from "./expand";
 import { HeadingNode } from "./heading";
 import { OrderedListNode } from "./ordered-list";
 import { PanelNode } from "./panel";
 import { ParagraphNode } from "./paragraph";
 import { TableNode } from "./table";
+import { TaskListNode } from "./task-list";
 
 export const BlockNode = ({ node }: { node: BlockNodeType }) => {
   switch (node.type) {
@@ -32,6 +34,10 @@ export const BlockNode = ({ node }: { node: BlockNodeType }) => {
       return <hr className="my-5 text-stone-500" />;
     case "table":
       return <TableNode node={node} />;
+    case "taskList":
+      return <TaskListNode node={node} />;
+    case "decisionList":
+      return <DecisionListNode node={node} />;
   }
   return <UnsupportedBlock type={node.type} />;
 };
