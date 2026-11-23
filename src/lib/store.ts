@@ -18,6 +18,10 @@ const settingsSchema = z.object({
       versions: z.array(z.string()).nullish(),
     })
     .nullable(),
+  // Defaulted so settings saved before GitLab support still parse instead of
+  // resetting the whole store.
+  gitlabApiKey: z.string().nullable().default(null),
+  gitlabProjects: z.array(z.number()).nullable().default(null),
 });
 
 export type Settings = z.infer<typeof settingsSchema>;
@@ -31,6 +35,8 @@ const defaults: Settings = {
   developerField: null,
   includeDevTickets: null,
   filter: null,
+  gitlabApiKey: null,
+  gitlabProjects: null,
 };
 
 /**
