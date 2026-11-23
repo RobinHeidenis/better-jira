@@ -1,6 +1,5 @@
-import type z from "zod";
-import type { blockNode } from "#/lib/adf/block-nodes";
-import { blockNodeTypes } from "#/lib/adf/block-nodes";
+import type { BlockNode as BlockNodeType } from "#/lib/adf/block-nodes";
+import { UnsupportedBlock } from "../unsupported";
 import { BlockquoteNode } from "./blockquote";
 import { BulletListNode } from "./bullet-list";
 import { CodeBlockNode } from "./code-block";
@@ -10,34 +9,26 @@ import { OrderedListNode } from "./ordered-list";
 import { PanelNode } from "./panel";
 import { ParagraphNode } from "./paragraph";
 
-export const BlockNode = ({ node }: { node: z.infer<typeof blockNode> }) => {
+export const BlockNode = ({ node }: { node: BlockNodeType }) => {
   switch (node.type) {
-    case blockNodeTypes.enum.blockquote:
+    case "blockquote":
       return <BlockquoteNode node={node} />;
-    // bodiedSyncBlock (can't find docs on it)
-    case blockNodeTypes.enum.bulletList:
+    case "bulletList":
       return <BulletListNode node={node} />;
-    case blockNodeTypes.enum.codeBlock:
+    case "codeBlock":
       return <CodeBlockNode node={node} />;
-    case blockNodeTypes.enum.expand:
+    case "expand":
       return <ExpandNode node={node} />;
-    case blockNodeTypes.enum.heading:
+    case "heading":
       return <HeadingNode node={node} />;
-    // mediaGroup
-    // mediaSingle
-    case blockNodeTypes.enum.orderedList:
+    case "orderedList":
       return <OrderedListNode node={node} />;
-    case blockNodeTypes.enum.panel:
+    case "panel":
       return <PanelNode node={node} />;
-    // panel
-    case blockNodeTypes.enum.paragraph:
+    case "paragraph":
       return <ParagraphNode node={node} />;
-    case blockNodeTypes.enum.rule:
+    case "rule":
       return <hr className="my-5 text-stone-500" />;
-    // syncBlock
-    // table
-    // multiBodiedExtension
   }
-  // @ts-expect-error
-  return <div>{node.type}</div>;
+  return <UnsupportedBlock type={node.type} />;
 };

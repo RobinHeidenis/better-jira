@@ -1,5 +1,5 @@
-import type z from "zod";
-import { type inlineNode, inlineNodeTypes } from "#/lib/adf/inline-nodes";
+import type { InlineNode as InlineNodeType } from "#/lib/adf/inline-nodes";
+import { UnsupportedInline } from "../unsupported";
 import { DateNode } from "./date";
 import { EmojiNode } from "./emoji";
 import { InlineCardNode } from "./inline-card";
@@ -7,24 +7,22 @@ import { MentionNode } from "./mention";
 import { StatusNode } from "./status";
 import { TextNode } from "./text";
 
-export const InlineNode = ({ node }: { node: z.infer<typeof inlineNode> }) => {
+export const InlineNode = ({ node }: { node: InlineNodeType }) => {
   switch (node.type) {
-    case inlineNodeTypes.enum.date:
+    case "date":
       return <DateNode node={node} />;
-    case inlineNodeTypes.enum.emoji:
+    case "emoji":
       return <EmojiNode node={node} />;
-    case inlineNodeTypes.enum.hardBreak:
+    case "hardBreak":
       return <br />;
-    case inlineNodeTypes.enum.inlineCard:
+    case "inlineCard":
       return <InlineCardNode node={node} />;
-    case inlineNodeTypes.enum.mention:
+    case "mention":
       return <MentionNode node={node} />;
-    case inlineNodeTypes.enum.status:
+    case "status":
       return <StatusNode node={node} />;
-    case inlineNodeTypes.enum.text:
+    case "text":
       return <TextNode node={node} />;
-    default:
-      // @ts-expect-error
-      return <span>{node.type}</span>;
   }
+  return <UnsupportedInline type={node.type} />;
 };
