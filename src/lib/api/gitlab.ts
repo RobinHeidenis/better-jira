@@ -52,6 +52,8 @@ export const gitlabProjectsOptions = (token: string | null) => {
 const mergeRequestSchema = z.object({
   id: z.number(),
   iid: z.number(),
+  project_id: z.number(),
+  has_conflicts: z.boolean().optional(),
   title: z.string(),
   state: z.enum(["opened", "closed", "locked", "merged"]),
   draft: z.boolean().optional(),
@@ -107,7 +109,7 @@ export const mergeRequestsOptions = (
   projectIds: number[],
 ) => {
   return queryOptions({
-    queryKey: ["gitlab-merge-requests", issueKey, projectIds],
+    queryKey: ["gitlab-merge-requests", 2, issueKey, projectIds],
     queryFn: () => getMergeRequests(issueKey, projectIds),
   });
 };
@@ -157,6 +159,54 @@ export const ticketMergeRequestsOptions = (
           return true;
         }),
       }));
+    },
+  });
+};
+
+const pipelineStatusSchema = z.object({
+  head_pipeline: z
+    .object({
+      status: z.string(),
+      web_url: z.string(),
+    })
+    .nullish(),
+});
+
+const approvalsSchema = z.object({
+  approved: z.boolean().optional(),
+  approvals_left: z.number().optional(),
+  approved_by: z.array(z.object({ user: z.object({ name: z.string() }) })),
+});
+
+export type MergeRequestDetail = {
+  pipeline: { status: string; url: string } | null;
+  approvedBy: string[];
+  approvalsLeft: number;
+};
+
+/**
+ * The list endpoint leaves out the pipeline and approvals, so these cost a
+ * request each and are only fetched for open MRs that are on screen.
+ */
+export const mergeRequestDetailOptions = (projectId: number, iid: number) => {
+  return queryOptions({
+    queryKey: ["gitlab-merge-request-detail", projectId, iid],
+    queryFn: async (): Promise<MergeRequestDetail> => {
+      const base = `/projects/${projectId}/merge_requests/${iid}`;
+      const [mergeRequest, approvals] = await Promise.all([
+        request(base, pipelineStatusSchema),
+        request(`${base}/approvals`, approvalsSchema),
+      ]);
+      return {
+        pipeline: mergeRequest.head_pipeline
+          ? {
+              status: mergeRequest.head_pipeline.status,
+              url: mergeRequest.head_pipeline.web_url,
+            }
+          : null,
+        approvedBy: approvals.approved_by.map((approval) => approval.user.name),
+        approvalsLeft: approvals.approvals_left ?? 0,
+      };
     },
   });
 };

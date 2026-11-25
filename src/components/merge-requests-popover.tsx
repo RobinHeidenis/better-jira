@@ -1,7 +1,13 @@
 import {
+  RiCheckboxCircleFill,
+  RiCloseCircleFill,
+  RiErrorWarningFill,
   RiGitClosePullRequestLine,
   RiGitMergeLine,
   RiGitPullRequestLine,
+  RiIndeterminateCircleLine,
+  RiLoader4Line,
+  RiThumbUpLine,
 } from "@remixicon/react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSelector } from "@tanstack/react-store";
@@ -9,6 +15,7 @@ import { cn } from "cn";
 import { useState } from "react";
 import {
   type MergeRequest,
+  mergeRequestDetailOptions,
   ticketMergeRequestsOptions,
 } from "#/lib/api/gitlab";
 import { store } from "#/lib/store";
@@ -16,6 +23,7 @@ import { initials, timeAgo } from "#/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Skeleton } from "./ui/skeleton";
+import { SharedTooltipTrigger } from "./ui/tooltip";
 
 const STATE = {
   opened: {
@@ -44,6 +52,87 @@ const STATE = {
 const shortReference = (full: string) => {
   const [path = full, iid = ""] = full.split("!");
   return { project: path.split("/").at(-1) ?? path, iid: `!${iid}` };
+};
+
+const PIPELINE: Record<
+  string,
+  { label: string; icon: typeof RiLoader4Line; className: string }
+> = {
+  success: {
+    label: "Pipeline passed",
+    icon: RiCheckboxCircleFill,
+    className: "text-emerald-500",
+  },
+  failed: {
+    label: "Pipeline failed",
+    icon: RiCloseCircleFill,
+    className: "text-destructive",
+  },
+  running: {
+    label: "Pipeline running",
+    icon: RiLoader4Line,
+    className: "animate-spin text-sky-500",
+  },
+  pending: {
+    label: "Pipeline pending",
+    icon: RiLoader4Line,
+    className: "text-amber-500",
+  },
+};
+
+const pipelineStyle = (status: string) =>
+  PIPELINE[status] ?? {
+    label: `Pipeline ${status.replace(/_/g, " ")}`,
+    icon: RiIndeterminateCircleLine,
+    className: "text-muted-foreground",
+  };
+
+/** Pipeline, approvals and conflicts, which only matter while it's open. */
+const MergeRequestChecks = ({
+  mergeRequest,
+}: {
+  mergeRequest: MergeRequest;
+}) => {
+  const { data } = useQuery(
+    mergeRequestDetailOptions(mergeRequest.project_id, mergeRequest.iid),
+  );
+  const pipeline = data?.pipeline ? pipelineStyle(data.pipeline.status) : null;
+  const PipelineIcon = pipeline?.icon;
+
+  return (
+    <>
+      {pipeline && PipelineIcon ? (
+        <SharedTooltipTrigger
+          content={pipeline.label}
+          aria-label={pipeline.label}
+          render={<span />}
+          className="flex"
+        >
+          <PipelineIcon className={cn("size-3.5", pipeline.className)} />
+        </SharedTooltipTrigger>
+      ) : null}
+      {data?.approvedBy.length ? (
+        <SharedTooltipTrigger
+          content={`Approved by ${data.approvedBy.join(", ")}`}
+          render={<span />}
+          className="flex items-center gap-0.5"
+        >
+          <RiThumbUpLine className="size-3.5" />
+          {data.approvedBy.length}
+        </SharedTooltipTrigger>
+      ) : null}
+      {mergeRequest.has_conflicts ? (
+        <SharedTooltipTrigger
+          content="Merge conflicts"
+          aria-label="Merge conflicts"
+          render={<span />}
+          className="flex"
+        >
+          <RiErrorWarningFill className="size-3.5 text-amber-500" />
+        </SharedTooltipTrigger>
+      ) : null}
+    </>
+  );
 };
 
 const MergeRequestRow = ({ mergeRequest }: { mergeRequest: MergeRequest }) => {
@@ -78,6 +167,9 @@ const MergeRequestRow = ({ mergeRequest }: { mergeRequest: MergeRequest }) => {
             </span>
             <span aria-hidden="true">·</span>
             <span>{timeAgo(mergeRequest.updated_at)}</span>
+            {mergeRequest.state === "opened" ? (
+              <MergeRequestChecks mergeRequest={mergeRequest} />
+            ) : null}
           </span>
         </span>
         {mergeRequest.author ? (
