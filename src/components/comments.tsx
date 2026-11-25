@@ -28,6 +28,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { Skeleton } from "./ui/skeleton";
@@ -53,7 +54,7 @@ const CommentMenu = ({
   editable: boolean;
   jiraUrl: string | null;
   onEdit: () => void;
-  onDelete: () => void;
+  onDelete: (skipConfirm: boolean) => void;
 }) => (
   <DropdownMenu>
     <DropdownMenuTrigger
@@ -82,9 +83,14 @@ const CommentMenu = ({
           Edit in Jira
         </DropdownMenuItem>
       ) : null}
-      <DropdownMenuItem variant="destructive" onClick={onDelete}>
+      <DropdownMenuItem
+        variant="destructive"
+        onClick={(event) => onDelete(event.shiftKey)}
+        title="Shift-click to delete without asking"
+      >
         <RiDeleteBinLine />
         Delete
+        <DropdownMenuShortcut>⇧</DropdownMenuShortcut>
       </DropdownMenuItem>
     </DropdownMenuContent>
   </DropdownMenu>
@@ -187,7 +193,9 @@ const Comment = ({
                 setDraft(plainText ?? "");
                 setMode("edit");
               }}
-              onDelete={() => setMode("confirmDelete")}
+              onDelete={(skipConfirm) =>
+                skipConfirm ? remove.mutate() : setMode("confirmDelete")
+              }
             />
           ) : null}
         </div>
