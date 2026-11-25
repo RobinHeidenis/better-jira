@@ -93,7 +93,7 @@ const MergeRequestChecks = ({
 }: {
   mergeRequest: MergeRequest;
 }) => {
-  const { data } = useQuery(
+  const { data, isPending } = useQuery(
     mergeRequestDetailOptions(mergeRequest.project_id, mergeRequest.iid),
   );
   const pipeline = data?.pipeline ? pipelineStyle(data.pipeline.status) : null;
@@ -101,6 +101,12 @@ const MergeRequestChecks = ({
 
   return (
     <>
+      {isPending ? (
+        <RiLoader4Line
+          aria-label="Loading pipeline and approvals"
+          className="size-3.5 animate-spin"
+        />
+      ) : null}
       {pipeline && PipelineIcon ? (
         <SharedTooltipTrigger
           content={pipeline.label}
