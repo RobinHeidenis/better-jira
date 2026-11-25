@@ -38,7 +38,12 @@ export const useBoardIssues = (boardId: number, jql: string) => {
     ...currentUserOptions(),
     enabled: reviewColumn !== null || onlyMine,
   });
-  const { data: issuesByStatusId, isPending } = useQuery(
+  const {
+    data: issuesByStatusId,
+    isPending,
+    error,
+    refetch,
+  } = useQuery(
     boardIssuesOptions(boardId, jql, { developerField, storyPointsField }),
   );
 
@@ -92,6 +97,8 @@ export const useBoardIssues = (boardId: number, jql: string) => {
 
   return {
     isPending,
+    error,
+    refetch,
     columnIssues,
     searching: query.trim() !== "",
     developerField,

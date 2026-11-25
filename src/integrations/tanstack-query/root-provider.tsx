@@ -29,6 +29,9 @@ export function getContext() {
         staleTime: MINUTE,
         // Has to outlive a reload, or there'd be nothing left to persist.
         gcTime: DAY,
+        // A 4xx won't fix itself, so only retry what might be a blip.
+        retry: (failureCount, error) =>
+          failureCount < 3 && !/failed: 4\d\d\b/.test(error.message),
       },
     },
   });

@@ -177,10 +177,33 @@ export const jiraAttachmentUrl = createServerFn({ method: "POST" })
     return { url: url.toString() };
   });
 
+// Jira explains failures as `{ errorMessages: [...], errors: { field: msg } }`;
+// those sentences beat the raw JSON for anything shown to a person.
+const jiraErrorText = (text: string) => {
+  try {
+    const parsed = JSON.parse(text) as {
+      errorMessages?: unknown;
+      errors?: unknown;
+    };
+    const messages = [
+      ...(Array.isArray(parsed.errorMessages) ? parsed.errorMessages : []),
+      ...(parsed.errors && typeof parsed.errors === "object"
+        ? Object.values(parsed.errors)
+        : []),
+    ].filter((message): message is string => typeof message === "string");
+    return messages.length ? messages.join(" ") : null;
+  } catch {
+    return null;
+  }
+};
+
 function requestError(label: string, response: Response, text: string) {
+  const readable = jiraErrorText(text) ?? text;
   const body =
-    text.length > MAX_ERROR_BODY ? `${text.slice(0, MAX_ERROR_BODY)}…` : text;
+    readable.length > MAX_ERROR_BODY
+      ? `${readable.slice(0, MAX_ERROR_BODY)}…`
+      : readable;
   return new Error(
-    `${label} failed: ${response.status} ${response.statusText}${body ? `: ${body}` : ""}`,
+    `${label} failed: ${[response.status, response.statusText].filter(Boolean).join(" ")}${body ? `: ${body}` : ""}`,
   );
 }

@@ -7,13 +7,36 @@ import { BoardFilters } from "./board-filters";
 import { BoardKeyboard } from "./board-keyboard";
 import { BoardSearch } from "./board-search";
 import { Column } from "./column";
+import { ErrorState } from "./error-state";
+import { Spinner } from "./ui/spinner";
+import { useBoardIssues } from "./use-board-issues";
 
 export const Board = () => {
   const boardId = useSelector(store, (state) => state.boardId);
-  const { data: board } = useQuery(boardConfigurationOptions(boardId));
+  const {
+    data: board,
+    error,
+    refetch,
+  } = useQuery(boardConfigurationOptions(boardId));
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  if (boardId === null || !board) return null;
+  if (boardId === null) return null;
+  if (error) {
+    return (
+      <ErrorState
+        title="Couldn't load the board"
+        error={error}
+        onRetry={() => refetch()}
+      />
+    );
+  }
+  if (!board) {
+    return (
+      <div className="flex justify-center p-8">
+        <Spinner />
+      </div>
+    );
+  }
 
   const jql = boardJql(board.filter.id, board.subQuery?.query);
   const columns = board.columnConfig.columns.map((column) => ({
@@ -27,6 +50,7 @@ export const Board = () => {
       <BoardFilters
         search={<BoardSearch boardId={boardId} jql={jql} columns={columns} />}
       />
+      <BoardIssuesError boardId={boardId} jql={jql} />
       <div
         ref={scrollRef}
         className="relative mt-5 min-h-0 flex-1 overflow-auto"
@@ -45,5 +69,25 @@ export const Board = () => {
         </div>
       </div>
     </>
+  );
+};
+
+const BoardIssuesError = ({
+  boardId,
+  jql,
+}: {
+  boardId: number;
+  jql: string;
+}) => {
+  const { error, refetch } = useBoardIssues(boardId, jql);
+  if (!error) return null;
+  return (
+    <div className="mt-5">
+      <ErrorState
+        title="Couldn't load the board's tickets"
+        error={error}
+        onRetry={() => refetch()}
+      />
+    </div>
   );
 };

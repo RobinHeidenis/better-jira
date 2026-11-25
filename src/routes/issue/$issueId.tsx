@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import { z } from "zod";
 import { Adf } from "#/components/adf/adf";
 import { Checklist } from "#/components/checklist";
+import { ErrorState } from "#/components/error-state";
 import { IssueSidebar } from "#/components/issue-sidebar";
 import {
   Breadcrumb,
@@ -28,6 +29,10 @@ const searchSchema = z.object({
   tab: z.enum(["description", "checklist"]).optional().catch(undefined),
 });
 
+// Jira answers 404 both for a ticket that doesn't exist and for one the user
+// can't see, and the proxy keeps the status in the message.
+const isNotFound = (error: Error) => /failed: 404\b/.test(error.message);
+
 export const Route = createFileRoute("/issue/$issueId")({
   validateSearch: searchSchema,
   component: RouteComponent,
@@ -37,7 +42,7 @@ function RouteComponent() {
   const { issueId } = Route.useParams();
   const { tab } = Route.useSearch();
   const navigate = Route.useNavigate();
-  const { data: issue } = useQuery(issueOptions(issueId));
+  const { data: issue, error, refetch } = useQuery(issueOptions(issueId));
   const checklistField = useSelector(store, (state) => state.checklistField);
   const checklist =
     issue && checklistField
@@ -165,6 +170,19 @@ function RouteComponent() {
             </div>
           </CardContent>
         </Card>
+      ) : error ? (
+        <div className="my-8 w-full max-w-xl space-y-3">
+          <ErrorState
+            title={
+              isNotFound(error)
+                ? `${issueId} doesn't exist, or you can't see it`
+                : `Couldn't load ${issueId}`
+            }
+            error={isNotFound(error) ? null : error}
+            onRetry={isNotFound(error) ? undefined : () => refetch()}
+          />
+          <Link to="/">Back to the board</Link>
+        </div>
       ) : (
         <Spinner />
       )}
