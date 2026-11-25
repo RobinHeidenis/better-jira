@@ -145,9 +145,11 @@ export const ticketMergeRequestsOptions = (
           summary: subtask.summary,
         })),
       ];
+      // `fetchQuery` reuses a fresh copy but refetches a stale one, where
+      // `ensureQueryData` would hand back any cached copy however old.
       const results = await Promise.all(
         tickets.map((ticket) =>
-          client.ensureQueryData(mergeRequestsOptions(ticket.key, projectIds)),
+          client.fetchQuery(mergeRequestsOptions(ticket.key, projectIds)),
         ),
       );
       // An MR naming both the story and a subtask only shows under the first.
@@ -209,5 +211,16 @@ export const mergeRequestDetailOptions = (projectId: number, iid: number) => {
         approvalsLeft: approvals.approvals_left ?? 0,
       };
     },
+    // A pipeline in progress is worth watching while it's on screen.
+    refetchInterval: (query) =>
+      [
+        "running",
+        "pending",
+        "created",
+        "preparing",
+        "waiting_for_resource",
+      ].includes(query.state.data?.pipeline?.status ?? "")
+        ? 15 * 1000
+        : false,
   });
 };
