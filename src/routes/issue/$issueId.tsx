@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import { z } from "zod";
 import { Adf } from "#/components/adf/adf";
 import { Checklist } from "#/components/checklist";
+import { Comments } from "#/components/comments";
 import { ErrorState } from "#/components/error-state";
 import { IssueSidebar } from "#/components/issue-sidebar";
 import {
@@ -21,12 +22,16 @@ import { Card, CardContent, CardTitle } from "#/components/ui/card";
 import { Link } from "#/components/ui/link";
 import { Spinner } from "#/components/ui/spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "#/components/ui/tabs";
+import { commentsOptions } from "#/lib/api/comments";
 import { issueOptions } from "#/lib/api/issues";
 import { parseChecklist } from "#/lib/checklist";
 import { store } from "#/lib/store";
 
 const searchSchema = z.object({
-  tab: z.enum(["description", "checklist"]).optional().catch(undefined),
+  tab: z
+    .enum(["description", "checklist", "comments"])
+    .optional()
+    .catch(undefined),
 });
 
 // Jira answers 404 both for a ticket that doesn't exist and for one the user
@@ -43,6 +48,11 @@ function RouteComponent() {
   const { tab } = Route.useSearch();
   const navigate = Route.useNavigate();
   const { data: issue, error, refetch } = useQuery(issueOptions(issueId));
+  // Loaded up front so the tab can show its count.
+  const { data: comments } = useQuery({
+    ...commentsOptions(issue?.key ?? ""),
+    enabled: !!issue,
+  });
   const checklistField = useSelector(store, (state) => state.checklistField);
   const checklist =
     issue && checklistField
@@ -132,37 +142,58 @@ function RouteComponent() {
                 <CardTitle className="text-lg">
                   {issue.fields.summary}
                 </CardTitle>
-                {checklist ? (
-                  <Tabs
-                    value={tab ?? "description"}
-                    onValueChange={(value) =>
-                      navigate({
-                        search: {
-                          tab: value === "checklist" ? "checklist" : undefined,
-                        },
-                      })
-                    }
-                    className="mt-4"
-                  >
-                    <TabsList variant="line">
-                      <TabsTrigger value="description">Description</TabsTrigger>
+                <Tabs
+                  value={
+                    tab === "checklist" && !checklist
+                      ? "description"
+                      : (tab ?? "description")
+                  }
+                  onValueChange={(value) =>
+                    navigate({
+                      search: {
+                        tab:
+                          value === "checklist" || value === "comments"
+                            ? value
+                            : undefined,
+                      },
+                    })
+                  }
+                  className="mt-4"
+                >
+                  <TabsList variant="line">
+                    <TabsTrigger value="description">Description</TabsTrigger>
+                    {checklist ? (
                       <TabsTrigger value="checklist">
                         Checklist
                         <span className="bg-muted px-1 tabular-nums text-muted-foreground">
                           {checklist.done}/{checklist.total}
                         </span>
                       </TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="description" className="mt-2 w-full">
-                      {description}
-                    </TabsContent>
+                    ) : null}
+                    <TabsTrigger value="comments">
+                      Comments
+                      {comments?.total ? (
+                        <span className="bg-muted px-1 tabular-nums text-muted-foreground">
+                          {comments.total}
+                        </span>
+                      ) : null}
+                    </TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="description" className="mt-2 w-full">
+                    {description}
+                  </TabsContent>
+                  {checklist ? (
                     <TabsContent value="checklist" className="mt-2">
                       <Checklist checklist={checklist} />
                     </TabsContent>
-                  </Tabs>
-                ) : (
-                  <div className="mt-4 w-full">{description}</div>
-                )}
+                  ) : null}
+                  <TabsContent value="comments" className="mt-2">
+                    <Comments
+                      issueKey={issue.key}
+                      attachments={issue.fields.attachment}
+                    />
+                  </TabsContent>
+                </Tabs>
               </div>
               <div className="self-start border-t pt-6 lg:sticky lg:top-14 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-6 lg:max-h-[calc(100vh-9rem)] lg:overflow-x-hidden lg:overflow-y-auto">
                 <IssueSidebar issue={issue} />

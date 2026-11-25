@@ -66,7 +66,7 @@ There is one file per resource in `src/lib/api/`. Each defines a Zod schema, a f
 
 - `/`: the board. Redirects to setup when the account or board isn't configured.
 - `/setup/account`, `/setup/board`, `/setup/gitlab`: setup wizards built on `src/components/ui/questionnaire.tsx`.
-- `/issue/$issueId`: issue detail, which renders the description from ADF.
+- `/issue/$issueId`: issue detail. Tabs for the description, checklist and comments (`?tab=`), all rendered from ADF, plus a sidebar.
 - `/settings`: edits the same settings as board setup in place and links to the account and GitLab wizards. A new setting goes in both places.
 
 ### ADF (Atlassian Document Format)
