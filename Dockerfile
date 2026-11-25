@@ -1,6 +1,8 @@
 # syntax=docker/dockerfile:1
 
-FROM node:24-alpine AS build
+# The build output is plain JavaScript, so build once on the runner's own CPU
+# instead of once per target platform under emulation.
+FROM --platform=$BUILDPLATFORM node:24-alpine AS build
 WORKDIR /app
 RUN npm install -g pnpm@12.4.2
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
