@@ -100,7 +100,15 @@ export const IssueCard = ({
                   iconUrl={issue.fields.priority.iconUrl}
                 />
               ) : null}
-              <MergeRequestsPopover issueKey={issue.key} />
+              <MergeRequestsPopover
+                issue={{
+                  key: issue.key,
+                  subtasks: (issue.fields.subtasks ?? []).map((subtask) => ({
+                    key: subtask.key,
+                    summary: subtask.fields.summary,
+                  })),
+                }}
+              />
               {storyPoints !== null ? (
                 <Badge className="!px-1 !py-0.5">{storyPoints}</Badge>
               ) : null}

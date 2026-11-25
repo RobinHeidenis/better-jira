@@ -49,6 +49,15 @@ export const jiraBoardIssueSchema = z.object({
       name: z.string(),
       iconUrl: z.string().optional(),
     }),
+    // Only key and summary are used; Jira sends a few more fields per subtask.
+    subtasks: z
+      .array(
+        z.object({
+          key: z.string(),
+          fields: z.object({ summary: z.string() }),
+        }),
+      )
+      .optional(),
     parent: z
       .object({
         id: z.string(),
@@ -107,6 +116,7 @@ const fields = [
   "labels",
   "issuetype",
   "parent",
+  "subtasks",
   "fixVersions",
 ];
 

@@ -111,3 +111,52 @@ export const mergeRequestsOptions = (
     queryFn: () => getMergeRequests(issueKey, projectIds),
   });
 };
+
+export type TicketMergeRequests = {
+  key: string;
+  summary: string | null;
+  mergeRequests: MergeRequest[];
+};
+
+/**
+ * The issue's merge requests followed by its subtasks', one group per ticket.
+ * Each key is its own cached query, so a subtask card reuses what its
+ * parent's popover already loaded.
+ */
+export const ticketMergeRequestsOptions = (
+  issue: { key: string; subtasks: { key: string; summary: string }[] },
+  projectIds: number[],
+) => {
+  return queryOptions({
+    queryKey: [
+      "gitlab-ticket-merge-requests",
+      issue.key,
+      issue.subtasks.map((subtask) => subtask.key),
+      projectIds,
+    ],
+    queryFn: async ({ client }): Promise<TicketMergeRequests[]> => {
+      const tickets = [
+        { key: issue.key, summary: null },
+        ...issue.subtasks.map((subtask) => ({
+          key: subtask.key,
+          summary: subtask.summary,
+        })),
+      ];
+      const results = await Promise.all(
+        tickets.map((ticket) =>
+          client.ensureQueryData(mergeRequestsOptions(ticket.key, projectIds)),
+        ),
+      );
+      // An MR naming both the story and a subtask only shows under the first.
+      const seen = new Set<number>();
+      return tickets.map((ticket, index) => ({
+        ...ticket,
+        mergeRequests: (results[index] ?? []).filter((mergeRequest) => {
+          if (seen.has(mergeRequest.id)) return false;
+          seen.add(mergeRequest.id);
+          return true;
+        }),
+      }));
+    },
+  });
+};

@@ -7,7 +7,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSelector } from "@tanstack/react-store";
 import { cn } from "cn";
 import { useState } from "react";
-import { type MergeRequest, mergeRequestsOptions } from "#/lib/api/gitlab";
+import {
+  type MergeRequest,
+  ticketMergeRequestsOptions,
+} from "#/lib/api/gitlab";
 import { store } from "#/lib/store";
 import { initials } from "#/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
@@ -117,15 +120,20 @@ const MergeRequestRow = ({ mergeRequest }: { mergeRequest: MergeRequest }) => {
   );
 };
 
+type PopoverIssue = {
+  key: string;
+  subtasks: { key: string; summary: string }[];
+};
+
 const MergeRequestList = ({
-  issueKey,
+  issue,
   projectIds,
 }: {
-  issueKey: string;
+  issue: PopoverIssue;
   projectIds: number[];
 }) => {
   const { data, isPending, error } = useQuery(
-    mergeRequestsOptions(issueKey, projectIds),
+    ticketMergeRequestsOptions(issue, projectIds),
   );
 
   if (isPending) {
@@ -143,23 +151,47 @@ const MergeRequestList = ({
       </p>
     );
   }
-  if (!data.length) {
+
+  const groups = data.filter((group) => group.mergeRequests.length);
+  if (!groups.length) {
     return (
       <p className="px-3 py-3 text-muted-foreground">
-        No merge requests mention {issueKey}.
+        No merge requests mention {issue.key}
+        {issue.subtasks.length ? " or its subtasks" : ""}.
       </p>
     );
   }
+
+  // Headings only earn their place once subtasks are in the mix.
+  const showHeadings = groups.some((group) => group.key !== issue.key);
+
   return (
-    <ul className="max-h-80 divide-y divide-border/60 overflow-y-auto">
-      {data.map((mergeRequest) => (
-        <MergeRequestRow key={mergeRequest.id} mergeRequest={mergeRequest} />
+    <div className="max-h-96 overflow-y-auto">
+      {groups.map((group) => (
+        <section key={group.key}>
+          {showHeadings ? (
+            <h3 className="sticky top-0 flex gap-1.5 border-b bg-popover px-3 py-1.5 text-muted-foreground">
+              <span className="shrink-0 font-medium text-foreground">
+                {group.key}
+              </span>
+              <span className="truncate">{group.summary ?? "This ticket"}</span>
+            </h3>
+          ) : null}
+          <ul className="divide-y divide-border/60">
+            {group.mergeRequests.map((mergeRequest) => (
+              <MergeRequestRow
+                key={mergeRequest.id}
+                mergeRequest={mergeRequest}
+              />
+            ))}
+          </ul>
+        </section>
       ))}
-    </ul>
+    </div>
   );
 };
 
-export const MergeRequestsPopover = ({ issueKey }: { issueKey: string }) => {
+export const MergeRequestsPopover = ({ issue }: { issue: PopoverIssue }) => {
   const hasToken = useSelector(store, (state) => !!state.gitlabApiKey);
   const projectIds = useSelector(store, (state) => state.gitlabProjects);
   const queryClient = useQueryClient();
@@ -170,7 +202,7 @@ export const MergeRequestsPopover = ({ issueKey }: { issueKey: string }) => {
   // Most of the wait is GitLab, so start as soon as the pointer or focus
   // lands on the icon rather than on click.
   const prefetch = () =>
-    queryClient.prefetchQuery(mergeRequestsOptions(issueKey, projectIds));
+    queryClient.prefetchQuery(ticketMergeRequestsOptions(issue, projectIds));
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -188,11 +220,14 @@ export const MergeRequestsPopover = ({ issueKey }: { issueKey: string }) => {
       <PopoverContent align="start" className="w-[26rem] gap-0 p-0">
         <p className="border-b px-3 py-2 text-muted-foreground">
           Merge requests ·{" "}
-          <span className="font-medium text-foreground">{issueKey}</span>
+          <span className="font-medium text-foreground">{issue.key}</span>
+          {issue.subtasks.length
+            ? ` and ${issue.subtasks.length} subtask${issue.subtasks.length === 1 ? "" : "s"}`
+            : null}
         </p>
         {/* Mounted only while open, so cards don't query GitLab up front. */}
         {open ? (
-          <MergeRequestList issueKey={issueKey} projectIds={projectIds} />
+          <MergeRequestList issue={issue} projectIds={projectIds} />
         ) : null}
       </PopoverContent>
     </Popover>
