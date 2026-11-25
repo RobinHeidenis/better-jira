@@ -91,7 +91,9 @@ function QuestionnaireChoices({
     <QuestionnairePrimitive.Choices
       data-slot="questionnaire-choices"
       className={cn(
-        "group/questionnaire-choices grid min-w-0 gap-2",
+        // Long lists (projects, fields) scroll inside the card so the question
+        // and the buttons stay on screen.
+        "group/questionnaire-choices grid max-h-[50vh] min-w-0 auto-rows-max gap-2 overflow-y-auto p-px pr-1 *:shrink-0",
         className,
       )}
       {...props}
