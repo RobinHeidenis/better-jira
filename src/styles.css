@@ -184,6 +184,14 @@ body {
 }
 
 @layer base {
+  /* Tailwind v4 borders default to currentColor; shadcn's base keeps them on
+     the theme's border colour instead. */
+  *,
+  ::after,
+  ::before {
+    @apply border-border outline-ring/50;
+  }
+
   button:not(:disabled),
   [role="button"]:not(:disabled) {
     cursor: pointer;
