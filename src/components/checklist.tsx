@@ -12,12 +12,12 @@ import type {
   ChecklistGroup,
   ChecklistItem,
 } from "#/lib/checklist";
-import { Badge } from "./ui/badge";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "./ui/collapsible";
+import { SharedTooltipTrigger } from "./ui/tooltip";
 
 export const ChecklistProgress = ({
   done,
@@ -44,7 +44,7 @@ export const ChecklistProgress = ({
 };
 
 const ItemIcon = ({ state }: { state: ChecklistItem["state"] }) => {
-  const className = "mt-0.5 size-4 shrink-0";
+  const className = "size-4";
   switch (state) {
     case "done":
       return <RiCheckboxFill className={cn(className, "text-emerald-500")} />;
@@ -65,7 +65,15 @@ const ItemIcon = ({ state }: { state: ChecklistItem["state"] }) => {
 
 const Item = ({ item }: { item: ChecklistItem }) => (
   <li className="flex items-start gap-2 py-1">
-    <ItemIcon state={item.state} />
+    {/* The status is only spelled out on hover; the icon carries it. */}
+    <SharedTooltipTrigger
+      content={item.status}
+      aria-label={item.status}
+      className="mt-0.5 flex shrink-0"
+      render={<span />}
+    >
+      <ItemIcon state={item.state} />
+    </SharedTooltipTrigger>
     <div className="min-w-0 flex-1">
       <p
         className={cn(
@@ -74,11 +82,6 @@ const Item = ({ item }: { item: ChecklistItem }) => (
             : "text-foreground",
         )}
       >
-        {item.state === "partial" || item.state === "skipped" ? (
-          <Badge variant="outline" className="mr-2 align-middle">
-            {item.status}
-          </Badge>
-        ) : null}
         {item.text}
       </p>
       {item.note ? (
