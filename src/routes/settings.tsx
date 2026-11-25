@@ -300,8 +300,11 @@ function SettingsPage() {
               )
             ) : (
               <p className="text-muted-foreground">
-                When moving a ticket opens a form, use "Customize form" to pick
-                which fields it asks for and their defaults for that lane.
+                No forms customized yet. Forms are set up while moving a ticket:
+                when a move opens a form, click "Customize form" in it to choose
+                which fields it asks for and their defaults. Every ticket moved
+                to that lane afterwards uses them, and the lane shows up here so
+                you can reset it.
               </p>
             )}
           </Section>
