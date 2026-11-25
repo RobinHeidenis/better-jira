@@ -34,7 +34,7 @@ export const ExpandNode = ({
           </Button>
         }
       />
-      <CollapsibleContent className="pl-7 pb-2">
+      <CollapsibleContent className="pr-4 pb-2 pl-7">
         {node.content?.map((child, index) => (
           <BlockNode key={index} node={child} />
         ))}
