@@ -1,6 +1,5 @@
 import { RiExternalLinkLine } from "@remixicon/react";
 import { useSelector } from "@tanstack/react-store";
-import { cn } from "cn";
 import type { ReactNode } from "react";
 import {
   issueDeveloper,
@@ -20,18 +19,6 @@ type SidebarIssue = JiraBoardIssue & {
     created?: string;
     updated?: string;
   };
-};
-
-/** Jira's three status categories, by the name it sends. */
-const categoryStyle = (category: string | undefined) => {
-  switch (category) {
-    case "Done":
-      return "border-emerald-500/40 text-emerald-500";
-    case "In Progress":
-      return "border-sky-500/40 text-sky-400";
-    default:
-      return "text-muted-foreground";
-  }
 };
 
 const Section = ({
@@ -104,12 +91,7 @@ export const IssueSidebar = ({ issue }: { issue: SidebarIssue }) => {
       <Section title="Details">
         <dl>
           <Field label="Status">
-            <Badge
-              variant="outline"
-              className={categoryStyle(fields.status.statusCategory.name)}
-            >
-              {fields.status.name}
-            </Badge>
+            <Badge variant="outline">{fields.status.name}</Badge>
           </Field>
           <Field label="Type">
             <IconText
@@ -202,13 +184,7 @@ export const IssueSidebar = ({ issue }: { issue: SidebarIssue }) => {
                   {subtask.fields.summary}
                 </Link>
                 {subtask.fields.status ? (
-                  <Badge
-                    variant="outline"
-                    className={cn(
-                      "shrink-0",
-                      categoryStyle(subtask.fields.status.statusCategory.name),
-                    )}
-                  >
+                  <Badge variant="outline" className="shrink-0">
                     {subtask.fields.status.name}
                   </Badge>
                 ) : null}
