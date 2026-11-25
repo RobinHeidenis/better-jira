@@ -4,6 +4,11 @@ export type ChecklistItem = {
   /** The item's line number, stable for as long as the text is unchanged. */
   id: number;
   status: string;
+  /**
+   * `partial` is any status a site added besides open, done and skipped
+   * (like "done by dev"): further along than open, not finished.
+   */
+  state: "open" | "done" | "partial" | "skipped";
   done: boolean;
   text: string;
   note: string | null;
@@ -19,7 +24,17 @@ export type Checklist = {
   title: string | null;
   groups: ChecklistGroup[];
   done: number;
+  /** Items in a partial status, counted per status. */
+  partial: Record<string, number>;
+  /** Every item except skipped ones. */
   total: number;
+};
+
+const stateOf = (status: string): ChecklistItem["state"] => {
+  if (status === "open" || status === "") return "open";
+  if (status === "done" || status === "x") return "done";
+  if (status === "skipped") return "skipped";
+  return "partial";
 };
 
 type AdfNode = { type?: string; text?: string; content?: AdfNode[] };
@@ -96,7 +111,13 @@ export const parseChecklist = (value: unknown): Checklist | null => {
   const result = fieldText.safeParse(value);
   if (!result.success) return null;
 
-  const checklist: Checklist = { title: null, groups: [], done: 0, total: 0 };
+  const checklist: Checklist = {
+    title: null,
+    groups: [],
+    done: 0,
+    partial: {},
+    total: 0,
+  };
   let group: ChecklistGroup | null = null;
   let item: ChecklistItem | null = null;
 
@@ -120,10 +141,12 @@ export const parseChecklist = (value: unknown): Checklist | null => {
     } else {
       const match = ITEM.exec(line);
       const status = (match?.[1] ?? "open").trim().toLowerCase();
+      const state = stateOf(status);
       item = {
         id: lineNumber,
         status,
-        done: status === "done" || status === "x",
+        state,
+        done: state === "done",
         text: (match ? match[2] : line).trim(),
         note: null,
       };
@@ -132,8 +155,11 @@ export const parseChecklist = (value: unknown): Checklist | null => {
         checklist.groups.push(group);
       }
       group.items.push(item);
-      checklist.total += 1;
-      if (item.done) checklist.done += 1;
+      if (state !== "skipped") checklist.total += 1;
+      if (state === "done") checklist.done += 1;
+      if (state === "partial") {
+        checklist.partial[status] = (checklist.partial[status] ?? 0) + 1;
+      }
     }
   }
 

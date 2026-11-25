@@ -3,7 +3,9 @@ import {
   RiArrowRightSLine,
   RiCheckboxBlankLine,
   RiCheckboxFill,
+  RiCheckboxIndeterminateFill,
 } from "@remixicon/react";
+import { cn } from "cn";
 import { useState } from "react";
 import type {
   Checklist as ChecklistData,
@@ -19,34 +21,67 @@ import {
 
 export const ChecklistProgress = ({
   done,
+  partial,
   total,
 }: {
   done: number;
+  partial: number;
   total: number;
-}) => (
-  <div className="h-1 w-full bg-muted">
-    <div
-      className="h-full bg-emerald-500 transition-[width]"
-      style={{ width: `${total ? (done / total) * 100 : 0}%` }}
-    />
-  </div>
-);
+}) => {
+  const percent = (count: number) => `${total ? (count / total) * 100 : 0}%`;
+  return (
+    <div className="flex h-1 w-full bg-muted">
+      <div
+        className="h-full bg-emerald-500 transition-[width]"
+        style={{ width: percent(done) }}
+      />
+      <div
+        className="h-full bg-sky-500 transition-[width]"
+        style={{ width: percent(partial) }}
+      />
+    </div>
+  );
+};
+
+const ItemIcon = ({ state }: { state: ChecklistItem["state"] }) => {
+  const className = "mt-0.5 size-4 shrink-0";
+  switch (state) {
+    case "done":
+      return <RiCheckboxFill className={cn(className, "text-emerald-500")} />;
+    case "partial":
+      return (
+        <RiCheckboxIndeterminateFill
+          className={cn(className, "text-sky-500")}
+        />
+      );
+    default:
+      return (
+        <RiCheckboxBlankLine
+          className={cn(className, "text-muted-foreground")}
+        />
+      );
+  }
+};
 
 const Item = ({ item }: { item: ChecklistItem }) => (
   <li className="flex items-start gap-2 py-1">
-    {item.done ? (
-      <RiCheckboxFill className="mt-0.5 size-4 shrink-0 text-emerald-500" />
-    ) : (
-      <RiCheckboxBlankLine className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-    )}
+    <ItemIcon state={item.state} />
     <div className="min-w-0 flex-1">
       <p
-        className={
-          item.done ? "text-muted-foreground line-through" : "text-foreground"
-        }
+        className={cn(
+          item.state === "done" || item.state === "skipped"
+            ? "text-muted-foreground line-through"
+            : "text-foreground",
+        )}
       >
-        {item.status !== "open" && !item.done ? (
-          <Badge variant="outline" className="mr-2 align-middle">
+        {item.state === "partial" || item.state === "skipped" ? (
+          <Badge
+            variant="outline"
+            className={cn(
+              "mr-2 align-middle no-underline",
+              item.state === "partial" && "border-sky-500/40 text-sky-500",
+            )}
+          >
             {item.status}
           </Badge>
         ) : null}
@@ -63,7 +98,9 @@ const Item = ({ item }: { item: ChecklistItem }) => (
 
 const Group = ({ group }: { group: ChecklistGroup }) => {
   const [open, setOpen] = useState(true);
-  const done = group.items.filter((item) => item.done).length;
+  const done = group.items.filter((item) => item.state === "done").length;
+  const partial = group.items.filter((item) => item.state === "partial").length;
+  const total = group.items.filter((item) => item.state !== "skipped").length;
 
   if (!group.title) {
     return (
@@ -85,7 +122,8 @@ const Group = ({ group }: { group: ChecklistGroup }) => {
         )}
         <span className="flex-1">{group.title}</span>
         <span className="font-normal tabular-nums">
-          {done}/{group.items.length}
+          {partial ? <span className="text-sky-500">+{partial} </span> : null}
+          {done}/{total}
         </span>
       </CollapsibleTrigger>
       <CollapsibleContent>
@@ -103,21 +141,35 @@ const Group = ({ group }: { group: ChecklistGroup }) => {
   );
 };
 
-export const Checklist = ({ checklist }: { checklist: ChecklistData }) => (
-  <div className="space-y-3">
-    <div className="space-y-2">
-      <div className="flex justify-between font-semibold">
-        <span>{checklist.title ?? "Checklist"}</span>
-        <span className="tabular-nums">
-          {checklist.done}/{checklist.total}
-        </span>
+export const Checklist = ({ checklist }: { checklist: ChecklistData }) => {
+  const partial = Object.entries(checklist.partial);
+  const partialTotal = partial.reduce((sum, [, count]) => sum + count, 0);
+  return (
+    <div className="space-y-3">
+      <div className="space-y-2">
+        <div className="flex justify-between gap-4 font-semibold">
+          <span>{checklist.title ?? "Checklist"}</span>
+          <span className="tabular-nums">
+            {checklist.done}/{checklist.total}
+            {partial.map(([status, count]) => (
+              <span key={status} className="font-normal text-sky-500">
+                {" "}
+                · {count} {status}
+              </span>
+            ))}
+          </span>
+        </div>
+        <ChecklistProgress
+          done={checklist.done}
+          partial={partialTotal}
+          total={checklist.total}
+        />
       </div>
-      <ChecklistProgress done={checklist.done} total={checklist.total} />
+      <div className="space-y-1">
+        {checklist.groups.map((group) => (
+          <Group key={group.id} group={group} />
+        ))}
+      </div>
     </div>
-    <div className="space-y-1">
-      {checklist.groups.map((group) => (
-        <Group key={group.id} group={group} />
-      ))}
-    </div>
-  </div>
-);
+  );
+};
