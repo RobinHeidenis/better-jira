@@ -7,7 +7,21 @@ export const boardSearch = createStore<{
   activeIssueId: string | null;
 }>({ query: "", activeIssueId: null });
 
-const searchText = (issue: JiraBoardIssue, developerField: string | null) =>
+// Keyed on the issue object, so a refetch (new objects) rebuilds it.
+const searchTextCache = new WeakMap<JiraBoardIssue, string>();
+
+const searchText = (issue: JiraBoardIssue, developerField: string | null) => {
+  const cached = searchTextCache.get(issue);
+  if (cached !== undefined) return cached;
+  const text = buildSearchText(issue, developerField);
+  searchTextCache.set(issue, text);
+  return text;
+};
+
+const buildSearchText = (
+  issue: JiraBoardIssue,
+  developerField: string | null,
+) =>
   [
     issue.key,
     issue.fields.summary,

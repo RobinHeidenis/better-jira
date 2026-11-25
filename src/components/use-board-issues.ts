@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useSelector } from "@tanstack/react-store";
+import { useDeferredValue } from "react";
 import { currentUserOptions } from "#/lib/api/current-user";
 import {
   boardIssuesOptions,
@@ -27,7 +28,11 @@ export const useBoardIssues = (boardId: number, jql: string) => {
     (state) => state.storyPointsField,
   );
   const reviewColumn = useSelector(store, (state) => state.reviewColumn);
-  const query = useSelector(boardSearch, (state) => state.query);
+  // The input renders with the live query; the board follows at low priority,
+  // so typing never waits on cards mounting and stale renders get dropped.
+  const query = useDeferredValue(
+    useSelector(boardSearch, (state) => state.query),
+  );
   const { data: currentUser } = useQuery({
     ...currentUserOptions(),
     enabled: reviewColumn !== null,
