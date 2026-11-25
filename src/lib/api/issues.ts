@@ -54,7 +54,15 @@ export const jiraBoardIssueSchema = z.object({
       .array(
         z.object({
           key: z.string(),
-          fields: z.object({ summary: z.string() }),
+          fields: z.object({
+            summary: z.string(),
+            status: z
+              .object({
+                name: z.string(),
+                statusCategory: z.object({ name: z.string() }),
+              })
+              .optional(),
+          }),
         }),
       )
       .optional(),
@@ -194,6 +202,8 @@ const jiraIssueSchema = jiraBoardIssueSchema.extend({
         content: z.any(),
       })
       .nullable(),
+    created: z.string().optional(),
+    updated: z.string().optional(),
     // A malformed attachment list shouldn't stop the issue from loading.
     attachment: z.array(attachmentSchema).nullish().catch(null),
   }),

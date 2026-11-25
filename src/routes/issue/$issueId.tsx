@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import { z } from "zod";
 import { Adf } from "#/components/adf/adf";
 import { Checklist } from "#/components/checklist";
+import { IssueSidebar } from "#/components/issue-sidebar";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -121,38 +122,47 @@ function RouteComponent() {
                 <RiCloseLine />
               </Button>
             </div>
-            <CardTitle className="text-lg">{issue.fields.summary}</CardTitle>
-            {checklist ? (
-              <Tabs
-                value={tab ?? "description"}
-                onValueChange={(value) =>
-                  navigate({
-                    search: {
-                      tab: value === "checklist" ? "checklist" : undefined,
-                    },
-                  })
-                }
-                className="mt-4"
-              >
-                <TabsList variant="line">
-                  <TabsTrigger value="description">Description</TabsTrigger>
-                  <TabsTrigger value="checklist">
-                    Checklist
-                    <span className="bg-muted px-1 tabular-nums text-muted-foreground">
-                      {checklist.done}/{checklist.total}
-                    </span>
-                  </TabsTrigger>
-                </TabsList>
-                <TabsContent value="description" className="mt-2 w-full">
-                  {description}
-                </TabsContent>
-                <TabsContent value="checklist" className="mt-2">
-                  <Checklist checklist={checklist} />
-                </TabsContent>
-              </Tabs>
-            ) : (
-              <div className="mt-4 w-full">{description}</div>
-            )}
+            <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_20rem]">
+              <div className="min-w-0">
+                <CardTitle className="text-lg">
+                  {issue.fields.summary}
+                </CardTitle>
+                {checklist ? (
+                  <Tabs
+                    value={tab ?? "description"}
+                    onValueChange={(value) =>
+                      navigate({
+                        search: {
+                          tab: value === "checklist" ? "checklist" : undefined,
+                        },
+                      })
+                    }
+                    className="mt-4"
+                  >
+                    <TabsList variant="line">
+                      <TabsTrigger value="description">Description</TabsTrigger>
+                      <TabsTrigger value="checklist">
+                        Checklist
+                        <span className="bg-muted px-1 tabular-nums text-muted-foreground">
+                          {checklist.done}/{checklist.total}
+                        </span>
+                      </TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="description" className="mt-2 w-full">
+                      {description}
+                    </TabsContent>
+                    <TabsContent value="checklist" className="mt-2">
+                      <Checklist checklist={checklist} />
+                    </TabsContent>
+                  </Tabs>
+                ) : (
+                  <div className="mt-4 w-full">{description}</div>
+                )}
+              </div>
+              <div className="self-start lg:sticky lg:top-14 lg:max-h-[calc(100vh-9rem)] lg:overflow-y-auto">
+                <IssueSidebar issue={issue} />
+              </div>
+            </div>
           </CardContent>
         </Card>
       ) : (

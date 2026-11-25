@@ -12,7 +12,7 @@ import {
   ticketMergeRequestsOptions,
 } from "#/lib/api/gitlab";
 import { store } from "#/lib/store";
-import { initials } from "#/lib/utils";
+import { initials, timeAgo } from "#/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Skeleton } from "./ui/skeleton";
@@ -39,26 +39,6 @@ const STATE = {
     className: "text-muted-foreground",
   },
 } satisfies Record<MergeRequest["state"], unknown>;
-
-const relativeTime = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
-const UNITS = [
-  ["year", 365 * 24 * 3600],
-  ["month", 30 * 24 * 3600],
-  ["week", 7 * 24 * 3600],
-  ["day", 24 * 3600],
-  ["hour", 3600],
-  ["minute", 60],
-] as const;
-
-const timeAgo = (iso: string) => {
-  const seconds = (Date.parse(iso) - Date.now()) / 1000;
-  for (const [unit, size] of UNITS) {
-    if (Math.abs(seconds) >= size) {
-      return relativeTime.format(Math.round(seconds / size), unit);
-    }
-  }
-  return "just now";
-};
 
 /** `group/sub/hooray-frontend!3001` → `hooray-frontend`, `!3001`. */
 const shortReference = (full: string) => {
@@ -120,12 +100,12 @@ const MergeRequestRow = ({ mergeRequest }: { mergeRequest: MergeRequest }) => {
   );
 };
 
-type PopoverIssue = {
+export type PopoverIssue = {
   key: string;
   subtasks: { key: string; summary: string }[];
 };
 
-const MergeRequestList = ({
+export const MergeRequestList = ({
   issue,
   projectIds,
 }: {
@@ -166,11 +146,11 @@ const MergeRequestList = ({
   const showHeadings = groups.some((group) => group.key !== issue.key);
 
   return (
-    <div className="max-h-96 overflow-y-auto">
+    <div className="max-h-96 overflow-y-auto bg-inherit">
       {groups.map((group) => (
-        <section key={group.key}>
+        <section key={group.key} className="bg-inherit">
           {showHeadings ? (
-            <h3 className="sticky top-0 flex gap-1.5 border-b bg-popover px-3 py-1.5 text-muted-foreground">
+            <h3 className="sticky top-0 flex gap-1.5 border-b bg-inherit px-3 py-1.5 text-muted-foreground">
               <span className="shrink-0 font-medium text-foreground">
                 {group.key}
               </span>
