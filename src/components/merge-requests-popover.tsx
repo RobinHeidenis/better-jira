@@ -77,8 +77,6 @@ const MergeRequestRow = ({ mergeRequest }: { mergeRequest: MergeRequest }) => {
               <span className="text-muted-foreground/70">{iid}</span>
             </span>
             <span aria-hidden="true">·</span>
-            <span>{isDraft ? "Draft" : state.label}</span>
-            <span aria-hidden="true">·</span>
             <span>{timeAgo(mergeRequest.updated_at)}</span>
           </span>
         </span>
@@ -150,7 +148,7 @@ export const MergeRequestList = ({
       {groups.map((group) => (
         <section key={group.key} className="bg-inherit">
           {showHeadings ? (
-            <h3 className="sticky top-0 z-10 flex gap-1.5 border-b bg-inherit px-3 py-1.5 text-muted-foreground">
+            <h3 className="sticky top-0 z-10 flex gap-1.5 border-border border-b bg-inherit px-3 py-1.5 text-muted-foreground">
               <span className="shrink-0 font-medium text-foreground">
                 {group.key}
               </span>
@@ -195,10 +193,10 @@ export const MergeRequestsPopover = ({ issue }: { issue: PopoverIssue }) => {
           open && "text-foreground",
         )}
       >
-        <RiGitMergeLine className="size-4" />
+        <RiGitPullRequestLine className="size-4" />
       </PopoverTrigger>
       <PopoverContent align="start" className="w-[26rem] gap-0 p-0">
-        <p className="border-b px-3 py-2 text-muted-foreground">
+        <p className="border-border border-b px-3 py-2 text-muted-foreground">
           Merge requests ·{" "}
           <span className="font-medium text-foreground">{issue.key}</span>
           {issue.subtasks.length
