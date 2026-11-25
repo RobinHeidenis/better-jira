@@ -119,3 +119,69 @@ export const addComment = async (issueKey: string, text: string) => {
     },
   );
 };
+
+type AdfNode = {
+  type?: string;
+  text?: string;
+  marks?: { type?: string; attrs?: { href?: string } }[];
+  content?: AdfNode[];
+};
+
+/**
+ * The comment as editable plain text, or null when it holds formatting that
+ * plain text can't carry back (bold, code, mentions, lists, images…), so an
+ * edit here would quietly strip it.
+ */
+export const adfToPlainText = (content: unknown): string | null => {
+  if (!Array.isArray(content)) return null;
+  const paragraphs: string[] = [];
+  for (const block of content as AdfNode[]) {
+    if (block.type !== "paragraph") return null;
+    let text = "";
+    for (const inline of block.content ?? []) {
+      if (inline.type === "hardBreak") {
+        text += "\n";
+      } else if (inline.type === "text") {
+        const marks = inline.marks ?? [];
+        // A link only survives if its text is the URL itself.
+        const plainLink =
+          marks.length === 1 &&
+          marks[0]?.type === "link" &&
+          marks[0].attrs?.href === inline.text;
+        if (marks.length && !plainLink) return null;
+        text += inline.text ?? "";
+      } else {
+        return null;
+      }
+    }
+    paragraphs.push(text);
+  }
+  return paragraphs.join("\n\n");
+};
+
+export const updateComment = async (
+  issueKey: string,
+  commentId: string,
+  text: string,
+) => {
+  return await request(
+    `issue/${issueKey}/comment/${commentId}`,
+    commentSchema,
+    "atlassian",
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ body: plainTextToAdf(text) }),
+    },
+  );
+};
+
+export const deleteComment = async (issueKey: string, commentId: string) => {
+  // Jira answers a delete with 204 and no body.
+  await request(
+    `issue/${issueKey}/comment/${commentId}`,
+    z.unknown(),
+    "atlassian",
+    { method: "DELETE" },
+  );
+};
