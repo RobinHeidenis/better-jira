@@ -11,11 +11,7 @@ import {
 import { Copyable } from "#/components/ui/copyable";
 import { Link } from "#/components/ui/link";
 import { RoleChip } from "#/components/ui/role-chip";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "#/components/ui/tooltip";
+import { SharedTooltipTrigger } from "#/components/ui/tooltip";
 import {
   issueDeveloper,
   issueStoryPoints,
@@ -28,12 +24,9 @@ import { initials } from "#/lib/utils";
 const FieldIcon = ({ name, iconUrl }: { name: string; iconUrl?: string }) => {
   if (!iconUrl) return null;
   return (
-    <Tooltip>
-      <TooltipTrigger>
-        <img src={iconUrl} alt={name} className="size-4" />
-      </TooltipTrigger>
-      <TooltipContent>{name}</TooltipContent>
-    </Tooltip>
+    <SharedTooltipTrigger content={name}>
+      <img src={iconUrl} alt={name} className="size-4" />
+    </SharedTooltipTrigger>
   );
 };
 
@@ -114,29 +107,23 @@ export const IssueCard = ({
 
           <div className="flex flex-col items-center gap-2">
             {developer ? (
-              <Tooltip>
-                <TooltipTrigger>
-                  <RoleChip
-                    name={developer.displayName}
-                    initials={initials(developer.displayName)}
-                    kind="developer"
-                    src={developer.avatarUrls["48x48"] ?? ""}
-                  />
-                </TooltipTrigger>
-                <TooltipContent>{developer.displayName}</TooltipContent>
-              </Tooltip>
-            ) : null}
-            <Tooltip>
-              <TooltipTrigger>
+              <SharedTooltipTrigger content={developer.displayName}>
                 <RoleChip
-                  name={assigneeName}
-                  initials={initials(assigneeName)}
-                  kind="assignee"
-                  src={issue.fields.assignee?.avatarUrls["48x48"] ?? ""}
+                  name={developer.displayName}
+                  initials={initials(developer.displayName)}
+                  kind="developer"
+                  src={developer.avatarUrls["48x48"] ?? ""}
                 />
-              </TooltipTrigger>
-              <TooltipContent>{assigneeName}</TooltipContent>
-            </Tooltip>
+              </SharedTooltipTrigger>
+            ) : null}
+            <SharedTooltipTrigger content={assigneeName}>
+              <RoleChip
+                name={assigneeName}
+                initials={initials(assigneeName)}
+                kind="assignee"
+                src={issue.fields.assignee?.avatarUrls["48x48"] ?? ""}
+              />
+            </SharedTooltipTrigger>
           </div>
         </div>
       </CardContent>

@@ -1,7 +1,7 @@
 import { CheckIcon, type LucideIcon } from "lucide-react";
 import { useState } from "react";
 import { cn } from "#/lib/utils.ts";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
+import { SharedTooltipTrigger } from "./tooltip";
 
 export const Copyable = ({
   value,
@@ -25,18 +25,18 @@ export const Copyable = ({
   };
 
   return (
-    <Tooltip>
+    <>
       {/* Radix renders a bare <button>, which defaults to type="submit" and
           would post any form this ends up inside. */}
-      <TooltipTrigger
+      <SharedTooltipTrigger
+        content={tooltip}
         aria-label={tooltip}
         className={cn("cursor-pointer", className)}
         onClick={copy}
         type="button"
       >
         {isCopied ? <CheckIcon size={size} /> : <Icon size={size} />}
-      </TooltipTrigger>
-      <TooltipContent>{tooltip}</TooltipContent>
-    </Tooltip>
+      </SharedTooltipTrigger>
+    </>
   );
 };

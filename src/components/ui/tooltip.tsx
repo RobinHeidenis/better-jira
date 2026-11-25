@@ -1,5 +1,6 @@
 import { Tooltip as TooltipPrimitive } from "@base-ui/react/tooltip";
 import { cn } from "cn";
+import type * as React from "react";
 
 function TooltipProvider({
   delay = 0,
@@ -60,4 +61,45 @@ function TooltipContent({
   );
 }
 
-export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider };
+export {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+  SharedTooltip,
+  SharedTooltipTrigger,
+};
+
+const sharedTooltip = TooltipPrimitive.createHandle<React.ReactNode>();
+
+/**
+ * One tooltip for the whole page, mounted once in the root. Triggers pass
+ * their text as `payload`, which keeps lists like the board from mounting a
+ * tooltip per element.
+ */
+function SharedTooltip() {
+  return (
+    <TooltipPrimitive.Root handle={sharedTooltip}>
+      {({ payload }) => <TooltipContent>{payload}</TooltipContent>}
+    </TooltipPrimitive.Root>
+  );
+}
+
+function SharedTooltipTrigger({
+  content,
+  ...props
+}: Omit<
+  TooltipPrimitive.Trigger.Props<React.ReactNode>,
+  "handle" | "payload"
+> & {
+  content: React.ReactNode;
+}) {
+  return (
+    <TooltipPrimitive.Trigger
+      data-slot="tooltip-trigger"
+      handle={sharedTooltip}
+      payload={content}
+      {...props}
+    />
+  );
+}
