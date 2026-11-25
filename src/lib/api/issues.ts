@@ -193,6 +193,9 @@ export const boardIssuesOptions = (
   return queryOptions({
     queryKey: ["boards", boardId, "issues", customFields],
     queryFn: (context) => getBoardIssues(boardId, jql, customFields, context),
+    // Keeps an open board current. Query skips it while the tab is hidden and
+    // refetches on focus instead.
+    refetchInterval: 2 * 60 * 1000,
   });
 };
 
