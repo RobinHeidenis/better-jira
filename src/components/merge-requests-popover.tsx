@@ -1,5 +1,6 @@
 import {
   RiCheckboxCircleFill,
+  RiCheckLine,
   RiCloseCircleFill,
   RiErrorWarningFill,
   RiGitClosePullRequestLine,
@@ -7,7 +8,6 @@ import {
   RiGitPullRequestLine,
   RiIndeterminateCircleLine,
   RiLoader4Line,
-  RiThumbUpLine,
 } from "@remixicon/react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSelector } from "@tanstack/react-store";
@@ -123,7 +123,7 @@ const MergeRequestChecks = ({
           render={<span />}
           className="flex items-center gap-0.5"
         >
-          <RiThumbUpLine className="size-3.5" />
+          <RiCheckLine className="size-3.5" />
           {data.approvedBy.length}
         </SharedTooltipTrigger>
       ) : null}
