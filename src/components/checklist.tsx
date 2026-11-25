@@ -34,7 +34,6 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { SharedTooltipTrigger } from "./ui/tooltip";
 
 export const ChecklistProgress = ({
   done,
@@ -94,27 +93,24 @@ const Item = ({ item }: { item: ChecklistItem }) => {
 
   return (
     <li className="group/item flex items-start gap-2 py-1">
-      {/* The status is only spelled out on hover; the icon carries it. */}
-      <SharedTooltipTrigger
-        content={item.status}
-        aria-label={editing ? `${item.status}, mark ${next}` : item.status}
-        className={cn(
-          "mt-0.5 flex shrink-0",
-          editing && "cursor-pointer hover:opacity-80",
-        )}
-        render={
-          editing ? (
-            <button
-              type="button"
-              onClick={() => editing.setStatus(item, next)}
-            />
-          ) : (
-            <span />
-          )
-        }
-      >
-        <ItemIcon state={item.state} />
-      </SharedTooltipTrigger>
+      {editing ? (
+        <button
+          type="button"
+          aria-label={`${item.status}, mark ${next}`}
+          onClick={() => editing.setStatus(item, next)}
+          className="mt-0.5 flex shrink-0 cursor-pointer hover:opacity-80"
+        >
+          <ItemIcon state={item.state} />
+        </button>
+      ) : (
+        <span
+          role="img"
+          aria-label={item.status}
+          className="mt-0.5 flex shrink-0"
+        >
+          <ItemIcon state={item.state} />
+        </span>
+      )}
       <div className="min-w-0 flex-1">
         <p
           className={cn(

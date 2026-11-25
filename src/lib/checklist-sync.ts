@@ -16,6 +16,8 @@ export type ChecklistChange = {
   original: string;
   status: string;
   written?: boolean;
+  /** Writes of the current status, so one Jira keeps undoing can give up. */
+  writes?: number;
 };
 
 type State = { changes: ChecklistChange[]; error: string | null };
@@ -32,7 +34,7 @@ type Sync = {
 
 const GATHER_MS = 800;
 const SETTLE_MS = 5000;
-const MAX_WRITES = 4;
+const MAX_WRITES = 3;
 
 const EMPTY: State = { changes: [], error: null };
 const syncs = new Map<string, Sync>();
@@ -55,7 +57,7 @@ const run = async (issueKey: string, sync: Sync) => {
   let checked = new Map<ChecklistChange, string>();
 
   try {
-    for (let writes = 0; ; writes++) {
+    for (;;) {
       const text = await getChecklistText(issueKey, sync.fieldId);
       let next = text;
       checked = new Map(
@@ -78,17 +80,22 @@ const run = async (issueKey: string, sync: Sync) => {
           );
           continue;
         }
+        if ((change.writes ?? 0) >= MAX_WRITES) {
+          errors.push(
+            `Jira kept undoing the change to "${change.ref.text}". Try again in a moment.`,
+          );
+          continue;
+        }
         next = result.text;
         toWrite.push(change);
       }
 
       if (!toWrite.length) break;
-      if (writes === MAX_WRITES) {
-        errors.push("Jira kept undoing the change. Try again in a moment.");
-        break;
-      }
       await putChecklistText(issueKey, sync.fieldId, next);
-      for (const change of toWrite) change.written = true;
+      for (const change of toWrite) {
+        change.written = true;
+        change.writes = (change.writes ?? 0) + 1;
+      }
       await sleep(SETTLE_MS);
     }
   } catch (error) {
@@ -139,7 +146,10 @@ export const queueChecklistChange = (
   const existing = sync.state.changes.find((other) =>
     sameItem(other.ref, change.ref),
   );
-  if (existing) existing.status = change.status;
+  if (existing) {
+    existing.status = change.status;
+    existing.writes = 0;
+  }
   update(sync, {
     changes: existing
       ? [...sync.state.changes]
