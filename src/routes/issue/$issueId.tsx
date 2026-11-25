@@ -122,7 +122,7 @@ function RouteComponent() {
                 <RiCloseLine />
               </Button>
             </div>
-            <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_20rem]">
+            <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_calc(20rem+1.5rem+1px)]">
               <div className="min-w-0">
                 <CardTitle className="text-lg">
                   {issue.fields.summary}
