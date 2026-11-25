@@ -1,7 +1,10 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSelector } from "@tanstack/react-store";
 import { cn } from "cn";
 import type { ReactElement } from "react";
-import { transitionsOptions } from "#/lib/api/transitions";
+import { boardConfigurationOptions } from "#/lib/api/boards";
+import { type Transition, transitionsOptions } from "#/lib/api/transitions";
+import { store } from "#/lib/store";
 import { startTransition, type TransitionTarget } from "#/lib/transition";
 import { useStatusTone } from "./related-issues";
 import {
@@ -13,6 +16,30 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 
+const CATEGORY_ORDER = ["To Do", "In Progress", "Done"];
+
+/**
+ * Orders statuses the way the board shows them, left to right. Statuses
+ * the board has no column for follow, by category.
+ */
+const useLaneOrder = () => {
+  const boardId = useSelector(store, (state) => state.boardId);
+  // Hidden columns still have a place in the workflow's order.
+  const { data: board } = useQuery(boardConfigurationOptions(boardId, true));
+  const positions = new Map<string, number>();
+  for (const column of board?.columnConfig.columns ?? []) {
+    for (const status of column.statuses) {
+      if (!positions.has(status.id)) positions.set(status.id, positions.size);
+    }
+  }
+  return (status: Transition["to"]) => {
+    const position = positions.get(status.id);
+    if (position !== undefined) return position;
+    const category = CATEGORY_ORDER.indexOf(status.statusCategory?.name ?? "");
+    return 1000 + (category === -1 ? CATEGORY_ORDER.length : category);
+  };
+};
+
 const TransitionItems = ({
   issue,
   statusId,
@@ -22,6 +49,7 @@ const TransitionItems = ({
 }) => {
   const queryClient = useQueryClient();
   const tone = useStatusTone();
+  const laneOrder = useLaneOrder();
   const { data, isPending, error } = useQuery(transitionsOptions(issue.key));
 
   if (isPending) {
@@ -35,9 +63,15 @@ const TransitionItems = ({
     );
   }
 
-  const transitions = data.filter(
-    (transition) => transition.to.id !== statusId,
-  );
+  const transitions = data
+    .filter((transition) => transition.to.id !== statusId)
+    .map((transition, index) => ({ transition, index }))
+    .sort(
+      (a, b) =>
+        laneOrder(a.transition.to) - laneOrder(b.transition.to) ||
+        a.index - b.index,
+    )
+    .map(({ transition }) => transition);
   if (!transitions.length) {
     return <DropdownMenuLabel>No other statuses</DropdownMenuLabel>;
   }
