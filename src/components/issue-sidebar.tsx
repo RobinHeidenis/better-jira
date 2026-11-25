@@ -196,7 +196,7 @@ export const IssueSidebar = ({ issue }: { issue: SidebarIssue }) => {
 
       {hasGitlab && projectIds ? (
         <Section title="Merge requests">
-          <div className="-mx-3 bg-card">
+          <div className="bg-card">
             <MergeRequestList
               issue={{
                 key: issue.key,

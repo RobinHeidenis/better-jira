@@ -159,7 +159,7 @@ function RouteComponent() {
                   <div className="mt-4 w-full">{description}</div>
                 )}
               </div>
-              <div className="self-start lg:sticky lg:top-14 lg:max-h-[calc(100vh-9rem)] lg:overflow-y-auto">
+              <div className="self-start lg:sticky lg:top-14 lg:max-h-[calc(100vh-9rem)] lg:overflow-x-hidden lg:overflow-y-auto">
                 <IssueSidebar issue={issue} />
               </div>
             </div>
