@@ -1,6 +1,7 @@
 import { queryOptions } from "@tanstack/react-query";
 import { z } from "zod";
 import { request } from "./api";
+import { refetchOnReturn } from "./refetch";
 
 const commentSchema = z.object({
   id: z.string(),
@@ -54,6 +55,7 @@ export const commentsOptions = (issueKey: string) => {
   return queryOptions({
     queryKey: ["issue", issueKey, "comments"],
     queryFn: () => getComments(issueKey),
+    refetchOnWindowFocus: refetchOnReturn,
   });
 };
 

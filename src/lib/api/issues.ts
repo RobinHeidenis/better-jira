@@ -3,6 +3,7 @@ import { queryOptions } from "@tanstack/react-query";
 import { z } from "zod";
 import { request } from "./api";
 import { attachmentSchema } from "./attachments";
+import { refetchOnReturn } from "./refetch";
 
 const jiraUserSchema = z.object({
   accountId: z.string(),
@@ -196,6 +197,7 @@ export const boardIssuesOptions = (
     // Keeps an open board current. Query skips it while the tab is hidden and
     // refetches on focus instead.
     refetchInterval: 2 * 60 * 1000,
+    refetchOnWindowFocus: refetchOnReturn,
   });
 };
 
@@ -244,5 +246,6 @@ export const issueOptions = (issueId: string) => {
   return queryOptions({
     queryKey: ["issue", issueId],
     queryFn: () => getIssue(issueId),
+    refetchOnWindowFocus: refetchOnReturn,
   });
 };
