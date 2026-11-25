@@ -265,7 +265,7 @@ export const BoardSetupForm = ({
           <QuestionnaireDescription>
             {question.description}
           </QuestionnaireDescription>
-          <QuestionnaireChoices>
+          <QuestionnaireChoices className="max-h-[50vh] overflow-y-auto p-px pr-1">
             {question.pending ? <Spinner /> : null}
             {question.failure ? (
               <p className="text-xs text-destructive">{question.failure}</p>
