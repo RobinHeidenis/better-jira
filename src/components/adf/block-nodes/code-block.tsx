@@ -25,7 +25,7 @@ const Code = ({
   // Plain lines until the language loads, and for languages it doesn't know.
   const lines = useHighlightedCode(text, language);
   return (
-    <div className="w-full max-w-md">
+    <div className="w-full">
       <CodeBlock size="sm" className="w-full">
         <CodeBlockActions>
           <CodeBlockCopyButton value={text} />
