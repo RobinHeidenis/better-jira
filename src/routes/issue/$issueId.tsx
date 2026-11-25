@@ -1,6 +1,8 @@
+import { RiCloseLine } from "@remixicon/react";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useSelector } from "@tanstack/react-store";
+import { useEffect } from "react";
 import { z } from "zod";
 import { Adf } from "#/components/adf/adf";
 import { Checklist } from "#/components/checklist";
@@ -12,6 +14,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "#/components/ui/breadcrumb";
+import { Button } from "#/components/ui/button";
 import { Card, CardContent, CardTitle } from "#/components/ui/card";
 import { Link } from "#/components/ui/link";
 import { Spinner } from "#/components/ui/spinner";
@@ -40,6 +43,23 @@ function RouteComponent() {
       ? parseChecklist(issue.fields[checklistField])
       : null;
 
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || event.defaultPrevented) return;
+      // Esc belongs to an open dialog (the image viewer) or a text field first.
+      if (document.querySelector("[role=dialog]")) return;
+      if (
+        event.target instanceof HTMLElement &&
+        event.target.closest("input, textarea, [contenteditable=true]")
+      ) {
+        return;
+      }
+      navigate({ to: "/" });
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [navigate]);
+
   const description = issue?.fields.description ? (
     <Adf
       content={issue.fields.description.content}
@@ -54,41 +74,53 @@ function RouteComponent() {
       {issue ? (
         <Card className="w-7xl my-8 overflow-auto pt-0">
           <CardContent>
-            <Breadcrumb className="sticky top-0 z-10 bg-card pt-[var(--card-spacing)] pb-2">
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink
-                    render={
-                      <Link to="/" underlined={false}>
-                        Board
-                      </Link>
-                    }
-                  />
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                {issue.fields.parent?.key ? (
-                  <>
-                    <BreadcrumbItem>
-                      <BreadcrumbLink
-                        render={
-                          <Link
-                            to="/issue/$issueId"
-                            params={{ issueId: issue.fields.parent.id }}
-                            underlined={false}
-                          >
-                            {issue.fields.parent.key}
-                          </Link>
-                        }
-                      />
-                    </BreadcrumbItem>
-                    <BreadcrumbSeparator />
-                  </>
-                ) : null}
-                <BreadcrumbItem>
-                  <BreadcrumbPage>{issue.key}</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
+            <div className="sticky top-0 z-10 flex items-center justify-between gap-2 bg-card pt-[var(--card-spacing)] pb-2">
+              <Breadcrumb>
+                <BreadcrumbList>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink
+                      render={
+                        <Link to="/" underlined={false}>
+                          Board
+                        </Link>
+                      }
+                    />
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator />
+                  {issue.fields.parent?.key ? (
+                    <>
+                      <BreadcrumbItem>
+                        <BreadcrumbLink
+                          render={
+                            <Link
+                              to="/issue/$issueId"
+                              params={{ issueId: issue.fields.parent.id }}
+                              underlined={false}
+                            >
+                              {issue.fields.parent.key}
+                            </Link>
+                          }
+                        />
+                      </BreadcrumbItem>
+                      <BreadcrumbSeparator />
+                    </>
+                  ) : null}
+                  <BreadcrumbItem>
+                    <BreadcrumbPage>{issue.key}</BreadcrumbPage>
+                  </BreadcrumbItem>
+                </BreadcrumbList>
+              </Breadcrumb>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label="Back to the board (Esc)"
+                title="Back to the board (Esc)"
+                nativeButton={false}
+                render={<Link to="/" underlined={false} />}
+              >
+                <RiCloseLine />
+              </Button>
+            </div>
             <CardTitle className="text-lg">{issue.fields.summary}</CardTitle>
             {checklist ? (
               <Tabs
