@@ -1,10 +1,10 @@
 import {
-  CircleCheckIcon,
-  CircleXIcon,
-  FileTextIcon,
-  InfoIcon,
-  TriangleAlertIcon,
-} from "lucide-react";
+  RiAlertLine,
+  RiCheckboxCircleLine,
+  RiCloseCircleLine,
+  RiFileTextLine,
+  RiInformationLine,
+} from "@remixicon/react";
 import type z from "zod";
 import { Card, CardContent } from "#/components/ui/card";
 import type { panelNode } from "#/lib/adf/block-nodes";
@@ -19,11 +19,11 @@ const colorMap = {
 } as const;
 
 const iconMap = {
-  info: InfoIcon,
-  note: FileTextIcon,
-  error: CircleXIcon,
-  success: CircleCheckIcon,
-  warning: TriangleAlertIcon,
+  info: RiInformationLine,
+  note: RiFileTextLine,
+  error: RiCloseCircleLine,
+  success: RiCheckboxCircleLine,
+  warning: RiAlertLine,
 } as const;
 
 const iconColorMap = {

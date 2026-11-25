@@ -1,5 +1,5 @@
+import { RiCornerLeftUpLine, RiHashtag, RiLinkM } from "@remixicon/react";
 import { useSelector } from "@tanstack/react-store";
-import { CornerLeftUpIcon, HashIcon, LinkIcon } from "lucide-react";
 import { MergeRequestsPopover } from "#/components/merge-requests-popover";
 import { Badge } from "#/components/ui/badge";
 import {
@@ -54,7 +54,7 @@ export const IssueCard = ({
               href={`/issue/${issue.fields.parent?.key}`}
               className="flex items-start gap-2"
             >
-              <CornerLeftUpIcon size={13} className="mt-[0.2em] shrink-0" />
+              <RiCornerLeftUpLine size={13} className="mt-[0.2em] shrink-0" />
               <span
                 className="line-clamp-2"
                 title={issue.fields.parent.fields.summary}
@@ -76,14 +76,14 @@ export const IssueCard = ({
             <div className="group flex items-center gap-1">
               <Copyable
                 value={issue.key}
-                icon={HashIcon}
+                icon={RiHashtag}
                 tooltip="Copy ticket number"
               />
               {issue.key}
               {baseUrl && (
                 <Copyable
                   value={jiraIssueUrl(baseUrl, issue.key)}
-                  icon={LinkIcon}
+                  icon={RiLinkM}
                   tooltip="Copy link to ticket"
                   className="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
                 />

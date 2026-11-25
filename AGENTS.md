@@ -33,7 +33,7 @@ Commit finished work straight to `main` using conventional commits (`feat:`, `fi
 ## Conventions
 
 - **Imports:** use the `#/` alias (`#/components/ui/button`), never `@/`.
-- **Icons:** use `@remixicon/react`, the shadcn icon library set in `components.json`. Don't add more `lucide-react` usages.
+- **Icons:** use `@remixicon/react`, the shadcn icon library set in `components.json`.
 - **UI primitives:** these live in `src/components/ui/` and come from shadcn (`pnpm dlx shadcn@latest add <name>`). Build on them before writing new primitives.
 - **Comments:** keep them minimal. Only explain a non-obvious *why*, such as an API quirk, a security reason or a surprising constraint. Don't narrate what the code does.
 - **No `console.log` or `console.dir`** left in committed code.
@@ -79,10 +79,6 @@ Zod node schemas are in `src/lib/adf/` (`block-nodes.ts`, `inline-nodes.ts`). `s
 ### Custom fields
 
 Custom field ids differ per Jira site. The developer, story points and checklist fields are picked during board setup and stored as `developerField`, `storyPointsField` and `checklistField`. The checklist is Issue Checklist Pro's text field, parsed in `src/lib/checklist.ts`. `src/lib/api/issues.ts` requests them by id and parses them out of the loose `fields` object (`issueDeveloper`, `issueStoryPoints`). When a setting is null, the UI hides that part.
-
-## Known debt (don't copy these patterns)
-
-- Some files still use `lucide-react` icons.
 
 <!-- intent-skills:start -->
 ## Skill Loading

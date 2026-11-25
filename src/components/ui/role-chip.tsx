@@ -1,4 +1,4 @@
-import { Code2Icon, UserCheckIcon } from "lucide-react";
+import { RiCodeSSlashLine, RiUserFollowLine } from "@remixicon/react";
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Badge } from "#/components/ui/badge";
 
@@ -19,9 +19,9 @@ export function RoleChip({
       className="h-6 gap-1.5 rounded-none py-0 pl-1.5 pr-0.5 text-muted-foreground [&>svg]:size-3.5"
     >
       {kind === "developer" ? (
-        <Code2Icon aria-hidden="true" />
+        <RiCodeSSlashLine aria-hidden="true" />
       ) : (
-        <UserCheckIcon aria-hidden="true" />
+        <RiUserFollowLine aria-hidden="true" />
       )}
       <Avatar rounded={false} className="size-[18px]">
         <AvatarImage src={src} alt="" />

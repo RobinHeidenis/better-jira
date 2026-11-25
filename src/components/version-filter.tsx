@@ -1,6 +1,6 @@
+import { RiSignpostLine } from "@remixicon/react";
 import { useQuery } from "@tanstack/react-query";
 import { useSelector } from "@tanstack/react-store";
-import { MilestoneIcon } from "lucide-react";
 import { versionOptions } from "#/lib/api/versions.ts";
 import { store } from "#/lib/store.ts";
 import {
@@ -45,7 +45,7 @@ export const VersionFilter = () => {
       defaultValue={savedSelectedVersions}
     >
       <SelectTrigger>
-        <MilestoneIcon />
+        <RiSignpostLine />
         <SelectValue>{renderVersions}</SelectValue>
       </SelectTrigger>
       <SelectContent alignItemWithTrigger={false} className="min-w-64">

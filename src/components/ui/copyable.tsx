@@ -1,4 +1,4 @@
-import { CheckIcon, type LucideIcon } from "lucide-react";
+import { type RemixiconComponentType, RiCheckLine } from "@remixicon/react";
 import { useState } from "react";
 import { cn } from "#/lib/utils.ts";
 import { SharedTooltipTrigger } from "./tooltip";
@@ -11,7 +11,7 @@ export const Copyable = ({
   className,
 }: {
   value: string;
-  icon: LucideIcon;
+  icon: RemixiconComponentType;
   size?: number;
   tooltip?: string;
   className?: string;
@@ -35,7 +35,7 @@ export const Copyable = ({
         onClick={copy}
         type="button"
       >
-        {isCopied ? <CheckIcon size={size} /> : <Icon size={size} />}
+        {isCopied ? <RiCheckLine size={size} /> : <Icon size={size} />}
       </SharedTooltipTrigger>
     </>
   );

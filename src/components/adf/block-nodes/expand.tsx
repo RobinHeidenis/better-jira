@@ -1,4 +1,4 @@
-import { ChevronDownIcon, ChevronRightIcon } from "lucide-react";
+import { RiArrowDownSLine, RiArrowRightSLine } from "@remixicon/react";
 import { useState } from "react";
 import type z from "zod";
 import { Button } from "#/components/ui/button";
@@ -26,9 +26,9 @@ export const ExpandNode = ({
             className="flex items-center justify-start gap-2 w-full text-stone-300 font-bold"
           >
             {open ? (
-              <ChevronDownIcon className="-ml-1" />
+              <RiArrowDownSLine className="-ml-1" />
             ) : (
-              <ChevronRightIcon className="-ml-1" />
+              <RiArrowRightSLine className="-ml-1" />
             )}
             {node.attrs?.title || "Expand content"}
           </Button>

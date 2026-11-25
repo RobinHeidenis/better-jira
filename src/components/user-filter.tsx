@@ -1,6 +1,6 @@
+import { RiUserLine } from "@remixicon/react";
 import { useQuery } from "@tanstack/react-query";
 import { useSelector } from "@tanstack/react-store";
-import { UserIcon } from "lucide-react";
 import { usersOptions } from "#/lib/api/users";
 import { store } from "#/lib/store.ts";
 import { Avatar, AvatarFallback, AvatarGroup, AvatarImage } from "./ui/avatar";
@@ -56,7 +56,7 @@ export const UserFilter = () => {
       <SelectTrigger
         title={onlyMine ? "Turn off Mine to filter by user" : undefined}
       >
-        <UserIcon data-icon="start" />
+        <RiUserLine data-icon="start" />
         <SelectValue>
           {(value: string[]) => <SelectedUsers value={value} />}
         </SelectValue>
