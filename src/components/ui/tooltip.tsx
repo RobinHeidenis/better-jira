@@ -62,12 +62,12 @@ function TooltipContent({
 }
 
 export {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-  TooltipProvider,
   SharedTooltip,
   SharedTooltipTrigger,
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
 };
 
 const sharedTooltip = TooltipPrimitive.createHandle<React.ReactNode>();

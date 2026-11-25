@@ -230,11 +230,11 @@ function CodeBlockFooter({ className, ...props }: React.ComponentProps<"div">) {
 
 export {
   CodeBlock,
-  CodeBlockHeader,
-  CodeBlockTitle,
   CodeBlockActions,
-  CodeBlockCopyButton,
   CodeBlockContent,
-  CodeBlockLine,
+  CodeBlockCopyButton,
   CodeBlockFooter,
+  CodeBlockHeader,
+  CodeBlockLine,
+  CodeBlockTitle,
 };
