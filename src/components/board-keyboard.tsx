@@ -116,6 +116,20 @@ export const BoardKeyboard = ({
           }));
           return;
         }
+        case "a":
+        case "d": {
+          const issue = column === -1 ? null : grid[column]?.[row];
+          if (!issue) return;
+          event.preventDefault();
+          boardSearch.setState((state) => ({
+            ...state,
+            peopleMenu: {
+              issueId: issue.id,
+              role: event.key === "a" ? "assignee" : "developer",
+            },
+          }));
+          return;
+        }
         case "Escape":
           if (activeIssueId) setActive(null);
           return;

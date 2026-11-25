@@ -4,8 +4,10 @@ import {
   RiHashtag,
   RiLinkM,
 } from "@remixicon/react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useSelector } from "@tanstack/react-store";
 import { MergeRequestsPopover } from "#/components/merge-requests-popover";
+import { PeoplePicker, personEdit } from "#/components/people-picker";
 import { TransitionMenu } from "#/components/transition-menu";
 import { Badge } from "#/components/ui/badge";
 import {
@@ -17,14 +19,21 @@ import {
 } from "#/components/ui/card";
 import { Copyable } from "#/components/ui/copyable";
 import { Link } from "#/components/ui/link";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "#/components/ui/popover";
 import { RoleChip } from "#/components/ui/role-chip";
 import { SharedTooltipTrigger } from "#/components/ui/tooltip";
+import { currentUserOptions } from "#/lib/api/current-user";
 import {
   issueDeveloper,
   issueStoryPoints,
   type JiraBoardIssue,
 } from "#/lib/api/issues";
 import { boardSearch } from "#/lib/board-search";
+import { editIssue } from "#/lib/edit-issue";
 import { jiraIssueUrl } from "#/lib/jira-url";
 import { store } from "#/lib/store";
 import { initials } from "#/lib/utils";
@@ -35,6 +44,103 @@ const FieldIcon = ({ name, iconUrl }: { name: string; iconUrl?: string }) => {
     <SharedTooltipTrigger content={name}>
       <img src={iconUrl} alt={name} className="size-4" />
     </SharedTooltipTrigger>
+  );
+};
+
+type CardUser = {
+  accountId: string;
+  displayName: string;
+  avatarUrls: { "48x48"?: string | null };
+} | null;
+
+/** A role chip that opens a people picker to change who holds the role. */
+const PersonChip = ({
+  issue,
+  kind,
+  fieldId,
+  user,
+}: {
+  issue: JiraBoardIssue;
+  kind: "assignee" | "developer";
+  fieldId: string;
+  user: CardUser;
+}) => {
+  const queryClient = useQueryClient();
+  const open = useSelector(
+    boardSearch,
+    (state) =>
+      state.peopleMenu?.issueId === issue.id && state.peopleMenu.role === kind,
+  );
+  const setOpen = (next: boolean) =>
+    boardSearch.setState((state) => ({
+      ...state,
+      peopleMenu: next ? { issueId: issue.id, role: kind } : null,
+    }));
+  const name =
+    user?.displayName ?? (kind === "developer" ? "No developer" : "Unassigned");
+  const label = kind === "developer" ? "Developer" : "Assignee";
+  const shortcut = kind === "developer" ? "d" : "a";
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <SharedTooltipTrigger
+        content={`${label}: ${name} (${shortcut})`}
+        render={<PopoverTrigger />}
+        className={
+          // An empty developer chip only shows on hover, to keep cards calm.
+          kind === "developer" && !user && !open
+            ? "cursor-pointer opacity-0 transition-opacity group-hover/card:opacity-100 focus-visible:opacity-100"
+            : "cursor-pointer"
+        }
+      >
+        <RoleChip
+          name={name}
+          initials={user ? initials(name) : "–"}
+          kind={kind}
+          src={user?.avatarUrls["48x48"] ?? ""}
+        />
+      </SharedTooltipTrigger>
+      <PopoverContent align="end" className="w-64 p-2">
+        {open ? (
+          <PeoplePicker
+            issueKey={issue.key}
+            value={
+              user
+                ? {
+                    kind: "user",
+                    accountId: user.accountId,
+                    displayName: user.displayName,
+                  }
+                : { kind: "unassigned" }
+            }
+            placeholder={`Change ${label.toLowerCase()}`}
+            autoOpen
+            onOpenChange={(next) => !next && setOpen(false)}
+            onChange={async (value) => {
+              setOpen(false);
+              if (!value) return;
+              const me =
+                value.kind === "me"
+                  ? await queryClient.ensureQueryData(currentUserOptions())
+                  : undefined;
+              const edit = personEdit(value, me);
+              if (
+                !edit ||
+                (edit.payload?.accountId ?? null) === (user?.accountId ?? null)
+              ) {
+                return;
+              }
+              void editIssue(
+                queryClient,
+                issue.key,
+                { fields: { [fieldId]: edit.payload } },
+                { [fieldId]: edit.display },
+              );
+            }}
+          />
+        ) : null}
+      </PopoverContent>
+    </Popover>
   );
 };
 
@@ -50,7 +156,6 @@ export const IssueCard = ({
   const baseUrl = useSelector(store, (state) => state.baseUrl);
   const developer = issueDeveloper(issue, developerField);
   const storyPoints = issueStoryPoints(issue, storyPointsField);
-  const assigneeName = issue.fields.assignee?.displayName ?? "Unassigned";
   const statusMenuOpen = useSelector(
     boardSearch,
     (state) => state.statusMenuIssueId === issue.id,
@@ -152,24 +257,20 @@ export const IssueCard = ({
           </div>
 
           <div className="flex flex-col items-center gap-2">
-            {developer ? (
-              <SharedTooltipTrigger content={developer.displayName}>
-                <RoleChip
-                  name={developer.displayName}
-                  initials={initials(developer.displayName)}
-                  kind="developer"
-                  src={developer.avatarUrls["48x48"] ?? ""}
-                />
-              </SharedTooltipTrigger>
-            ) : null}
-            <SharedTooltipTrigger content={assigneeName}>
-              <RoleChip
-                name={assigneeName}
-                initials={initials(assigneeName)}
-                kind="assignee"
-                src={issue.fields.assignee?.avatarUrls["48x48"] ?? ""}
+            {developerField ? (
+              <PersonChip
+                issue={issue}
+                kind="developer"
+                fieldId={developerField}
+                user={developer}
               />
-            </SharedTooltipTrigger>
+            ) : null}
+            <PersonChip
+              issue={issue}
+              kind="assignee"
+              fieldId="assignee"
+              user={issue.fields.assignee}
+            />
           </div>
         </div>
       </CardContent>

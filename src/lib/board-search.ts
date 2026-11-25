@@ -8,7 +8,14 @@ export const boardSearch = createStore<{
   activeIssueId: string | null;
   /** The card whose status menu is open. */
   statusMenuIssueId: string | null;
-}>({ query: "", activeIssueId: null, statusMenuIssueId: null });
+  /** The card and role whose people picker is open. */
+  peopleMenu: { issueId: string; role: "assignee" | "developer" } | null;
+}>({
+  query: "",
+  activeIssueId: null,
+  statusMenuIssueId: null,
+  peopleMenu: null,
+});
 
 // Keyed on the issue object, so a refetch (new objects) rebuilds it.
 const searchTextCache = new WeakMap<JiraBoardIssue, string>();

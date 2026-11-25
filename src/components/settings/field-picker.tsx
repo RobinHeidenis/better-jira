@@ -36,6 +36,8 @@ export const Picker = ({
   onOpenChange?: (open: boolean) => void;
 }) => (
   <Combobox
+    // Enter picks the first match while searching.
+    autoHighlight
     defaultOpen={defaultOpen}
     onOpenChange={
       onOpenChange ? (open: boolean) => onOpenChange(open) : undefined
@@ -56,6 +58,8 @@ export const Picker = ({
       disabled={disabled}
       className={className}
       autoFocus={autoFocus}
+      // Typing replaces the shown choice instead of appending to it.
+      onFocus={(event) => event.currentTarget.select()}
     />
     <ComboboxContent>
       <ComboboxEmpty>No matches</ComboboxEmpty>
