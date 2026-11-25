@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { boardConfigurationOptions, boardJql } from "#/lib/api/boards";
 import { store } from "#/lib/store";
 import { BoardFilters } from "./board-filters";
+import { BoardSearch } from "./board-search";
 import { Column } from "./column";
 
 export const Board = () => {
@@ -14,20 +15,26 @@ export const Board = () => {
   if (boardId === null || !board) return null;
 
   const jql = boardJql(board.filter.id, board.subQuery?.query);
+  const columns = board.columnConfig.columns.map((column) => ({
+    name: column.name,
+    statusIds: column.statuses.map((status) => status.id),
+  }));
 
   return (
     <>
-      <BoardFilters />
+      <BoardFilters
+        search={<BoardSearch boardId={boardId} jql={jql} columns={columns} />}
+      />
       <div
         ref={scrollRef}
         className="relative mt-5 min-h-0 flex-1 overflow-auto"
       >
         <div className="flex min-h-full w-max gap-2">
-          {board.columnConfig.columns.map((column) => (
+          {columns.map((column) => (
             <Column
               boardId={boardId}
               name={column.name}
-              statusIds={column.statuses.map((status) => status.id)}
+              statusIds={column.statusIds}
               jql={jql}
               scrollRef={scrollRef}
               key={column.name}

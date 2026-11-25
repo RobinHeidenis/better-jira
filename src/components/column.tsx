@@ -1,19 +1,13 @@
-import { useQuery } from "@tanstack/react-query";
 import { useSelector } from "@tanstack/react-store";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { type RefObject, useState } from "react";
-import { currentUserOptions } from "#/lib/api/current-user";
-import { boardIssuesOptions, issueDeveloper } from "#/lib/api/issues";
-import { sortForReview } from "#/lib/review-order";
-import { type Settings, store } from "#/lib/store";
+import { cn } from "cn";
+import { type RefObject, useEffect, useRef, useState } from "react";
+import { boardSearch } from "#/lib/board-search";
 import { IssueCard } from "./issue-card";
 import { CardTitle } from "./ui/card";
 import { Separator } from "./ui/separator";
 import { Skeleton } from "./ui/skeleton";
-
-const anyFiltersEnabled = (filters: Settings["filter"]) => {
-  return filters?.users?.length || filters?.versions?.length;
-};
+import { useBoardIssues } from "./use-board-issues";
 
 export const Column = ({
   boardId,
@@ -32,71 +26,14 @@ export const Column = ({
   // The virtualizer hands back the same instance on every render and mutates
   // it, which the React Compiler's memoisation would freeze.
   "use no memo";
-  const filters = useSelector(store, (state) => state.filter);
-  const includeDevTickets = useSelector(
-    store,
-    (state) => state.includeDevTickets,
+  const { isPending, columnIssues, developerField, storyPointsField } =
+    useBoardIssues(boardId, jql);
+  const { issues, total } = columnIssues(name, statusIds);
+  const activeIssueId = useSelector(
+    boardSearch,
+    (state) => state.activeIssueId,
   );
-  const developerField = useSelector(store, (state) => state.developerField);
-  const storyPointsField = useSelector(
-    store,
-    (state) => state.storyPointsField,
-  );
-  const reviewColumn = useSelector(store, (state) => state.reviewColumn);
-  const isReviewColumn = reviewColumn === name;
-  const { data: currentUser } = useQuery({
-    ...currentUserOptions(),
-    enabled: isReviewColumn,
-  });
-  const { data: issuesByStatusId, isPending } = useQuery(
-    boardIssuesOptions(boardId, jql, { developerField, storyPointsField }),
-  );
-
-  const columnIssues = statusIds.flatMap(
-    (statusId) => issuesByStatusId?.[statusId] ?? [],
-  );
-
-  const filteredColumnIssues = anyFiltersEnabled(filters)
-    ? columnIssues.filter((issue) => {
-        if (filters?.users?.length) {
-          const assigneeInFilters = filters.users.includes(
-            issue.fields.assignee?.accountId ?? "",
-          );
-          if (includeDevTickets && developerField) {
-            if (
-              !assigneeInFilters &&
-              !filters.users.includes(
-                issueDeveloper(issue, developerField)?.accountId ?? "",
-              )
-            ) {
-              return false;
-            }
-          } else if (!assigneeInFilters) {
-            return false;
-          }
-        }
-
-        if (
-          filters?.versions?.length &&
-          !issue.fields.fixVersions?.some((version) =>
-            filters.versions?.includes(version.id),
-          )
-        ) {
-          return false;
-        }
-
-        return true;
-      })
-    : columnIssues;
-
-  const visibleIssues =
-    isReviewColumn && currentUser
-      ? sortForReview(
-          filteredColumnIssues,
-          currentUser.accountId,
-          developerField,
-        )
-      : filteredColumnIssues;
+  const columnRef = useRef<HTMLDivElement>(null);
 
   const [listOffset, setListOffset] = useState(0);
   // The scroller is the nearest positioned ancestor, so `offsetTop` is the
@@ -106,21 +43,42 @@ export const Column = ({
   };
 
   const virtualizer = useVirtualizer({
-    count: isPending ? 0 : visibleIssues.length,
+    count: isPending ? 0 : issues.length,
     getScrollElement: () => scrollRef.current,
     estimateSize: () => 160,
     gap: 16,
     overscan: 4,
     scrollMargin: listOffset,
-    getItemKey: (index) => visibleIssues[index]?.id ?? index,
+    getItemKey: (index) => issues[index]?.id ?? index,
   });
 
+  const activeIndex = issues.findIndex((issue) => issue.id === activeIssueId);
+
+  useEffect(() => {
+    if (activeIndex === -1) return;
+    virtualizer.scrollToIndex(activeIndex, { align: "center" });
+
+    const scroller = scrollRef.current;
+    const column = columnRef.current;
+    if (!scroller || !column) return;
+    const left = column.offsetLeft;
+    const right = left + column.offsetWidth;
+    if (left < scroller.scrollLeft) {
+      scroller.scrollTo({ left, behavior: "smooth" });
+    } else if (right > scroller.scrollLeft + scroller.clientWidth) {
+      scroller.scrollTo({
+        left: right - scroller.clientWidth,
+        behavior: "smooth",
+      });
+    }
+  }, [activeIndex, virtualizer, scrollRef]);
+
   return (
-    <div className="w-80 shrink-0 bg-card/30 p-4">
+    <div ref={columnRef} className="w-80 shrink-0 bg-card/30 p-4">
       <CardTitle>
         {name}
         {!isPending &&
-          ` (${filteredColumnIssues.length !== columnIssues.length ? `${filteredColumnIssues.length} / ` : ""}${columnIssues.length})`}
+          ` (${issues.length !== total ? `${issues.length} / ` : ""}${total})`}
       </CardTitle>
       <Separator className="my-4" />
       {isPending ? (
@@ -138,14 +96,18 @@ export const Column = ({
           style={{ height: virtualizer.getTotalSize() }}
         >
           {virtualizer.getVirtualItems().map((row) => {
-            const issue = visibleIssues[row.index];
+            const issue = issues[row.index];
             if (!issue) return null;
             return (
               <div
                 key={row.key}
                 data-index={row.index}
                 ref={virtualizer.measureElement}
-                className="absolute top-0 left-0 w-full"
+                className={cn(
+                  "absolute top-0 left-0 w-full",
+                  issue.id === activeIssueId &&
+                    "ring-2 ring-primary ring-offset-2 ring-offset-background",
+                )}
                 style={{
                   transform: `translateY(${row.start - virtualizer.options.scrollMargin}px)`,
                 }}
