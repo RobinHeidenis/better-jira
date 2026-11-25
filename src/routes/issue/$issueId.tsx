@@ -26,7 +26,7 @@ function RouteComponent() {
       {issue ? (
         <Card className="w-7xl my-8 overflow-auto pt-0">
           <CardContent>
-            <Breadcrumb className="sticky top-0 bg-card pt-[var(--card-spacing)] pb-2">
+            <Breadcrumb className="sticky top-0 z-10 bg-card pt-[var(--card-spacing)] pb-2">
               <BreadcrumbList>
                 <BreadcrumbItem>
                   <BreadcrumbLink
