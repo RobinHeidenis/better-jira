@@ -150,7 +150,7 @@ export const MergeRequestList = ({
       {groups.map((group) => (
         <section key={group.key} className="bg-inherit">
           {showHeadings ? (
-            <h3 className="sticky top-0 flex gap-1.5 border-b bg-inherit px-3 py-1.5 text-muted-foreground">
+            <h3 className="sticky top-0 z-10 flex gap-1.5 border-b bg-inherit px-3 py-1.5 text-muted-foreground">
               <span className="shrink-0 font-medium text-foreground">
                 {group.key}
               </span>
