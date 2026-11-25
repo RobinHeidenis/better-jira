@@ -1,6 +1,6 @@
 # better-jira
 
-A faster, nicer front end for Jira Cloud boards and issues, with GitLab merge request lookup in progress. It is a personal tool for now but will be open sourced, so it must work against any Jira Cloud site, not just the author's.
+A faster, nicer front end for Jira Cloud boards and issues, with GitLab merge requests alongside. It is a personal tool for now but will be open sourced, so it must work against any Jira Cloud site, not just the author's.
 
 ## Hard rules
 
