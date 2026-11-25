@@ -1,5 +1,6 @@
 import { useSelector } from "@tanstack/react-store";
 import { CornerLeftUpIcon, HashIcon, LinkIcon } from "lucide-react";
+import { MergeRequestsPopover } from "#/components/merge-requests-popover";
 import { Badge } from "#/components/ui/badge";
 import {
   Card,
@@ -99,6 +100,7 @@ export const IssueCard = ({
                   iconUrl={issue.fields.priority.iconUrl}
                 />
               ) : null}
+              <MergeRequestsPopover issueKey={issue.key} />
               {storyPoints !== null ? (
                 <Badge className="!px-1 !py-0.5">{storyPoints}</Badge>
               ) : null}
