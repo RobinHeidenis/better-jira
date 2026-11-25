@@ -1,8 +1,11 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useSelector } from "@tanstack/react-store";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { cn } from "cn";
 import { type RefObject, useEffect, useRef, useState } from "react";
-import { boardSearch } from "#/lib/board-search";
+import { transitionsOptions } from "#/lib/api/transitions";
+import { boardDrag, boardSearch } from "#/lib/board-search";
+import { reportTransitionError, startTransition } from "#/lib/transition";
 import { IssueCard } from "./issue-card";
 import { CardTitle } from "./ui/card";
 import { Separator } from "./ui/separator";
@@ -34,6 +37,36 @@ export const Column = ({
     (state) => state.activeIssueId,
   );
   const columnRef = useRef<HTMLDivElement>(null);
+  const queryClient = useQueryClient();
+  const dragged = useSelector(boardDrag, (state) => state);
+  const [dropping, setDropping] = useState(false);
+  const canDrop = !!dragged && dragged.column !== name;
+
+  const drop = async () => {
+    const issue = boardDrag.state;
+    boardDrag.setState(() => null);
+    if (!issue || issue.column === name) return;
+    try {
+      const transitions = await queryClient.fetchQuery(
+        transitionsOptions(issue.key),
+      );
+      // A column can hold several statuses; its first one wins.
+      const transition = statusIds
+        .map((id) => transitions.find((other) => other.to.id === id))
+        .find((other) => other !== undefined);
+      if (!transition) {
+        reportTransitionError(
+          `${issue.key} can't move to ${name} from its current status.`,
+        );
+        return;
+      }
+      startTransition(queryClient, issue, transition);
+    } catch (error) {
+      reportTransitionError(
+        `Couldn't move ${issue.key}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  };
 
   const [listOffset, setListOffset] = useState(0);
   // The scroller is the nearest positioned ancestor, so `offsetTop` is the
@@ -74,7 +107,32 @@ export const Column = ({
   }, [activeIndex, virtualizer, scrollRef]);
 
   return (
-    <div ref={columnRef} className="w-80 shrink-0 bg-card/30 p-4">
+    // biome-ignore lint/a11y/noStaticElementInteractions: dropping is a mouse shortcut for the status menu, which the keyboard reaches with s
+    <div
+      ref={columnRef}
+      className={cn(
+        "w-80 shrink-0 bg-card/30 p-4 outline-offset-[-2px] transition-colors",
+        canDrop &&
+          dropping &&
+          "bg-primary/5 outline-2 outline-primary/40 outline-dashed",
+      )}
+      onDragOver={(event) => {
+        if (!canDrop) return;
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "move";
+        if (!dropping) setDropping(true);
+      }}
+      onDragLeave={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+          setDropping(false);
+        }
+      }}
+      onDrop={(event) => {
+        event.preventDefault();
+        setDropping(false);
+        void drop();
+      }}
+    >
       <CardTitle>
         {name}
         {!isPending &&
@@ -99,14 +157,38 @@ export const Column = ({
             const issue = issues[row.index];
             if (!issue) return null;
             return (
+              // biome-ignore lint/a11y/noStaticElementInteractions: dragging is a mouse shortcut for the status menu, which the keyboard reaches with s
               <div
                 key={row.key}
                 data-index={row.index}
                 ref={virtualizer.measureElement}
+                draggable
+                onDragStart={(event) => {
+                  event.dataTransfer.effectAllowed = "move";
+                  event.dataTransfer.setData("text/plain", issue.key);
+                  // Dragging from the title would otherwise show just the link.
+                  event.dataTransfer.setDragImage(
+                    event.currentTarget,
+                    event.nativeEvent.offsetX,
+                    event.nativeEvent.offsetY,
+                  );
+                  boardDrag.setState(() => ({
+                    id: issue.id,
+                    key: issue.key,
+                    summary: issue.fields.summary,
+                    column: name,
+                  }));
+                  void queryClient.prefetchQuery(transitionsOptions(issue.key));
+                }}
+                onDragEnd={() => {
+                  // Cleared on drop already; this covers a cancelled drag.
+                  if (boardDrag.state) boardDrag.setState(() => null);
+                }}
                 className={cn(
                   "absolute top-0 left-0 w-full",
                   issue.id === activeIssueId &&
                     "ring-2 ring-primary ring-offset-2 ring-offset-background",
+                  dragged?.id === issue.id && "opacity-50",
                 )}
                 style={{
                   transform: `translateY(${row.start - virtualizer.options.scrollMargin}px)`,

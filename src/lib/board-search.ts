@@ -49,3 +49,11 @@ export const matchesSearch = (
   const text = searchText(issue, developerField);
   return terms.every((term) => text.includes(term));
 };
+
+/** The card being dragged to another column. */
+export const boardDrag = createStore<{
+  id: string;
+  key: string;
+  summary: string;
+  column: string;
+} | null>(null);

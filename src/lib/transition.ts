@@ -29,7 +29,7 @@ export const transitionErrors = createStore<{ id: number; message: string }[]>(
 );
 
 let nextErrorId = 0;
-const reportError = (message: string) =>
+export const reportTransitionError = (message: string) =>
   transitionErrors.setState((errors) => [
     ...errors,
     { id: nextErrorId++, message },
@@ -139,7 +139,7 @@ export const runTransition = async (
       transitionPayload(fields, values, me?.accountId),
     );
   } catch (error) {
-    reportError(
+    reportTransitionError(
       `Couldn't move ${issue.key} to ${transition.to.name}: ${
         error instanceof Error ? error.message : String(error)
       }`,
