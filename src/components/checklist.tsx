@@ -6,18 +6,20 @@ import {
   RiCheckboxIndeterminateFill,
   RiMoreFill,
 } from "@remixicon/react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "cn";
 import { createContext, use, useState } from "react";
-import { setChecklistItemStatus } from "#/lib/api/checklist";
 import { issueOptions } from "#/lib/api/issues";
 import {
   type Checklist as ChecklistData,
   type ChecklistGroup,
   type ChecklistItem,
-  checklistText,
-  withItemStatus,
+  itemRef,
 } from "#/lib/checklist";
+import {
+  dismissChecklistError,
+  queueChecklistChange,
+} from "#/lib/checklist-sync";
 import { Button } from "./ui/button";
 import {
   Collapsible,
@@ -78,8 +80,7 @@ const ItemIcon = ({ state }: { state: ChecklistItem["state"] }) => {
 };
 
 type Editing = {
-  /** Every status this checklist uses, open and done first. */
-  statuses: string[];
+  statuses: { value: string; label: string }[];
   setStatus: (item: ChecklistItem, status: string) => void;
 };
 
@@ -129,7 +130,7 @@ const Item = ({ item }: { item: ChecklistItem }) => {
           </p>
         ) : null}
       </div>
-      {editing && editing.statuses.length > 2 ? (
+      {editing ? (
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
@@ -137,7 +138,7 @@ const Item = ({ item }: { item: ChecklistItem }) => {
                 variant="ghost"
                 size="icon-xs"
                 aria-label={`Status of "${item.text}"`}
-                className="shrink-0 text-muted-foreground opacity-0 group-hover/item:opacity-100 hover:text-foreground focus-visible:opacity-100 data-popup-open:text-foreground data-popup-open:opacity-100"
+                className="-my-1 shrink-0 text-muted-foreground opacity-0 group-hover/item:opacity-100 hover:text-foreground focus-visible:opacity-100 data-popup-open:text-foreground data-popup-open:opacity-100"
               />
             }
           >
@@ -151,8 +152,8 @@ const Item = ({ item }: { item: ChecklistItem }) => {
               }
             >
               {editing.statuses.map((status) => (
-                <DropdownMenuRadioItem key={status} value={status}>
-                  {status}
+                <DropdownMenuRadioItem key={status.value} value={status.value}>
+                  {status.label}
                 </DropdownMenuRadioItem>
               ))}
             </DropdownMenuRadioGroup>
@@ -208,59 +209,25 @@ const Group = ({ group }: { group: ChecklistGroup }) => {
   );
 };
 
+// Issue Checklist Pro's statuses are configured in the app, which offers no
+// API to read them, so these are the ones this site uses.
+const STATUSES = ["Open", "In Progress", "done by dev", "Done", "Skipped"];
+
+/** The statuses above, plus any other one this checklist already uses. */
 const statusesOf = (checklist: ChecklistData) => {
-  const seen = checklist.groups.flatMap((group) =>
-    group.items.map((item) => item.status),
-  );
-  return [...new Set(["open", "done", ...seen])].filter(
-    (status) => status !== "",
-  );
-};
-
-/**
- * Updates the cached issue straight away and writes to Jira in the
- * background. Changes go out one at a time, so quick clicks can't race, and
- * the issue is reloaded once the last one is through.
- */
-const useSetItemStatus = ({
-  issueId,
-  issueKey,
-  fieldId,
-  checklist,
-}: {
-  issueId: string;
-  issueKey: string;
-  fieldId: string;
-  checklist: ChecklistData;
-}) => {
-  const queryClient = useQueryClient();
-  const { queryKey } = issueOptions(issueId);
-  const mutationKey = ["checklist", issueKey];
-  const mutation = useMutation({
-    mutationKey,
-    scope: { id: `checklist:${issueKey}` },
-    mutationFn: setChecklistItemStatus,
-    onSettled: () => {
-      if (queryClient.isMutating({ mutationKey }) <= 1) {
-        return queryClient.invalidateQueries({ queryKey });
-      }
-    },
-  });
-
-  const setStatus = (item: ChecklistItem, status: string) => {
-    if (item.status === status) return;
-    void queryClient.cancelQueries({ queryKey, exact: true });
-    queryClient.setQueryData(queryKey, (issue) => {
-      const text = issue && checklistText(issue.fields[fieldId]);
-      const result = text && withItemStatus(text, checklist, item, status);
-      return issue && result
-        ? { ...issue, fields: { ...issue.fields, [fieldId]: result.text } }
-        : issue;
-    });
-    mutation.mutate({ issueKey, fieldId, checklist, item, status });
-  };
-
-  return { setStatus, error: mutation.error, reset: mutation.reset };
+  const known = STATUSES.map((label) => ({
+    value: label.toLowerCase(),
+    label,
+  }));
+  const extra = checklist.groups
+    .flatMap((group) => group.items.map((item) => item.status))
+    .filter(
+      (status) => status && !known.some((option) => option.value === status),
+    );
+  return [
+    ...known,
+    ...[...new Set(extra)].map((status) => ({ value: status, label: status })),
+  ];
 };
 
 export const Checklist = ({
@@ -268,19 +235,29 @@ export const Checklist = ({
   issueId,
   issueKey,
   fieldId,
+  error,
 }: {
+  /** With changes not yet confirmed in Jira already applied. */
   checklist: ChecklistData;
   /** The id or key the issue was loaded by, which keys its query. */
   issueId: string;
   issueKey: string;
   fieldId: string;
+  error: string | null;
 }) => {
-  const { setStatus, error, reset } = useSetItemStatus({
-    issueId,
-    issueKey,
-    fieldId,
-    checklist,
-  });
+  const queryClient = useQueryClient();
+  const setStatus = (item: ChecklistItem, status: string) => {
+    if (item.status === status) return;
+    queueChecklistChange(
+      issueKey,
+      fieldId,
+      () =>
+        queryClient.invalidateQueries({
+          queryKey: issueOptions(issueId).queryKey,
+        }),
+      { ref: itemRef(checklist, item), current: item.status, status },
+    );
+  };
   const partial = Object.entries(checklist.partial);
   const partialTotal = partial.reduce((sum, [, count]) => sum + count, 0);
   return (
@@ -307,10 +284,10 @@ export const Checklist = ({
         </div>
         {error ? (
           <p className="flex items-start justify-between gap-2 border border-destructive/40 bg-destructive/5 px-3 py-2 text-destructive">
-            <span>Couldn't update the checklist: {error.message}</span>
+            <span>Couldn't update the checklist: {error}</span>
             <button
               type="button"
-              onClick={reset}
+              onClick={() => dismissChecklistError(issueKey)}
               className="shrink-0 text-muted-foreground hover:text-foreground"
             >
               Dismiss

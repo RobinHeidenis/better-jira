@@ -24,7 +24,8 @@ import { Spinner } from "#/components/ui/spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "#/components/ui/tabs";
 import { commentsOptions } from "#/lib/api/comments";
 import { issueOptions } from "#/lib/api/issues";
-import { parseChecklist } from "#/lib/checklist";
+import { checklistText, parseChecklist } from "#/lib/checklist";
+import { useChecklistSync, withChanges } from "#/lib/checklist-sync";
 import { store } from "#/lib/store";
 
 const searchSchema = z.object({
@@ -54,10 +55,14 @@ function RouteComponent() {
     enabled: !!issue,
   });
   const checklistField = useSelector(store, (state) => state.checklistField);
-  const checklist =
+  const checklistSync = useChecklistSync(issue?.key);
+  const rawChecklist =
     issue && checklistField
-      ? parseChecklist(issue.fields[checklistField])
+      ? checklistText(issue.fields[checklistField])
       : null;
+  const checklist = rawChecklist
+    ? parseChecklist(withChanges(rawChecklist, checklistSync.changes))
+    : null;
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -189,6 +194,7 @@ function RouteComponent() {
                         issueId={issueId}
                         issueKey={issue.key}
                         fieldId={checklistField}
+                        error={checklistSync.error}
                       />
                     </TabsContent>
                   ) : null}

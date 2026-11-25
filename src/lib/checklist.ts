@@ -176,24 +176,29 @@ const itemsOf = (checklist: Checklist) =>
   checklist.groups.flatMap((group) => group.items);
 
 /**
- * Sets the status of `item`, read from `from`, in another copy of the
- * checklist's text. Line numbers shift when the text changes, so the item is
- * found again by its text, and by its position among items with the same text.
- * Returns the new text and the status the item had in `text`, or null when
- * the item is gone.
+ * Line numbers shift when the text changes, so an item is found again by its
+ * text, and by its position among items with the same text.
  */
-export const withItemStatus = (
-  text: string,
-  from: Checklist,
+export type ItemRef = { text: string; nth: number };
+
+export const itemRef = (
+  checklist: Checklist,
   item: ChecklistItem,
-  status: string,
-) => {
-  const nth = itemsOf(from)
+): ItemRef => ({
+  text: item.text,
+  nth: itemsOf(checklist)
     .filter((other) => other.text === item.text)
-    .findIndex((other) => other.id === item.id);
-  const current = parseChecklist(text);
-  const target = current
-    ? itemsOf(current).filter((other) => other.text === item.text)[nth]
+    .findIndex((other) => other.id === item.id),
+});
+
+/**
+ * Sets the status of an item in the checklist's text. Returns the new text
+ * and the status the item had, or null when the item isn't there.
+ */
+export const withItemStatus = (text: string, ref: ItemRef, status: string) => {
+  const checklist = parseChecklist(text);
+  const target = checklist
+    ? itemsOf(checklist).filter((other) => other.text === ref.text)[ref.nth]
     : undefined;
   if (!target) return null;
 
