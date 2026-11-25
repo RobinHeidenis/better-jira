@@ -192,6 +192,25 @@ export const boardIssuesOptions = (
   });
 };
 
+const linkedIssueSchema = z.object({
+  key: z.string(),
+  fields: z.object({
+    summary: z.string(),
+    status: z.object({ name: z.string() }).optional(),
+  }),
+});
+
+// Each link names the other issue on one side only; which side says whether
+// the relation reads as `inward` ("is blocked by") or `outward` ("blocks").
+const issueLinkSchema = z.object({
+  id: z.string(),
+  type: z.object({ inward: z.string(), outward: z.string() }),
+  inwardIssue: linkedIssueSchema.optional(),
+  outwardIssue: linkedIssueSchema.optional(),
+});
+
+export type JiraIssueLink = z.infer<typeof issueLinkSchema>;
+
 const jiraIssueSchema = jiraBoardIssueSchema.extend({
   fields: jiraBoardIssueSchema.shape.fields.extend({
     // Null when the issue has no description at all.
@@ -204,6 +223,7 @@ const jiraIssueSchema = jiraBoardIssueSchema.extend({
       .nullable(),
     created: z.string().optional(),
     updated: z.string().optional(),
+    issuelinks: z.array(issueLinkSchema).optional().catch(undefined),
     // A malformed attachment list shouldn't stop the issue from loading.
     attachment: z.array(attachmentSchema).nullish().catch(null),
   }),

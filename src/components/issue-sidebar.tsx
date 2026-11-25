@@ -5,6 +5,7 @@ import {
   issueDeveloper,
   issueStoryPoints,
   type JiraBoardIssue,
+  type JiraIssueLink,
 } from "#/lib/api/issues";
 import { jiraIssueUrl } from "#/lib/jira-url";
 import { store } from "#/lib/store";
@@ -18,7 +19,46 @@ type SidebarIssue = JiraBoardIssue & {
   fields: JiraBoardIssue["fields"] & {
     created?: string;
     updated?: string;
+    issuelinks?: JiraIssueLink[];
   };
+};
+
+type RelatedIssue = { key: string; summary: string; status?: string };
+
+const RelatedRow = ({ issue }: { issue: RelatedIssue }) => (
+  <li className="flex items-center gap-2">
+    <Link
+      to="/issue/$issueId"
+      params={{ issueId: issue.key }}
+      underlined={false}
+      className="min-w-0 flex-1 truncate"
+    >
+      <span className="font-medium">{issue.key}</span> {issue.summary}
+    </Link>
+    {issue.status ? (
+      <Badge variant="outline" className="shrink-0">
+        {issue.status}
+      </Badge>
+    ) : null}
+  </li>
+);
+
+/** Links grouped by how they read from this issue, e.g. "is blocked by". */
+const groupLinks = (links: JiraIssueLink[]) => {
+  const groups = new Map<string, RelatedIssue[]>();
+  for (const link of links) {
+    const other = link.outwardIssue ?? link.inwardIssue;
+    if (!other) continue;
+    const label = link.outwardIssue ? link.type.outward : link.type.inward;
+    const group = groups.get(label) ?? [];
+    group.push({
+      key: other.key,
+      summary: other.fields.summary,
+      status: other.fields.status?.name,
+    });
+    groups.set(label, group);
+  }
+  return [...groups];
 };
 
 const Section = ({
@@ -85,6 +125,7 @@ export const IssueSidebar = ({ issue }: { issue: SidebarIssue }) => {
   const storyPoints = issueStoryPoints(issue, storyPointsField);
   const subtasks = fields.subtasks ?? [];
   const versions = fields.fixVersions ?? [];
+  const linkGroups = groupLinks(fields.issuelinks ?? []);
 
   return (
     <aside className="space-y-6">
@@ -155,42 +196,51 @@ export const IssueSidebar = ({ issue }: { issue: SidebarIssue }) => {
         </dl>
       </Section>
 
-      {fields.parent || subtasks.length ? (
+      {fields.parent || subtasks.length || linkGroups.length ? (
         <Section title="Related">
-          <ul className="space-y-1">
-            {fields.parent ? (
-              <li className="flex gap-2">
-                <span className="shrink-0 text-muted-foreground">Parent</span>
-                <Link
-                  to="/issue/$issueId"
-                  params={{ issueId: fields.parent.key }}
-                  underlined={false}
-                  className="min-w-0 truncate"
-                >
-                  <span className="font-medium">{fields.parent.key}</span>{" "}
-                  {fields.parent.fields.summary}
-                </Link>
-              </li>
-            ) : null}
-            {subtasks.map((subtask) => (
-              <li key={subtask.key} className="flex items-center gap-2">
-                <Link
-                  to="/issue/$issueId"
-                  params={{ issueId: subtask.key }}
-                  underlined={false}
-                  className="min-w-0 flex-1 truncate"
-                >
-                  <span className="font-medium">{subtask.key}</span>{" "}
-                  {subtask.fields.summary}
-                </Link>
-                {subtask.fields.status ? (
-                  <Badge variant="outline" className="shrink-0">
-                    {subtask.fields.status.name}
-                  </Badge>
-                ) : null}
-              </li>
-            ))}
-          </ul>
+          {fields.parent ? (
+            <p className="flex gap-2">
+              <span className="shrink-0 text-muted-foreground">Parent</span>
+              <Link
+                to="/issue/$issueId"
+                params={{ issueId: fields.parent.key }}
+                underlined={false}
+                className="min-w-0 truncate"
+              >
+                <span className="font-medium">{fields.parent.key}</span>{" "}
+                {fields.parent.fields.summary}
+              </Link>
+            </p>
+          ) : null}
+          {subtasks.length ? (
+            <div className="space-y-1">
+              <p className="text-muted-foreground">Subtasks</p>
+              <ul className="space-y-1">
+                {subtasks.map((subtask) => (
+                  <RelatedRow
+                    key={subtask.key}
+                    issue={{
+                      key: subtask.key,
+                      summary: subtask.fields.summary,
+                      status: subtask.fields.status?.name,
+                    }}
+                  />
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          {linkGroups.map(([label, issues]) => (
+            <div key={label} className="space-y-1">
+              <p className="text-muted-foreground first-letter:uppercase">
+                {label}
+              </p>
+              <ul className="space-y-1">
+                {issues.map((related) => (
+                  <RelatedRow key={related.key} issue={related} />
+                ))}
+              </ul>
+            </div>
+          ))}
         </Section>
       ) : null}
 
