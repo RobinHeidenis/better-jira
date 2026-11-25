@@ -28,6 +28,7 @@ const FILTERING_STEP = "filtering";
 const DEVELOPER_STEP = "developerField";
 const STORY_POINTS_STEP = "storyPointsField";
 const REVIEW_STEP = "reviewColumn";
+const CHECKLIST_STEP = "checklistField";
 
 const customFieldsOfType = (fields: JiraField[] | undefined, type: string) =>
   (fields ?? []).filter((field) => field.custom && field.schema?.type === type);
@@ -185,6 +186,24 @@ export const BoardSetupForm = ({
         defaultChecked: /review/i.test(column.name),
       })),
     },
+    {
+      name: CHECKLIST_STEP,
+      required: false,
+      prompt: "Which field holds the checklist in text form?",
+      description:
+        "Issue Checklist Pro's \"Checklist Text\" field, shown as a tab on the ticket. Skip this if you don't use it.",
+      pending: isFieldsLoading,
+      failure: fieldsError
+        ? `Couldn't load Jira's fields: ${fieldsError.message}`
+        : undefined,
+      choices: customFieldsOfType(fields, "string").map((field) => ({
+        key: `checklist:${field.id}`,
+        value: field.id,
+        label: field.name,
+        description: field.id,
+        defaultChecked: field.name.toLowerCase() === "checklist text",
+      })),
+    },
   ];
 
   // The columns step can't be answered before its choices exist. The
@@ -194,7 +213,9 @@ export const BoardSetupForm = ({
   const waitingOnColumns =
     (activeStep === COLUMNS_STEP && isLoading) ||
     (activeStep === REVIEW_STEP && isLoading) ||
-    ((activeStep === DEVELOPER_STEP || activeStep === STORY_POINTS_STEP) &&
+    ((activeStep === DEVELOPER_STEP ||
+      activeStep === STORY_POINTS_STEP ||
+      activeStep === CHECKLIST_STEP) &&
       isFieldsLoading);
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -216,6 +237,7 @@ export const BoardSetupForm = ({
       developerField: stringAnswer(answers, DEVELOPER_STEP),
       storyPointsField: stringAnswer(answers, STORY_POINTS_STEP),
       reviewColumn: stringAnswer(answers, REVIEW_STEP),
+      checklistField: stringAnswer(answers, CHECKLIST_STEP),
       hiddenColumns: columns
         .map((column) => column.name)
         .filter((name) => !visible.has(name)),

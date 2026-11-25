@@ -13,6 +13,7 @@ const settingsSchema = z.object({
   developerField: z.string().nullable(),
   storyPointsField: z.string().nullable().default(null),
   reviewColumn: z.string().nullable().default(null),
+  checklistField: z.string().nullable().default(null),
   includeDevTickets: z.boolean().nullable(),
   filter: z
     .object({
@@ -37,6 +38,7 @@ const defaults: Settings = {
   developerField: null,
   storyPointsField: null,
   reviewColumn: null,
+  checklistField: null,
   includeDevTickets: null,
   filter: null,
   gitlabApiKey: null,
