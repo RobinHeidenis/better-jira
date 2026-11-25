@@ -1,6 +1,12 @@
-import { RiCornerLeftUpLine, RiHashtag, RiLinkM } from "@remixicon/react";
+import {
+  RiArrowLeftRightLine,
+  RiCornerLeftUpLine,
+  RiHashtag,
+  RiLinkM,
+} from "@remixicon/react";
 import { useSelector } from "@tanstack/react-store";
 import { MergeRequestsPopover } from "#/components/merge-requests-popover";
+import { TransitionMenu } from "#/components/transition-menu";
 import { Badge } from "#/components/ui/badge";
 import {
   Card,
@@ -18,6 +24,7 @@ import {
   issueStoryPoints,
   type JiraBoardIssue,
 } from "#/lib/api/issues";
+import { boardSearch } from "#/lib/board-search";
 import { jiraIssueUrl } from "#/lib/jira-url";
 import { store } from "#/lib/store";
 import { initials } from "#/lib/utils";
@@ -44,6 +51,10 @@ export const IssueCard = ({
   const developer = issueDeveloper(issue, developerField);
   const storyPoints = issueStoryPoints(issue, storyPointsField);
   const assigneeName = issue.fields.assignee?.displayName ?? "Unassigned";
+  const statusMenuOpen = useSelector(
+    boardSearch,
+    (state) => state.statusMenuIssueId === issue.id,
+  );
 
   return (
     <Card>
@@ -108,6 +119,31 @@ export const IssueCard = ({
                     summary: subtask.fields.summary,
                   })),
                 }}
+              />
+              <TransitionMenu
+                issue={{ key: issue.key, summary: issue.fields.summary }}
+                statusId={issue.fields.status.id}
+                open={statusMenuOpen}
+                onOpenChange={(open) =>
+                  boardSearch.setState((state) => ({
+                    ...state,
+                    statusMenuIssueId: open ? issue.id : null,
+                  }))
+                }
+                trigger={
+                  <button
+                    type="button"
+                    aria-label="Change status (s)"
+                    title="Change status (s)"
+                    className={
+                      statusMenuOpen
+                        ? "text-foreground"
+                        : "cursor-pointer text-muted-foreground hover:text-foreground"
+                    }
+                  >
+                    <RiArrowLeftRightLine className="size-4" />
+                  </button>
+                }
               />
               {storyPoints !== null ? (
                 <Badge className="!px-1 !py-0.5">{storyPoints}</Badge>

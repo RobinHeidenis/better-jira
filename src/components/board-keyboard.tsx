@@ -40,7 +40,7 @@ export const BoardKeyboard = ({
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.metaKey || event.ctrlKey || event.altKey) return;
       if (isTyping(event.target)) return;
-      if (document.querySelector("[role=dialog]")) return;
+      if (document.querySelector("[role=dialog], [role=menu]")) return;
 
       if (event.key === "/") {
         event.preventDefault();
@@ -104,6 +104,16 @@ export const BoardKeyboard = ({
           if (!issue) return;
           event.preventDefault();
           navigate({ to: "/issue/$issueId", params: { issueId: issue.key } });
+          return;
+        }
+        case "s": {
+          const issue = column === -1 ? null : grid[column]?.[row];
+          if (!issue) return;
+          event.preventDefault();
+          boardSearch.setState((state) => ({
+            ...state,
+            statusMenuIssueId: issue.id,
+          }));
           return;
         }
         case "Escape":

@@ -9,7 +9,7 @@ A faster front end for Jira Cloud boards and tickets, with GitLab merge requests
 - **Code review ordering.** Pick a code review column in settings, and it lists reviews waiting on you first, then your own work, then tickets you reported.
 - **Ticket view.** The full description, including tables, code blocks, Mermaid diagrams, images and videos. A sidebar has status, people, parent, subtasks and linked tickets.
 - **Checklists.** If your site uses Issue Checklist Pro, the checklist shows in its own tab, grouped, with progress. Custom statuses like "done by dev" are shown separately from done. Click a box to tick it off, "Check all" ticks off everything left, or use the menu next to an item to pick another status (Open, In Progress, done by dev, Done or Skipped). The change is saved to Jira, and Issue Checklist Pro picks it up.
-- **Moving tickets.** Change a ticket's status from the sidebar. Transitions with a form in Jira open the same form here, and per lane you can choose which fields it asks for and set defaults, or skip the form entirely.
+- **Moving tickets.** Change a ticket's status from the sidebar, from the button on a card, or with `s` on the board. Transitions with a form in Jira open the same form here, and per lane you can choose which fields it asks for and set defaults, or skip the form entirely.
 - **Merge requests.** A popover on each card and a list in the sidebar show the merge requests that name the ticket or its subtasks, with pipeline status, approvals and conflicts.
 
 ## Running it
@@ -56,6 +56,7 @@ On the board:
 | `j` / `k`      | Next or previous card in the column     |
 | `h` / `l`      | Previous or next column                 |
 | `Enter` or `o` | Open the selected card                  |
+| `s`            | Change the selected card's status       |
 | `/`            | Search the board                        |
 | `Cmd/Ctrl+F`   | Search the board (press again for the browser's own find) |
 

@@ -5,7 +5,9 @@ import { issueDeveloper, type JiraBoardIssue } from "#/lib/api/issues";
 export const boardSearch = createStore<{
   query: string;
   activeIssueId: string | null;
-}>({ query: "", activeIssueId: null });
+  /** The card whose status menu is open. */
+  statusMenuIssueId: string | null;
+}>({ query: "", activeIssueId: null, statusMenuIssueId: null });
 
 // Keyed on the issue object, so a refetch (new objects) rebuilds it.
 const searchTextCache = new WeakMap<JiraBoardIssue, string>();

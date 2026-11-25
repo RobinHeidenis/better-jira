@@ -71,7 +71,11 @@ export const BoardSearch = ({
   };
 
   const clear = () =>
-    boardSearch.setState(() => ({ query: "", activeIssueId: null }));
+    boardSearch.setState((state) => ({
+      ...state,
+      query: "",
+      activeIssueId: null,
+    }));
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -100,7 +104,8 @@ export const BoardSearch = ({
         placeholder="Search the board"
         value={query}
         onChange={(event) =>
-          boardSearch.setState(() => ({
+          boardSearch.setState((state) => ({
+            ...state,
             query: event.target.value,
             activeIssueId: null,
           }))
