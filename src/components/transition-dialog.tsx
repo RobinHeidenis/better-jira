@@ -3,11 +3,11 @@ import {
   RiExternalLinkLine,
   RiSettings3Line,
 } from "@remixicon/react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useSelector } from "@tanstack/react-store";
 import { cn } from "cn";
 import { useState } from "react";
-import { assignableUsersOptions, type Transition } from "#/lib/api/transitions";
+import type { Transition } from "#/lib/api/transitions";
 import { jiraIssueUrl } from "#/lib/jira-url";
 import { store } from "#/lib/store";
 import {
@@ -27,7 +27,8 @@ import {
   missingFields,
   optionLabel,
 } from "#/lib/transition-form";
-import { Picker, type PickerOption } from "./settings/field-picker";
+import { PeoplePicker } from "./people-picker";
+import { Picker } from "./settings/field-picker";
 import { Button } from "./ui/button";
 import {
   Dialog,
@@ -40,93 +41,6 @@ import {
 import { Input } from "./ui/input";
 import { Switch } from "./ui/switch";
 import { Textarea } from "./ui/textarea";
-
-const ME = "__me";
-const UNASSIGNED = "__unassigned";
-const EVERYONE = "__everyone";
-
-const UserInput = ({
-  issueKey,
-  value,
-  onChange,
-  autoOpen,
-}: {
-  issueKey: string;
-  autoOpen: boolean;
-  value: FormValue | undefined;
-  onChange: (value: FormValue | undefined) => void;
-}) => {
-  const { data: users, isPending } = useQuery(assignableUsersOptions(issueKey));
-  const shortlist = useSelector(store, (state) => state.assigneeShortlist);
-  const [showEveryone, setShowEveryone] = useState(false);
-  const shortlisted =
-    shortlist.length && !showEveryone
-      ? (users ?? []).filter((user) => shortlist.includes(user.accountId))
-      : (users ?? []);
-  const people: PickerOption[] = shortlisted.map((user) => ({
-    value: user.accountId,
-    label: user.displayName,
-  }));
-  // The chosen person may be off the shortlist, or not in this project at all.
-  if (
-    value?.kind === "user" &&
-    !people.some((person) => person.value === value.accountId)
-  ) {
-    const user = users?.find((user) => user.accountId === value.accountId);
-    people.push({
-      value: value.accountId,
-      label: user?.displayName ?? value.displayName,
-    });
-  }
-  const options: PickerOption[] = [
-    { value: ME, label: "Me", description: "Whoever moves the ticket" },
-    ...people,
-    { value: UNASSIGNED, label: "Unassigned" },
-  ];
-  if (users && shortlisted.length < users.length) {
-    options.push({
-      value: EVERYONE,
-      label: "Someone else…",
-      description: `Show all ${users.length} people`,
-    });
-  }
-
-  const selected =
-    value?.kind === "me"
-      ? ME
-      : value?.kind === "unassigned"
-        ? UNASSIGNED
-        : value?.kind === "user"
-          ? value.accountId
-          : null;
-
-  return (
-    <Picker
-      // Remounted to reopen with everyone once "Someone else…" is picked.
-      key={showEveryone ? "everyone" : "shortlist"}
-      options={options}
-      value={selected}
-      placeholder={isPending ? "Loading people…" : "Leave as is"}
-      className="w-full"
-      defaultOpen={autoOpen || showEveryone}
-      autoFocus={showEveryone}
-      onChange={(next) => {
-        if (next === EVERYONE) setShowEveryone(true);
-        else if (next === null) onChange(undefined);
-        else if (next === ME) onChange({ kind: "me" });
-        else if (next === UNASSIGNED) onChange({ kind: "unassigned" });
-        else {
-          const option = options.find((option) => option.value === next);
-          onChange({
-            kind: "user",
-            accountId: next,
-            displayName: option?.label ?? next,
-          });
-        }
-      }}
-    />
-  );
-};
 
 const FieldInput = ({
   entry,
@@ -149,11 +63,13 @@ const FieldInput = ({
   switch (entry.kind) {
     case "user":
       return (
-        <UserInput
+        <PeoplePicker
           issueKey={issueKey}
           value={value}
           onChange={onChange}
           autoOpen={autoOpen}
+          placeholder="Leave as is"
+          meDescription="Whoever moves the ticket"
         />
       );
     case "option":

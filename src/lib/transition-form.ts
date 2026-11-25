@@ -12,6 +12,7 @@ export const formValueSchema = z.discriminatedUnion("kind", [
     kind: z.literal("user"),
     accountId: z.string(),
     displayName: z.string(),
+    avatarUrl: z.string().optional(),
   }),
   z.object({ kind: z.literal("option"), id: z.string(), label: z.string() }),
   z.object({

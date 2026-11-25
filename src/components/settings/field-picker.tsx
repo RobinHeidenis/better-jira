@@ -23,6 +23,7 @@ export const Picker = ({
   className = "w-72",
   defaultOpen,
   autoFocus,
+  onOpenChange,
 }: {
   options: PickerOption[];
   value: string | null;
@@ -32,9 +33,13 @@ export const Picker = ({
   className?: string;
   defaultOpen?: boolean;
   autoFocus?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) => (
   <Combobox
     defaultOpen={defaultOpen}
+    onOpenChange={
+      onOpenChange ? (open: boolean) => onOpenChange(open) : undefined
+    }
     items={options}
     value={options.find((option) => option.value === value) ?? null}
     onValueChange={(option: PickerOption | null) =>

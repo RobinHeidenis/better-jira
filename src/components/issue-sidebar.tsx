@@ -10,11 +10,17 @@ import {
 import { jiraIssueUrl } from "#/lib/jira-url";
 import { store } from "#/lib/store";
 import { initials, timeAgo } from "#/lib/utils";
+import {
+  LabelsField,
+  NumberField,
+  PersonField,
+  PriorityField,
+  VersionsField,
+} from "./issue-fields";
 import { MergeRequestList } from "./merge-requests-popover";
 import { groupLinks, RelatedGroup } from "./related-issues";
 import { TransitionMenu } from "./transition-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Link } from "./ui/link";
 
@@ -114,52 +120,59 @@ export const IssueSidebar = ({ issue }: { issue: SidebarIssue }) => {
               iconUrl={fields.issuetype.iconUrl}
             />
           </Field>
-          {fields.priority ? (
-            <Field label="Priority">
-              <IconText
-                name={fields.priority.name}
-                iconUrl={fields.priority.iconUrl}
+          <Field label="Priority">
+            <PriorityField issueKey={issue.key} priority={fields.priority}>
+              {fields.priority ? (
+                <IconText
+                  name={fields.priority.name}
+                  iconUrl={fields.priority.iconUrl}
+                />
+              ) : (
+                <span className="text-muted-foreground">None</span>
+              )}
+            </PriorityField>
+          </Field>
+          {storyPointsField ? (
+            <Field label="Story points">
+              <NumberField
+                issueKey={issue.key}
+                fieldId={storyPointsField}
+                label="story points"
+                value={storyPoints}
               />
             </Field>
           ) : null}
-          {storyPointsField ? (
-            <Field label="Story points">
-              {storyPoints ?? <span className="text-muted-foreground">–</span>}
-            </Field>
-          ) : null}
-          {versions.length ? (
-            <Field label="Fix versions">
-              <span className="flex flex-wrap gap-1">
-                {versions.map((version) => (
-                  <Badge key={version.id} variant="outline">
-                    {version.name}
-                  </Badge>
-                ))}
-              </span>
-            </Field>
-          ) : null}
-          {fields.labels.length ? (
-            <Field label="Labels">
-              <span className="flex flex-wrap gap-1">
-                {fields.labels.map((label) => (
-                  <Badge key={label} variant="secondary">
-                    {label}
-                  </Badge>
-                ))}
-              </span>
-            </Field>
-          ) : null}
+          <Field label="Fix versions">
+            <VersionsField issueKey={issue.key} versions={versions} />
+          </Field>
+          <Field label="Labels">
+            <LabelsField issueKey={issue.key} labels={fields.labels} />
+          </Field>
         </dl>
       </Section>
 
       <Section title="People">
         <dl>
           <Field label="Assignee">
-            <Person user={fields.assignee} />
+            <PersonField
+              issueKey={issue.key}
+              fieldId="assignee"
+              label="assignee"
+              user={fields.assignee}
+            >
+              <Person user={fields.assignee} />
+            </PersonField>
           </Field>
           {developerField ? (
             <Field label="Developer">
-              <Person user={developer} />
+              <PersonField
+                issueKey={issue.key}
+                fieldId={developerField}
+                label="developer"
+                user={developer}
+              >
+                <Person user={developer} />
+              </PersonField>
             </Field>
           ) : null}
           {fields.reporter ? (

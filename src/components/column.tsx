@@ -5,7 +5,7 @@ import { cn } from "cn";
 import { type RefObject, useEffect, useRef, useState } from "react";
 import { transitionsOptions } from "#/lib/api/transitions";
 import { boardDrag, boardScroll, boardSearch } from "#/lib/board-search";
-import { reportTransitionError, startTransition } from "#/lib/transition";
+import { reportError, startTransition } from "#/lib/transition";
 import { IssueCard } from "./issue-card";
 import { CardTitle } from "./ui/card";
 import { Separator } from "./ui/separator";
@@ -55,14 +55,14 @@ export const Column = ({
         .map((id) => transitions.find((other) => other.to.id === id))
         .find((other) => other !== undefined);
       if (!transition) {
-        reportTransitionError(
+        reportError(
           `${issue.key} can't move to ${name} from its current status.`,
         );
         return;
       }
       startTransition(queryClient, issue, transition);
     } catch (error) {
-      reportTransitionError(
+      reportError(
         `Couldn't move ${issue.key}: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
