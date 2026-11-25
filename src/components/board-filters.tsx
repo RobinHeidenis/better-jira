@@ -20,7 +20,13 @@ export const BoardFilters = ({ search }: { search: ReactNode }) => {
           aria-pressed={onlyMine}
           title="Only tickets assigned to or developed by you"
           onClick={() =>
-            store.setState((state) => ({ ...state, onlyMine: !state.onlyMine }))
+            store.setState((state) => ({
+              ...state,
+              onlyMine: !state.onlyMine,
+              filter: state.onlyMine
+                ? state.filter
+                : { ...state.filter, users: [] },
+            }))
           }
         >
           <RiUserStarLine data-icon="inline-start" />

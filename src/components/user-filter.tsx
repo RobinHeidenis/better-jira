@@ -34,6 +34,8 @@ const SelectedUsers = ({ value }: { value: string[] }) => {
 export const UserFilter = () => {
   const { data: users } = useQuery(usersOptions());
   const savedSelectedUsers = useSelector(store, (state) => state.filter?.users);
+  // "Mine" already narrows to one person, so the two can't be combined.
+  const onlyMine = useSelector(store, (state) => state.onlyMine);
 
   const updateFilters = (selectedUsers: string[]) =>
     store.setState((state) => ({
@@ -48,9 +50,12 @@ export const UserFilter = () => {
     <Select
       multiple
       onValueChange={updateFilters}
-      defaultValue={savedSelectedUsers}
+      value={savedSelectedUsers ?? []}
+      disabled={onlyMine}
     >
-      <SelectTrigger>
+      <SelectTrigger
+        title={onlyMine ? "Turn off Mine to filter by user" : undefined}
+      >
         <UserIcon data-icon="start" />
         <SelectValue>
           {(value: string[]) => <SelectedUsers value={value} />}
