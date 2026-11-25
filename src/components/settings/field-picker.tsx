@@ -22,6 +22,7 @@ export const Picker = ({
   disabled,
   className = "w-72",
   defaultOpen,
+  autoFocus,
 }: {
   options: PickerOption[];
   value: string | null;
@@ -30,6 +31,7 @@ export const Picker = ({
   disabled?: boolean;
   className?: string;
   defaultOpen?: boolean;
+  autoFocus?: boolean;
 }) => (
   <Combobox
     defaultOpen={defaultOpen}
@@ -48,6 +50,7 @@ export const Picker = ({
       showClear={value !== null}
       disabled={disabled}
       className={className}
+      autoFocus={autoFocus}
     />
     <ComboboxContent>
       <ComboboxEmpty>No matches</ComboboxEmpty>

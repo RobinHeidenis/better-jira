@@ -12,11 +12,20 @@ import {
   CardTitle,
 } from "#/components/ui/card";
 import { Link } from "#/components/ui/link";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
 import { Switch } from "#/components/ui/switch";
 import { allBoardsOptions, boardConfigurationOptions } from "#/lib/api/boards";
 import { currentUserOptions } from "#/lib/api/current-user";
 import { fieldsOptions, type JiraField } from "#/lib/api/fields";
+import { projectAssignableUsersOptions } from "#/lib/api/users";
 import { type Settings, store } from "#/lib/store";
 
 export const Route = createFileRoute("/settings")({
@@ -85,6 +94,10 @@ function SettingsPage() {
   );
   const { data: configuration } = useQuery(
     boardConfigurationOptions(settings.boardId, true),
+  );
+
+  const { data: people } = useQuery(
+    projectAssignableUsersOptions(settings.project),
   );
 
   const columns = configuration?.columnConfig.columns ?? [];
@@ -261,6 +274,55 @@ function SettingsPage() {
                 placeholder="None"
                 disabled={isFieldsPending}
               />
+            </Row>
+          </Section>
+
+          <Separator />
+
+          <Section title="People">
+            <Row
+              label="Assignee shortlist"
+              description={`Who the assignee field offers, besides "Me" and "Unassigned". "Someone else…" still shows everyone. Leave empty to always show everyone.`}
+            >
+              <Select
+                multiple
+                value={settings.assigneeShortlist}
+                onValueChange={(assigneeShortlist: string[]) =>
+                  update({ assigneeShortlist })
+                }
+              >
+                <SelectTrigger className="w-72">
+                  <SelectValue>
+                    {(value: string[]) =>
+                      value.length ? (
+                        <span className="truncate">
+                          {value
+                            .map(
+                              (id) =>
+                                people?.find((user) => user.accountId === id)
+                                  ?.displayName ?? "Unknown",
+                            )
+                            .join(", ")}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">Everyone</span>
+                      )
+                    }
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent
+                  alignItemWithTrigger={false}
+                  className="max-h-80"
+                >
+                  <SelectGroup>
+                    {people?.map((user) => (
+                      <SelectItem key={user.accountId} value={user.accountId}>
+                        {user.displayName}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
             </Row>
           </Section>
 

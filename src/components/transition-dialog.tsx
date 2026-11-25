@@ -43,6 +43,7 @@ import { Textarea } from "./ui/textarea";
 
 const ME = "__me";
 const UNASSIGNED = "__unassigned";
+const EVERYONE = "__everyone";
 
 const UserInput = ({
   issueKey,
@@ -56,14 +57,27 @@ const UserInput = ({
   onChange: (value: FormValue | undefined) => void;
 }) => {
   const { data: users, isPending } = useQuery(assignableUsersOptions(issueKey));
+  const shortlist = useSelector(store, (state) => state.assigneeShortlist);
+  const [showEveryone, setShowEveryone] = useState(false);
+  const shortlisted =
+    shortlist.length && !showEveryone
+      ? (users ?? []).filter((user) => shortlist.includes(user.accountId))
+      : (users ?? []);
   const options: PickerOption[] = [
     { value: ME, label: "Me", description: "Whoever moves the ticket" },
     { value: UNASSIGNED, label: "Unassigned" },
-    ...(users ?? []).map((user) => ({
+    ...shortlisted.map((user) => ({
       value: user.accountId,
       label: user.displayName,
     })),
   ];
+  if (users && shortlisted.length < users.length) {
+    options.push({
+      value: EVERYONE,
+      label: "Someone else…",
+      description: `Show all ${users.length} people`,
+    });
+  }
   // A saved default can name someone this issue's project doesn't list.
   if (
     value?.kind === "user" &&
@@ -83,13 +97,17 @@ const UserInput = ({
 
   return (
     <Picker
+      // Remounted to reopen with everyone once "Someone else…" is picked.
+      key={showEveryone ? "everyone" : "shortlist"}
       options={options}
       value={selected}
       placeholder={isPending ? "Loading people…" : "Leave as is"}
       className="w-full"
-      defaultOpen={autoOpen}
+      defaultOpen={autoOpen || showEveryone}
+      autoFocus={showEveryone}
       onChange={(next) => {
-        if (next === null) onChange(undefined);
+        if (next === EVERYONE) setShowEveryone(true);
+        else if (next === null) onChange(undefined);
         else if (next === ME) onChange({ kind: "me" });
         else if (next === UNASSIGNED) onChange({ kind: "unassigned" });
         else {

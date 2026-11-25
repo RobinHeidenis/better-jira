@@ -27,6 +27,8 @@ const settingsSchema = z.object({
   // resetting the whole store.
   gitlabApiKey: z.string().nullable().default(null),
   gitlabProjects: z.array(z.number()).nullable().default(null),
+  /** The people offered first when picking an assignee; empty offers everyone. */
+  assigneeShortlist: z.array(z.string()).default([]),
   /** Transition forms, by the id of the status they move to. */
   transitionForms: z
     .record(z.string(), transitionFormSchema)
@@ -51,6 +53,7 @@ const defaults: Settings = {
   filter: null,
   gitlabApiKey: null,
   gitlabProjects: null,
+  assigneeShortlist: [],
   transitionForms: {},
 };
 
