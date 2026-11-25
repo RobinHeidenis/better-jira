@@ -16,11 +16,10 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 
-const CATEGORY_ORDER = ["To Do", "In Progress", "Done"];
-
 /**
- * Orders statuses the way the board shows them, left to right. Statuses
- * the board has no column for follow, by category.
+ * Orders statuses the way the board shows them, left to right. Statuses the
+ * board has no column for go before it when they're still "To Do" (like
+ * refinement), and after it otherwise (like "Won't fix").
  */
 const useLaneOrder = () => {
   const boardId = useSelector(store, (state) => state.boardId);
@@ -35,8 +34,14 @@ const useLaneOrder = () => {
   return (status: Transition["to"]) => {
     const position = positions.get(status.id);
     if (position !== undefined) return position;
-    const category = CATEGORY_ORDER.indexOf(status.statusCategory?.name ?? "");
-    return 1000 + (category === -1 ? CATEGORY_ORDER.length : category);
+    switch (status.statusCategory?.name) {
+      case "To Do":
+        return -1;
+      case "Done":
+        return 2000;
+      default:
+        return 1000;
+    }
   };
 };
 
