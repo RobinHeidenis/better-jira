@@ -16,7 +16,7 @@ export const BoardFilters = ({ search }: { search: ReactNode }) => {
         <UserFilter />
         <VersionFilter />
         <Button
-          variant={onlyMine ? "secondary" : "outline"}
+          variant={onlyMine ? "default" : "outline"}
           aria-pressed={onlyMine}
           title="Only tickets assigned to or developed by you"
           onClick={() =>
