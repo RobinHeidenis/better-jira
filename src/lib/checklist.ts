@@ -24,11 +24,57 @@ export type Checklist = {
 
 type AdfNode = { type?: string; text?: string; content?: AdfNode[] };
 
-const adfText = (node: AdfNode): string => {
+const inlineText = (node: AdfNode): string => {
   if (node.type === "text") return node.text ?? "";
   if (node.type === "hardBreak") return "\n";
-  const inner = (node.content ?? []).map(adfText).join("");
-  return node.type === "paragraph" ? `${inner}\n` : inner;
+  return (node.content ?? []).map(inlineText).join("");
+};
+
+/**
+ * Rebuilds the plain-text format from the field's ADF. Usually that's one
+ * paragraph holding the text verbatim, but once someone edits the field in
+ * Jira's editor it reads the text as Markdown: `# name` turns into a numbered
+ * item, `* [open] x` into a bullet, and `---group` into an empty bullet with
+ * the group name nested one level down.
+ */
+const adfToChecklistText = (node: AdfNode, lines: string[] = []) => {
+  const walkList = (list: AdfNode, ordered: boolean, groups: boolean) => {
+    for (const item of list.content ?? []) {
+      const [first, ...rest] = item.content ?? [];
+      const text = first?.type === "paragraph" ? inlineText(first).trim() : "";
+      if (text) {
+        if (ordered) lines.push(`# ${text}`);
+        else if (groups && !text.startsWith("[")) lines.push(`---${text}`);
+        else lines.push(`* ${text}`);
+      }
+      for (const child of first?.type === "paragraph"
+        ? rest
+        : (item.content ?? [])) {
+        if (child.type === "bulletList" || child.type === "orderedList") {
+          walkList(child, child.type === "orderedList", !text);
+        } else {
+          adfToChecklistText(child, lines);
+        }
+      }
+    }
+  };
+
+  switch (node.type) {
+    case "paragraph":
+      lines.push(...inlineText(node).split("\n"));
+      break;
+    case "bulletList":
+    case "orderedList":
+      walkList(node, node.type === "orderedList", false);
+      break;
+    case "blockquote":
+      for (const line of adfToChecklistText({ content: node.content }, []))
+        lines.push(`>> ${line.replace(/^>>\s*/, "")}`);
+      break;
+    default:
+      for (const child of node.content ?? []) adfToChecklistText(child, lines);
+  }
+  return lines;
 };
 
 // API v3 wraps the plain-text field in an ADF doc; v2 or a plain text field
@@ -37,7 +83,7 @@ const fieldText = z.union([
   z.string(),
   z
     .looseObject({ type: z.literal("doc"), content: z.array(z.any()) })
-    .transform((doc) => adfText(doc)),
+    .transform((doc) => adfToChecklistText(doc).join("\n")),
 ]);
 
 const ITEM = /^\*\s*(?:\[([^\]]*)\]\s*)?(.*)$/;
