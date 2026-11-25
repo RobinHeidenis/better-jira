@@ -4,6 +4,7 @@ import { plainTextToAdf } from "./api/comments";
 import { currentUserOptions } from "./api/current-user";
 import { type IssuesByStatusId, issueOptions } from "./api/issues";
 import { type Transition, transitionIssue } from "./api/transitions";
+import { reloadIssue } from "./reload-issue";
 import { store } from "./store";
 import {
   type FormField,
@@ -145,10 +146,7 @@ export const runTransition = async (
       }`,
     );
   } finally {
-    void queryClient.invalidateQueries({ queryKey: ["issue", issue.key] });
-    void queryClient.invalidateQueries({
-      predicate: (query) => isBoardIssues(query.queryKey),
-    });
+    reloadIssue(queryClient, issue.key);
   }
 };
 

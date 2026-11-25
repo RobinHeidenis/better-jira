@@ -1,6 +1,7 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { type IssueEdit, updateIssue } from "./api/edit";
 import { type IssuesByStatusId, issueOptions } from "./api/issues";
+import { reloadIssue } from "./reload-issue";
 import { reportError } from "./transition";
 
 const isBoardIssues = (queryKey: readonly unknown[]) =>
@@ -43,12 +44,6 @@ export const editIssue = async (
       `Couldn't update ${issueKey}: ${error instanceof Error ? error.message : String(error)}`,
     );
   } finally {
-    void queryClient.invalidateQueries({
-      queryKey: issueOptions(issueKey).queryKey,
-      exact: true,
-    });
-    void queryClient.invalidateQueries({
-      predicate: (query) => isBoardIssues(query.queryKey),
-    });
+    reloadIssue(queryClient, issueKey);
   }
 };
