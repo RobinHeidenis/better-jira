@@ -28,6 +28,18 @@ It runs at http://localhost:3001. The first visit walks you through setup.
 
 Everything except the account can be changed later in settings, behind the gear on the board.
 
+## Hosting with Docker
+
+The repo has a `Dockerfile` and a `compose.yaml`. The image builds the app and runs it on Node, listening on port 3000.
+
+```sh
+docker compose up -d --build
+```
+
+On Komodo, create a Stack from this repo. It picks up `compose.yaml`, builds the image on your server and keeps it running. Change the left side of `"3000:3000"` to publish it on another port.
+
+Put it behind your reverse proxy with HTTPS. Your tokens travel from the browser to this server on every Jira request, so plain HTTP on a network you don't control would expose them. The server only forwards to `*.atlassian.net` with the caller's own token, but it's still best kept on a private network or behind your proxy's login.
+
 ## Where your credentials go
 
 Your Jira and GitLab tokens stay in your browser's local storage. GitLab is called straight from the browser. Jira calls go through this app's own server, because Atlassian's REST API sends no CORS headers. That server only forwards requests to `*.atlassian.net` and stores nothing.

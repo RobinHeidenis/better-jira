@@ -1,0 +1,7 @@
+services:
+  better-jira:
+    build: .
+    image: better-jira:latest
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
