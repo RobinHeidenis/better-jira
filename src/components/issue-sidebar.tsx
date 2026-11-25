@@ -211,7 +211,7 @@ export const IssueSidebar = ({ issue }: { issue: SidebarIssue }) => {
         </Section>
       ) : null}
 
-      <div className="space-y-1 border-t pt-4 text-muted-foreground">
+      <div className="space-y-1 border-border border-t pt-4 text-muted-foreground">
         {fields.created ? <p>Created {timeAgo(fields.created)}</p> : null}
         {fields.updated ? <p>Updated {timeAgo(fields.updated)}</p> : null}
         {baseUrl ? (
