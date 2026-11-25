@@ -62,7 +62,7 @@ const CommentMenu = ({
           variant="ghost"
           size="icon-xs"
           aria-label="Comment actions"
-          className="ml-auto opacity-0 group-hover/comment:opacity-100 focus-visible:opacity-100 data-popup-open:opacity-100"
+          className="self-center text-muted-foreground hover:text-foreground data-popup-open:text-foreground"
         />
       }
     >
