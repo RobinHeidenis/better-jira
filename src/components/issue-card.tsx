@@ -57,7 +57,7 @@ export const IssueCard = ({
   );
 
   return (
-    <Card>
+    <Card className="group/card">
       <CardHeader>
         {issue.fields.parent?.key ? (
           <CardDescription>
@@ -120,6 +120,9 @@ export const IssueCard = ({
                   })),
                 }}
               />
+              {storyPoints !== null ? (
+                <Badge className="!px-1 !py-0.5">{storyPoints}</Badge>
+              ) : null}
               <TransitionMenu
                 issue={{ key: issue.key, summary: issue.fields.summary }}
                 statusId={issue.fields.status.id}
@@ -138,16 +141,13 @@ export const IssueCard = ({
                     className={
                       statusMenuOpen
                         ? "text-foreground"
-                        : "cursor-pointer text-muted-foreground hover:text-foreground"
+                        : "cursor-pointer text-muted-foreground opacity-0 transition-opacity group-hover/card:opacity-100 hover:text-foreground focus-visible:opacity-100"
                     }
                   >
                     <RiArrowLeftRightLine className="size-4" />
                   </button>
                 }
               />
-              {storyPoints !== null ? (
-                <Badge className="!px-1 !py-0.5">{storyPoints}</Badge>
-              ) : null}
             </div>
           </div>
 
