@@ -76,7 +76,9 @@ export const jiraRequest = createServerFn({ method: "POST" })
       throw requestError("Jira request", response, responseText);
     }
 
-    return (await JSON.parse(responseText)) as JsonValue;
+    // Deletes and some updates answer 204 with no body.
+    if (!responseText) return null;
+    return JSON.parse(responseText) as JsonValue;
   });
 
 const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
