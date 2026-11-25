@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { useSelector } from "@tanstack/react-store";
+import { currentUserOptions } from "#/lib/api/current-user";
 import { boardIssuesOptions, issueDeveloper } from "#/lib/api/issues";
+import { sortForReview } from "#/lib/review-order";
 import { type Settings, store } from "#/lib/store";
 import { IssueCard } from "./issue-card";
 import { CardTitle } from "./ui/card";
@@ -32,6 +34,12 @@ export const Column = ({
     store,
     (state) => state.storyPointsField,
   );
+  const reviewColumn = useSelector(store, (state) => state.reviewColumn);
+  const isReviewColumn = reviewColumn === name;
+  const { data: currentUser } = useQuery({
+    ...currentUserOptions(),
+    enabled: isReviewColumn,
+  });
   const { data: issuesByStatusId, isPending } = useQuery(
     boardIssuesOptions(boardId, jql, { developerField, storyPointsField }),
   );
@@ -73,6 +81,15 @@ export const Column = ({
       })
     : columnIssues;
 
+  const visibleIssues =
+    isReviewColumn && currentUser
+      ? sortForReview(
+          filteredColumnIssues,
+          currentUser.accountId,
+          developerField,
+        )
+      : filteredColumnIssues;
+
   return (
     <div className="w-80 shrink-0 bg-card/30 p-4">
       <CardTitle>
@@ -88,7 +105,7 @@ export const Column = ({
             [0, 1, 2].map((index) => (
               <Skeleton key={index} className="h-32 w-full" />
             ))
-          : filteredColumnIssues.map((issue) => (
+          : visibleIssues.map((issue) => (
               <IssueCard
                 key={issue.id}
                 issue={issue}

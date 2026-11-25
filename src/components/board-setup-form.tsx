@@ -27,6 +27,7 @@ const COLUMNS_STEP = "visibleColumns";
 const FILTERING_STEP = "filtering";
 const DEVELOPER_STEP = "developerField";
 const STORY_POINTS_STEP = "storyPointsField";
+const REVIEW_STEP = "reviewColumn";
 
 const customFieldsOfType = (fields: JiraField[] | undefined, type: string) =>
   (fields ?? []).filter((field) => field.custom && field.schema?.type === type);
@@ -167,6 +168,23 @@ export const BoardSetupForm = ({
         defaultChecked: field.id === configuration?.estimation?.field.fieldId,
       })),
     },
+    {
+      name: REVIEW_STEP,
+      required: false,
+      prompt: "Which column holds tickets in code review?",
+      description:
+        "That column puts the tickets you need to review first, then your own. Skip this to keep Jira's order.",
+      pending: isLoading,
+      failure: error
+        ? `Couldn't load this board's columns: ${error.message}`
+        : undefined,
+      choices: columns.map((column) => ({
+        key: `${boardId}:review:${column.name}`,
+        value: column.name,
+        label: column.name,
+        defaultChecked: /review/i.test(column.name),
+      })),
+    },
   ];
 
   // The columns step can't be answered before its choices exist. The
@@ -175,6 +193,7 @@ export const BoardSetupForm = ({
   // wrong".
   const waitingOnColumns =
     (activeStep === COLUMNS_STEP && isLoading) ||
+    (activeStep === REVIEW_STEP && isLoading) ||
     ((activeStep === DEVELOPER_STEP || activeStep === STORY_POINTS_STEP) &&
       isFieldsLoading);
 
@@ -196,6 +215,7 @@ export const BoardSetupForm = ({
       includeDevTickets: answers.get(FILTERING_STEP) === "show",
       developerField: stringAnswer(answers, DEVELOPER_STEP),
       storyPointsField: stringAnswer(answers, STORY_POINTS_STEP),
+      reviewColumn: stringAnswer(answers, REVIEW_STEP),
       hiddenColumns: columns
         .map((column) => column.name)
         .filter((name) => !visible.has(name)),

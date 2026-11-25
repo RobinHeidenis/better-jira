@@ -35,6 +35,7 @@ export const jiraBoardIssueSchema = z.object({
       )
       .nullish(),
     assignee: jiraUserSchema.nullable(),
+    reporter: jiraUserSchema.nullish(),
     // Both are optional per-project: a project can have its priority field
     // hidden, and unassigned issues send `assignee: null`.
     priority: z
@@ -101,6 +102,7 @@ const fields = [
   "summary",
   "status",
   "assignee",
+  "reporter",
   "priority",
   "labels",
   "issuetype",
