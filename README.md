@@ -8,7 +8,7 @@ A faster front end for Jira Cloud boards and tickets, with GitLab merge requests
 - **Filters and search.** Filter by user, by fix version, or with "Mine" for tickets assigned to you or developed by you. Cmd/Ctrl+F searches every ticket on the board, including off-screen ones, and Enter jumps between matches.
 - **Code review ordering.** Pick a code review column in settings, and it lists reviews waiting on you first, then your own work, then tickets you reported.
 - **Ticket view.** The full description, including tables, code blocks, Mermaid diagrams, images and videos. A sidebar has status, people, parent, subtasks and linked tickets.
-- **Checklists.** If your site uses Issue Checklist Pro, the checklist shows in its own tab, grouped, with progress. Custom statuses like "done by dev" are shown separately from done. Click a box to tick it off, or use the menu next to an item to pick another status (Open, In Progress, done by dev, Done or Skipped). The change is saved to Jira, and Issue Checklist Pro picks it up.
+- **Checklists.** If your site uses Issue Checklist Pro, the checklist shows in its own tab, grouped, with progress. Custom statuses like "done by dev" are shown separately from done. Click a box to tick it off, "Check all" ticks off everything left, or use the menu next to an item to pick another status (Open, In Progress, done by dev, Done or Skipped). The change is saved to Jira, and Issue Checklist Pro picks it up.
 - **Merge requests.** A popover on each card and a list in the sidebar show the merge requests that name the ticket or its subtasks, with pipeline status, approvals and conflicts.
 
 ## Running it

@@ -4,6 +4,7 @@ import {
   RiCheckboxBlankLine,
   RiCheckboxFill,
   RiCheckboxIndeterminateFill,
+  RiCheckDoubleLine,
   RiMoreFill,
 } from "@remixicon/react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -258,14 +259,33 @@ export const Checklist = ({
       { ref: itemRef(checklist, item), current: item.status, status },
     );
   };
+  // Skipped items stay skipped; they don't count towards the total anyway.
+  const remaining = checklist.groups.flatMap((group) =>
+    group.items.filter(
+      (item) => item.state !== "done" && item.state !== "skipped",
+    ),
+  );
   const partial = Object.entries(checklist.partial);
   const partialTotal = partial.reduce((sum, [, count]) => sum + count, 0);
   return (
     <EditingContext value={{ statuses: statusesOf(checklist), setStatus }}>
       <div className="space-y-3">
         <div className="space-y-2">
-          <div className="flex justify-between gap-4 font-semibold">
-            <span>{checklist.title ?? "Checklist"}</span>
+          <div className="flex items-center gap-4 font-semibold">
+            <span className="flex-1">{checklist.title ?? "Checklist"}</span>
+            {remaining.length ? (
+              <Button
+                variant="outline"
+                size="xs"
+                className="-my-1 font-normal"
+                onClick={() => {
+                  for (const item of remaining) setStatus(item, "done");
+                }}
+              >
+                <RiCheckDoubleLine />
+                Check all
+              </Button>
+            ) : null}
             <span className="tabular-nums">
               {checklist.done}/{checklist.total}
               {partial.map(([status, count]) => (
