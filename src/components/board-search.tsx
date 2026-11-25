@@ -43,6 +43,19 @@ export const BoardSearch = ({
     : [];
   const activeIndex = activeIssueId ? matches.indexOf(activeIssueId) : -1;
 
+  // Like the browser's find: as soon as there are matches, the first one is
+  // current, and a match that drops out hands over to the new first.
+  const firstMatch = matches[0] ?? null;
+  const activeIsMatch = activeIndex !== -1;
+  useEffect(() => {
+    if (!activeIsMatch && firstMatch) {
+      boardSearch.setState((state) => ({
+        ...state,
+        activeIssueId: firstMatch,
+      }));
+    }
+  }, [activeIsMatch, firstMatch]);
+
   const step = (direction: 1 | -1) => {
     if (!matches.length) return;
     const next =
