@@ -1,0 +1,9 @@
+# pnpm
+/devtools-bidirectional
+/devtools-event-client
+/devtools-instrumentation
+/devtools-vite-plugin
+/react-router
+/react-start
+/router-query
+# pnpm end

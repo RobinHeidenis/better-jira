@@ -1,3 +1,15 @@
 allowBuilds:
   esbuild: true
   lightningcss: true
+permissions:
+  '@tanstack/devtools-event-client':
+    skills: [devtools-bidirectional, devtools-event-client, devtools-instrumentation]
+  '@tanstack/devtools-vite':
+    skills: true
+  '@tanstack/react-router':
+    skills: [react-router, router-query]
+  '@tanstack/react-start':
+    skills: [react-start]
+skills:
+  dirs:
+    - .claude/skills
