@@ -75,13 +75,7 @@ const Item = ({ item }: { item: ChecklistItem }) => (
         )}
       >
         {item.state === "partial" || item.state === "skipped" ? (
-          <Badge
-            variant="outline"
-            className={cn(
-              "mr-2 align-middle no-underline",
-              item.state === "partial" && "border-sky-500/40 text-sky-500",
-            )}
-          >
+          <Badge variant="outline" className="mr-2 align-middle">
             {item.status}
           </Badge>
         ) : null}
