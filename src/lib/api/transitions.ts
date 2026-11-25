@@ -72,6 +72,7 @@ export const transitionIssue = async (
 const assignableUserSchema = z.object({
   accountId: z.string(),
   displayName: z.string(),
+  accountType: z.string().optional(),
   active: z.boolean().optional(),
   avatarUrls: z.object({ "48x48": z.string().nullish() }).optional(),
 });
@@ -80,14 +81,17 @@ export type AssignableUser = z.infer<typeof assignableUserSchema>;
 
 export const assignableUsersOptions = (issueKey: string) => {
   return queryOptions({
-    queryKey: ["issue", issueKey, "assignable-users"],
+    queryKey: ["issue", issueKey, "assignable-users", 2],
     queryFn: async () => {
       const users = await request(
         `user/assignable/search?issueKey=${issueKey}&maxResults=500`,
         z.array(assignableUserSchema),
         "atlassian",
       );
-      return users.filter((user) => user.active !== false);
+      // Apps and integrations are assignable too, but nobody means them.
+      return users.filter(
+        (user) => user.active !== false && user.accountType !== "app",
+      );
     },
     staleTime: 60 * 60 * 1000,
   });

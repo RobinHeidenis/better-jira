@@ -21,6 +21,7 @@ export const Picker = ({
   placeholder,
   disabled,
   className = "w-72",
+  defaultOpen,
 }: {
   options: PickerOption[];
   value: string | null;
@@ -28,8 +29,10 @@ export const Picker = ({
   placeholder: string;
   disabled?: boolean;
   className?: string;
+  defaultOpen?: boolean;
 }) => (
   <Combobox
+    defaultOpen={defaultOpen}
     items={options}
     value={options.find((option) => option.value === value) ?? null}
     onValueChange={(option: PickerOption | null) =>

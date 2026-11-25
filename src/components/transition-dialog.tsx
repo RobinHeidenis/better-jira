@@ -48,8 +48,10 @@ const UserInput = ({
   issueKey,
   value,
   onChange,
+  autoOpen,
 }: {
   issueKey: string;
+  autoOpen: boolean;
   value: FormValue | undefined;
   onChange: (value: FormValue | undefined) => void;
 }) => {
@@ -85,6 +87,7 @@ const UserInput = ({
       value={selected}
       placeholder={isPending ? "Loading people…" : "Leave as is"}
       className="w-full"
+      defaultOpen={autoOpen}
       onChange={(next) => {
         if (next === null) onChange(undefined);
         else if (next === ME) onChange({ kind: "me" });
@@ -107,8 +110,11 @@ const FieldInput = ({
   issueKey,
   value,
   onChange,
+  autoOpen = false,
 }: {
   entry: FormField;
+  /** Opens a picker straight away, for a form with nothing else to fill in. */
+  autoOpen?: boolean;
   issueKey: string;
   value: FormValue | undefined;
   onChange: (value: FormValue | undefined) => void;
@@ -120,7 +126,12 @@ const FieldInput = ({
   switch (entry.kind) {
     case "user":
       return (
-        <UserInput issueKey={issueKey} value={value} onChange={onChange} />
+        <UserInput
+          issueKey={issueKey}
+          value={value}
+          onChange={onChange}
+          autoOpen={autoOpen}
+        />
       );
     case "option":
       return (
@@ -132,6 +143,7 @@ const FieldInput = ({
           value={value?.kind === "option" ? value.id : null}
           placeholder="Leave as is"
           className="w-full"
+          defaultOpen={autoOpen}
           onChange={(id) => {
             const option = allowed.find((option) => option.id === id);
             onChange(option ? { kind: "option", ...option } : undefined);
@@ -358,6 +370,7 @@ const TransitionForm = ({
             </div>
             <FieldInput
               entry={entry}
+              autoOpen={shown.length === 1 && !customizing}
               issueKey={issue.key}
               value={values[entry.key]}
               onChange={(value) =>
