@@ -324,6 +324,7 @@ const TransitionForm = ({
         {shown.map((entry) => (
           <div
             key={entry.key}
+            data-autofocus={entry === shown[0] && !customizing ? "" : undefined}
             className={cn(
               "grid gap-1.5",
               customizing && hidden.has(entry.key) && "opacity-60",
@@ -463,7 +464,15 @@ export const TransitionHost = () => {
   return (
     <>
       <Dialog open={!!request} onOpenChange={(open) => !open && close()}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent
+          className="sm:max-w-md"
+          // The first field gets focus, so it can be filled in straight away.
+          initialFocus={() =>
+            document.querySelector<HTMLElement>(
+              "[data-autofocus] :is(input, textarea, button)",
+            )
+          }
+        >
           {request ? (
             <TransitionForm
               key={`${request.issue.key}:${request.transition.id}`}
