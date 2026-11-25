@@ -1,5 +1,7 @@
-import { RiSettings3Line } from "@remixicon/react";
+import { RiSettings3Line, RiUserStarLine } from "@remixicon/react";
+import { useSelector } from "@tanstack/react-store";
 import type { ReactNode } from "react";
+import { store } from "#/lib/store";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Link } from "./ui/link";
@@ -7,11 +9,23 @@ import { UserFilter } from "./user-filter";
 import { VersionFilter } from "./version-filter";
 
 export const BoardFilters = ({ search }: { search: ReactNode }) => {
+  const onlyMine = useSelector(store, (state) => state.onlyMine);
   return (
     <Card>
       <CardContent className="flex gap-2">
         <UserFilter />
         <VersionFilter />
+        <Button
+          variant={onlyMine ? "secondary" : "outline"}
+          aria-pressed={onlyMine}
+          title="Only tickets assigned to or developed by you"
+          onClick={() =>
+            store.setState((state) => ({ ...state, onlyMine: !state.onlyMine }))
+          }
+        >
+          <RiUserStarLine data-icon="inline-start" />
+          Mine
+        </Button>
         {search}
         <Button
           variant="ghost"

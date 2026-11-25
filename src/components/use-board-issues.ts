@@ -28,6 +28,7 @@ export const useBoardIssues = (boardId: number, jql: string) => {
     (state) => state.storyPointsField,
   );
   const reviewColumn = useSelector(store, (state) => state.reviewColumn);
+  const onlyMine = useSelector(store, (state) => state.onlyMine);
   // The input renders with the live query; the board follows at low priority,
   // so typing never waits on cards mounting and stale renders get dropped.
   const query = useDeferredValue(
@@ -35,13 +36,23 @@ export const useBoardIssues = (boardId: number, jql: string) => {
   );
   const { data: currentUser } = useQuery({
     ...currentUserOptions(),
-    enabled: reviewColumn !== null,
+    enabled: reviewColumn !== null || onlyMine,
   });
   const { data: issuesByStatusId, isPending } = useQuery(
     boardIssuesOptions(boardId, jql, { developerField, storyPointsField }),
   );
 
   const passesFilters = (issue: JiraBoardIssue) => {
+    if (onlyMine && currentUser) {
+      const me = currentUser.accountId;
+      if (
+        issue.fields.assignee?.accountId !== me &&
+        issueDeveloper(issue, developerField)?.accountId !== me
+      ) {
+        return false;
+      }
+    }
+
     const users = filters?.users ?? [];
     if (users.length) {
       const assigned = users.includes(issue.fields.assignee?.accountId ?? "");

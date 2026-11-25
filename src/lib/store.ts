@@ -14,6 +14,7 @@ const settingsSchema = z.object({
   storyPointsField: z.string().nullable().default(null),
   reviewColumn: z.string().nullable().default(null),
   checklistField: z.string().nullable().default(null),
+  onlyMine: z.boolean().default(false),
   includeDevTickets: z.boolean().nullable(),
   filter: z
     .object({
@@ -39,6 +40,7 @@ const defaults: Settings = {
   storyPointsField: null,
   reviewColumn: null,
   checklistField: null,
+  onlyMine: false,
   includeDevTickets: null,
   filter: null,
   gitlabApiKey: null,
