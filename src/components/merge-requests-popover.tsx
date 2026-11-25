@@ -48,7 +48,7 @@ const STATE = {
   },
 } satisfies Record<MergeRequest["state"], unknown>;
 
-/** `group/sub/hooray-frontend!3001` → `hooray-frontend`, `!3001`. */
+/** `group/sub/web-app!3001` → `web-app`, `!3001`. */
 const shortReference = (full: string) => {
   const [path = full, iid = ""] = full.split("!");
   return { project: path.split("/").at(-1) ?? path, iid: `!${iid}` };
