@@ -63,13 +63,25 @@ const UserInput = ({
     shortlist.length && !showEveryone
       ? (users ?? []).filter((user) => shortlist.includes(user.accountId))
       : (users ?? []);
+  const people: PickerOption[] = shortlisted.map((user) => ({
+    value: user.accountId,
+    label: user.displayName,
+  }));
+  // The chosen person may be off the shortlist, or not in this project at all.
+  if (
+    value?.kind === "user" &&
+    !people.some((person) => person.value === value.accountId)
+  ) {
+    const user = users?.find((user) => user.accountId === value.accountId);
+    people.push({
+      value: value.accountId,
+      label: user?.displayName ?? value.displayName,
+    });
+  }
   const options: PickerOption[] = [
     { value: ME, label: "Me", description: "Whoever moves the ticket" },
+    ...people,
     { value: UNASSIGNED, label: "Unassigned" },
-    ...shortlisted.map((user) => ({
-      value: user.accountId,
-      label: user.displayName,
-    })),
   ];
   if (users && shortlisted.length < users.length) {
     options.push({
@@ -77,13 +89,6 @@ const UserInput = ({
       label: "Someone else…",
       description: `Show all ${users.length} people`,
     });
-  }
-  // A saved default can name someone this issue's project doesn't list.
-  if (
-    value?.kind === "user" &&
-    !options.some((option) => option.value === value.accountId)
-  ) {
-    options.push({ value: value.accountId, label: value.displayName });
   }
 
   const selected =
