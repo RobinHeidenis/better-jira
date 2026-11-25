@@ -38,6 +38,8 @@ docker compose up -d --build
 
 On Komodo, create a Stack from this repo. It picks up `compose.yaml`, builds the image on your server and keeps it running. Change the left side of `"3000:3000"` to publish it on another port.
 
+GitHub Actions also builds the image on every push to `main` and publishes it to the GitHub Container Registry as `ghcr.io/<owner>/<repo>:latest`, for both amd64 and arm64. A `v1.2.3` tag adds `1.2.3` and `1.2`, and every build gets a `sha-…` tag you can pin or roll back to. To run the published image instead of building on your server, replace `build: .` in `compose.yaml` with that image name. If the repo is private, the package is too, so log your server in to `ghcr.io` with a token that has `read:packages`.
+
 Put it behind your reverse proxy with HTTPS. Your tokens travel from the browser to this server on every Jira request, so plain HTTP on a network you don't control would expose them. The server only forwards to `*.atlassian.net` with the caller's own token, but it's still best kept on a private network or behind your proxy's login.
 
 ## Where your credentials go
