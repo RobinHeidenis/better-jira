@@ -1,11 +1,18 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import type { Attachment } from "#/lib/api/attachments";
-import { commentsOptions, type JiraComment } from "#/lib/api/comments";
+import {
+  addComment,
+  commentsOptions,
+  type JiraComment,
+} from "#/lib/api/comments";
 import { initials, timeAgo } from "#/lib/utils";
 import { Adf } from "./adf/adf";
 import { ErrorState } from "./error-state";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { Button } from "./ui/button";
 import { Skeleton } from "./ui/skeleton";
+import { Textarea } from "./ui/textarea";
 
 const dateTime = new Intl.DateTimeFormat(undefined, {
   dateStyle: "medium",
@@ -68,6 +75,73 @@ const Comment = ({
   );
 };
 
+const isMac =
+  typeof navigator !== "undefined" &&
+  /Mac|iPhone|iPad/.test(navigator.platform);
+
+const CommentForm = ({ issueKey }: { issueKey: string }) => {
+  const queryClient = useQueryClient();
+  const [text, setText] = useState("");
+  const { queryKey } = commentsOptions(issueKey);
+
+  const post = useMutation({
+    mutationFn: (body: string) => addComment(issueKey, body),
+    onSuccess: (comment) => {
+      // Show it straight away; the refetch below picks up anything else.
+      queryClient.setQueryData(queryKey, (old) =>
+        old
+          ? { comments: [comment, ...old.comments], total: old.total + 1 }
+          : old,
+      );
+      setText("");
+      queryClient.invalidateQueries({ queryKey });
+    },
+  });
+
+  const submit = () => {
+    if (text.trim() && !post.isPending) post.mutate(text);
+  };
+
+  return (
+    <form
+      className="space-y-2 py-4"
+      onSubmit={(event) => {
+        event.preventDefault();
+        submit();
+      }}
+    >
+      <Textarea
+        aria-label="Add a comment"
+        placeholder="Add a comment…"
+        value={text}
+        onChange={(event) => setText(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+            event.preventDefault();
+            submit();
+          }
+        }}
+        disabled={post.isPending}
+      />
+      {post.error ? (
+        <ErrorState title="Couldn't post the comment" error={post.error} />
+      ) : null}
+      <div className="flex items-center justify-end gap-3">
+        <span className="text-muted-foreground">
+          {isMac ? "⌘" : "Ctrl"}+Enter to post
+        </span>
+        <Button
+          type="submit"
+          size="sm"
+          disabled={!text.trim() || post.isPending}
+        >
+          {post.isPending ? "Posting…" : "Comment"}
+        </Button>
+      </div>
+    </form>
+  );
+};
+
 export const Comments = ({
   issueKey,
   attachments,
@@ -97,11 +171,17 @@ export const Comments = ({
     );
   }
   if (!data.comments.length) {
-    return <p className="py-4 text-muted-foreground">No comments yet.</p>;
+    return (
+      <>
+        <CommentForm issueKey={issueKey} />
+        <p className="py-4 text-muted-foreground">No comments yet.</p>
+      </>
+    );
   }
 
   return (
     <>
+      <CommentForm issueKey={issueKey} />
       <ul className="divide-y">
         {data.comments.map((comment) => (
           <Comment
