@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { boardConfigurationOptions, boardJql } from "#/lib/api/boards";
 import { store } from "#/lib/store";
 import { BoardFilters } from "./board-filters";
+import { BoardKeyboard } from "./board-keyboard";
 import { BoardSearch } from "./board-search";
 import { Column } from "./column";
 
@@ -22,6 +23,7 @@ export const Board = () => {
 
   return (
     <>
+      <BoardKeyboard boardId={boardId} jql={jql} columns={columns} />
       <BoardFilters
         search={<BoardSearch boardId={boardId} jql={jql} columns={columns} />}
       />
