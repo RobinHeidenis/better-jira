@@ -20,12 +20,14 @@ export const Picker = ({
   onChange,
   placeholder,
   disabled,
+  className = "w-72",
 }: {
   options: PickerOption[];
   value: string | null;
   onChange: (value: string | null) => void;
   placeholder: string;
   disabled?: boolean;
+  className?: string;
 }) => (
   <Combobox
     items={options}
@@ -42,7 +44,7 @@ export const Picker = ({
       placeholder={placeholder}
       showClear={value !== null}
       disabled={disabled}
-      className="w-72"
+      className={className}
     />
     <ComboboxContent>
       <ComboboxEmpty>No matches</ComboboxEmpty>

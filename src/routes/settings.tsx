@@ -266,6 +266,48 @@ function SettingsPage() {
 
           <Separator />
 
+          <Section title="Transition forms">
+            {Object.keys(settings.transitionForms).length ? (
+              Object.entries(settings.transitionForms).map(
+                ([statusId, form]) => (
+                  <Row
+                    key={statusId}
+                    label={`Moving to ${form.status}`}
+                    description={[
+                      form.hidden.length
+                        ? `${form.hidden.length} field${form.hidden.length === 1 ? "" : "s"} not asked`
+                        : null,
+                      Object.keys(form.defaults).length
+                        ? `${Object.keys(form.defaults).length} default${Object.keys(form.defaults).length === 1 ? "" : "s"}`
+                        : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  >
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const { [statusId]: _, ...rest } =
+                          settings.transitionForms;
+                        update({ transitionForms: rest });
+                      }}
+                    >
+                      Reset
+                    </Button>
+                  </Row>
+                ),
+              )
+            ) : (
+              <p className="text-muted-foreground">
+                When moving a ticket opens a form, use "Customize form" to pick
+                which fields it asks for and their defaults for that lane.
+              </p>
+            )}
+          </Section>
+
+          <Separator />
+
           <Section title="Filtering">
             <Row
               label="Include developed tickets"

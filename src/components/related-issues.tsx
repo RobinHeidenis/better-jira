@@ -45,7 +45,7 @@ const isDone = (status?: RelatedStatus) =>
  * Colours by Jira's status category, except that the statuses of the code
  * review column picked in settings get their own colour.
  */
-const useStatusTone = () => {
+export const useStatusTone = () => {
   const boardId = useSelector(store, (state) => state.boardId);
   const reviewColumn = useSelector(store, (state) => state.reviewColumn);
   const { data: board } = useQuery({

@@ -1,4 +1,4 @@
-import { RiExternalLinkLine } from "@remixicon/react";
+import { RiArrowDownSLine, RiExternalLinkLine } from "@remixicon/react";
 import { useSelector } from "@tanstack/react-store";
 import type { ReactNode } from "react";
 import {
@@ -12,8 +12,10 @@ import { store } from "#/lib/store";
 import { initials, timeAgo } from "#/lib/utils";
 import { MergeRequestList } from "./merge-requests-popover";
 import { groupLinks, RelatedGroup } from "./related-issues";
+import { TransitionMenu } from "./transition-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
 import { Link } from "./ui/link";
 
 type SidebarIssue = JiraBoardIssue & {
@@ -95,7 +97,16 @@ export const IssueSidebar = ({ issue }: { issue: SidebarIssue }) => {
       <Section title="Details">
         <dl>
           <Field label="Status">
-            <Badge variant="outline">{fields.status.name}</Badge>
+            <TransitionMenu
+              issue={{ key: issue.key, summary: fields.summary }}
+              statusId={fields.status.id}
+              trigger={
+                <Button variant="outline" size="xs" className="max-w-full">
+                  <span className="truncate">{fields.status.name}</span>
+                  <RiArrowDownSLine />
+                </Button>
+              }
+            />
           </Field>
           <Field label="Type">
             <IconText

@@ -7,6 +7,7 @@ import {
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { ThemeProvider } from "#/components/theme-provider";
+import { TransitionHost } from "#/components/transition-dialog";
 import { Link } from "#/components/ui/link";
 import { SharedTooltip, TooltipProvider } from "#/components/ui/tooltip";
 import TanStackQueryDevtools from "../integrations/tanstack-query/devtools";
@@ -63,6 +64,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           <TooltipProvider>
             {children}
             <SharedTooltip />
+            <TransitionHost />
           </TooltipProvider>
         </ThemeProvider>
         <TanStackDevtools

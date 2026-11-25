@@ -1,6 +1,7 @@
 import { createStore } from "@tanstack/react-store";
 import { z } from "zod";
 import { jiraBaseUrlSchema } from "./jira-url";
+import { transitionFormSchema } from "./transition-form";
 
 const STORAGE_KEY = "better-jira:settings";
 
@@ -26,6 +27,11 @@ const settingsSchema = z.object({
   // resetting the whole store.
   gitlabApiKey: z.string().nullable().default(null),
   gitlabProjects: z.array(z.number()).nullable().default(null),
+  /** Transition forms, by the id of the status they move to. */
+  transitionForms: z
+    .record(z.string(), transitionFormSchema)
+    .catch({})
+    .default({}),
 });
 
 export type Settings = z.infer<typeof settingsSchema>;
@@ -45,6 +51,7 @@ const defaults: Settings = {
   filter: null,
   gitlabApiKey: null,
   gitlabProjects: null,
+  transitionForms: {},
 };
 
 /**
