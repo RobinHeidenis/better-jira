@@ -11,6 +11,7 @@ import { jiraIssueUrl } from "#/lib/jira-url";
 import { store } from "#/lib/store";
 import { initials, timeAgo } from "#/lib/utils";
 import { MergeRequestList } from "./merge-requests-popover";
+import { groupLinks, RelatedGroup } from "./related-issues";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Badge } from "./ui/badge";
 import { Link } from "./ui/link";
@@ -21,44 +22,6 @@ type SidebarIssue = JiraBoardIssue & {
     updated?: string;
     issuelinks?: JiraIssueLink[];
   };
-};
-
-type RelatedIssue = { key: string; summary: string; status?: string };
-
-const RelatedRow = ({ issue }: { issue: RelatedIssue }) => (
-  <li className="flex items-center gap-2">
-    <Link
-      to="/issue/$issueId"
-      params={{ issueId: issue.key }}
-      underlined={false}
-      className="min-w-0 flex-1 truncate"
-    >
-      <span className="font-medium">{issue.key}</span> {issue.summary}
-    </Link>
-    {issue.status ? (
-      <Badge variant="outline" className="shrink-0">
-        {issue.status}
-      </Badge>
-    ) : null}
-  </li>
-);
-
-/** Links grouped by how they read from this issue, e.g. "is blocked by". */
-const groupLinks = (links: JiraIssueLink[]) => {
-  const groups = new Map<string, RelatedIssue[]>();
-  for (const link of links) {
-    const other = link.outwardIssue ?? link.inwardIssue;
-    if (!other) continue;
-    const label = link.outwardIssue ? link.type.outward : link.type.inward;
-    const group = groups.get(label) ?? [];
-    group.push({
-      key: other.key,
-      summary: other.fields.summary,
-      status: other.fields.status?.name,
-    });
-    groups.set(label, group);
-  }
-  return [...groups];
 };
 
 const Section = ({
@@ -213,33 +176,18 @@ export const IssueSidebar = ({ issue }: { issue: SidebarIssue }) => {
             </p>
           ) : null}
           {subtasks.length ? (
-            <div className="space-y-1">
-              <p className="text-muted-foreground">Subtasks</p>
-              <ul className="space-y-1">
-                {subtasks.map((subtask) => (
-                  <RelatedRow
-                    key={subtask.key}
-                    issue={{
-                      key: subtask.key,
-                      summary: subtask.fields.summary,
-                      status: subtask.fields.status?.name,
-                    }}
-                  />
-                ))}
-              </ul>
-            </div>
+            <RelatedGroup
+              label="Subtasks"
+              countDone
+              issues={subtasks.map((subtask) => ({
+                key: subtask.key,
+                summary: subtask.fields.summary,
+                status: subtask.fields.status,
+              }))}
+            />
           ) : null}
           {linkGroups.map(([label, issues]) => (
-            <div key={label} className="space-y-1">
-              <p className="text-muted-foreground first-letter:uppercase">
-                {label}
-              </p>
-              <ul className="space-y-1">
-                {issues.map((related) => (
-                  <RelatedRow key={related.key} issue={related} />
-                ))}
-              </ul>
-            </div>
+            <RelatedGroup key={label} label={label} issues={issues} />
           ))}
         </Section>
       ) : null}

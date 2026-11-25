@@ -12,6 +12,15 @@ const jiraUserSchema = z.object({
   }),
 });
 
+/** The status of a subtask or linked issue, as Jira nests it. */
+const relatedStatusSchema = z.object({
+  id: z.string().optional(),
+  name: z.string(),
+  statusCategory: z.object({ name: z.string() }).optional(),
+});
+
+export type RelatedStatus = z.infer<typeof relatedStatusSchema>;
+
 export const jiraBoardIssueSchema = z.object({
   id: z.string(),
   key: z.string(),
@@ -56,12 +65,7 @@ export const jiraBoardIssueSchema = z.object({
           key: z.string(),
           fields: z.object({
             summary: z.string(),
-            status: z
-              .object({
-                name: z.string(),
-                statusCategory: z.object({ name: z.string() }),
-              })
-              .optional(),
+            status: relatedStatusSchema.optional(),
           }),
         }),
       )
@@ -196,7 +200,7 @@ const linkedIssueSchema = z.object({
   key: z.string(),
   fields: z.object({
     summary: z.string(),
-    status: z.object({ name: z.string() }).optional(),
+    status: relatedStatusSchema.optional(),
   }),
 });
 
