@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { useSelector } from "@tanstack/react-store";
-import { useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { boardConfigurationOptions, boardJql } from "#/lib/api/boards";
+import { boardScroll } from "#/lib/board-search";
 import { store } from "#/lib/store";
 import { BoardFilters } from "./board-filters";
 import { BoardKeyboard } from "./board-keyboard";
@@ -19,6 +20,13 @@ export const Board = () => {
     refetch,
   } = useQuery(boardConfigurationOptions(boardId));
   const scrollRef = useRef<HTMLDivElement>(null);
+  const hasBoard = !!board;
+
+  // Columns lay out before this runs, so the content is already tall enough.
+  useLayoutEffect(() => {
+    if (!hasBoard || !scrollRef.current) return;
+    scrollRef.current.scrollTo(boardScroll.left, boardScroll.top);
+  }, [hasBoard]);
 
   if (boardId === null) return null;
   if (error) {
@@ -54,6 +62,10 @@ export const Board = () => {
       <div
         ref={scrollRef}
         className="relative mt-5 min-h-0 flex-1 overflow-auto"
+        onScroll={(event) => {
+          boardScroll.top = event.currentTarget.scrollTop;
+          boardScroll.left = event.currentTarget.scrollLeft;
+        }}
       >
         <div className="flex min-h-full w-max gap-2">
           {columns.map((column) => (

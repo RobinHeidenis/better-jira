@@ -4,7 +4,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { cn } from "cn";
 import { type RefObject, useEffect, useRef, useState } from "react";
 import { transitionsOptions } from "#/lib/api/transitions";
-import { boardDrag, boardSearch } from "#/lib/board-search";
+import { boardDrag, boardScroll, boardSearch } from "#/lib/board-search";
 import { reportTransitionError, startTransition } from "#/lib/transition";
 import { IssueCard } from "./issue-card";
 import { CardTitle } from "./ui/card";
@@ -83,7 +83,16 @@ export const Column = ({
     overscan: 4,
     scrollMargin: listOffset,
     getItemKey: (index) => issues[index]?.id ?? index,
+    initialOffset: () => boardScroll.top,
+    initialMeasurementsCache: boardScroll.measurements.get(name),
   });
+
+  useEffect(
+    () => () => {
+      boardScroll.measurements.set(name, virtualizer.measurementsCache);
+    },
+    [name, virtualizer],
+  );
 
   const activeIndex = issues.findIndex((issue) => issue.id === activeIssueId);
 

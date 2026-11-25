@@ -1,4 +1,5 @@
 import { createStore } from "@tanstack/react-store";
+import type { VirtualItem } from "@tanstack/react-virtual";
 import { issueDeveloper, type JiraBoardIssue } from "#/lib/api/issues";
 
 /** Board search state. Lives for the tab only, so it isn't in settings. */
@@ -57,3 +58,15 @@ export const boardDrag = createStore<{
   summary: string;
   column: string;
 } | null>(null);
+
+/**
+ * Where the board was scrolled and how tall each column's cards measured,
+ * so coming back from a ticket lands on the same spot. Columns only render
+ * the cards in view, so without the heights they'd be rebuilt from estimates
+ * and the restored position would drift.
+ */
+export const boardScroll = {
+  top: 0,
+  left: 0,
+  measurements: new Map<string, VirtualItem[]>(),
+};
