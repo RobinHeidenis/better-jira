@@ -132,6 +132,7 @@ export const ticketMergeRequestsOptions = (
   return queryOptions({
     queryKey: [
       "gitlab-ticket-merge-requests",
+      2,
       issue.key,
       issue.subtasks.map((subtask) => subtask.key),
       projectIds,

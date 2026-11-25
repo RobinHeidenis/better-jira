@@ -173,7 +173,8 @@ const MergeRequestRow = ({ mergeRequest }: { mergeRequest: MergeRequest }) => {
             </span>
             <span aria-hidden="true">·</span>
             <span>{timeAgo(mergeRequest.updated_at)}</span>
-            {mergeRequest.state === "opened" ? (
+            {/* Results cached before `project_id` was fetched lack it. */}
+            {mergeRequest.state === "opened" && mergeRequest.project_id ? (
               <MergeRequestChecks mergeRequest={mergeRequest} />
             ) : null}
           </span>
