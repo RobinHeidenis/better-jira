@@ -18,7 +18,7 @@ const jiraRequestSchema = z.object({
   body: z.string().optional(),
   query: z.record(z.string(), z.string()).optional(),
   endpointType: z
-    .enum(["jira", "atlassian", "software"])
+    .enum(["jira", "atlassian", "atlassian-v2", "software"])
     .optional()
     .default("jira"),
 });
@@ -33,6 +33,8 @@ export type JiraRequestInput = z.infer<typeof jiraRequestSchema>;
 const apiPrefixes: Record<JiraRequestInput["endpointType"], string> = {
   jira: "rest/agile/1.0",
   atlassian: "rest/api/3",
+  // v2 reads and writes text fields as plain strings instead of ADF.
+  "atlassian-v2": "rest/api/2",
   software: "rest/software/1.0",
 };
 

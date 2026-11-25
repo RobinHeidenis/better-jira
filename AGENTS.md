@@ -78,7 +78,7 @@ Zod node schemas are in `src/lib/adf/` (`block-nodes.ts`, `inline-nodes.ts`). `s
 
 ### Custom fields
 
-Custom field ids differ per Jira site. The developer, story points and checklist fields are picked during board setup and stored as `developerField`, `storyPointsField` and `checklistField`. The checklist is Issue Checklist Pro's text field, parsed in `src/lib/checklist.ts`. `src/lib/api/issues.ts` requests them by id and parses them out of the loose `fields` object (`issueDeveloper`, `issueStoryPoints`). When a setting is null, the UI hides that part.
+Custom field ids differ per Jira site. The developer, story points and checklist fields are picked during board setup and stored as `developerField`, `storyPointsField` and `checklistField`. The checklist is Issue Checklist Pro's text field, parsed in `src/lib/checklist.ts`. Ticking an item rewrites that one line in a fresh copy of the field through API v2 (`src/lib/api/checklist.ts`), and the app syncs its checklist from the field. `src/lib/api/issues.ts` requests them by id and parses them out of the loose `fields` object (`issueDeveloper`, `issueStoryPoints`). When a setting is null, the UI hides that part.
 
 <!-- intent-skills:start -->
 ## Skill Loading

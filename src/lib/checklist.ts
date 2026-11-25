@@ -165,3 +165,42 @@ export const parseChecklist = (value: unknown): Checklist | null => {
 
   return checklist.total || checklist.groups.length ? checklist : null;
 };
+
+/** The checklist's text, rebuilt from ADF when the field arrives as such. */
+export const checklistText = (value: unknown): string | null => {
+  const result = fieldText.safeParse(value);
+  return result.success ? result.data : null;
+};
+
+const itemsOf = (checklist: Checklist) =>
+  checklist.groups.flatMap((group) => group.items);
+
+/**
+ * Sets the status of `item`, read from `from`, in another copy of the
+ * checklist's text. Line numbers shift when the text changes, so the item is
+ * found again by its text, and by its position among items with the same text.
+ * Returns the new text and the status the item had in `text`, or null when
+ * the item is gone.
+ */
+export const withItemStatus = (
+  text: string,
+  from: Checklist,
+  item: ChecklistItem,
+  status: string,
+) => {
+  const nth = itemsOf(from)
+    .filter((other) => other.text === item.text)
+    .findIndex((other) => other.id === item.id);
+  const current = parseChecklist(text);
+  const target = current
+    ? itemsOf(current).filter((other) => other.text === item.text)[nth]
+    : undefined;
+  if (!target) return null;
+
+  const lines = text.split("\n");
+  lines[target.id] = (lines[target.id] ?? "").replace(
+    /^(\s*\*\s*)(?:\[[^\]]*\]\s*)?/,
+    `$1[${status}] `,
+  );
+  return { text: lines.join("\n"), previous: target.status };
+};

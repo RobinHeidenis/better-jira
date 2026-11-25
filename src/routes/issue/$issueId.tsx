@@ -182,9 +182,14 @@ function RouteComponent() {
                   <TabsContent value="description" className="mt-2 w-full">
                     {description}
                   </TabsContent>
-                  {checklist ? (
+                  {checklist && checklistField ? (
                     <TabsContent value="checklist" className="mt-2">
-                      <Checklist checklist={checklist} />
+                      <Checklist
+                        checklist={checklist}
+                        issueId={issueId}
+                        issueKey={issue.key}
+                        fieldId={checklistField}
+                      />
                     </TabsContent>
                   ) : null}
                   <TabsContent value="comments" className="mt-2">
