@@ -1,4 +1,4 @@
-import { RiCloseLine } from "@remixicon/react";
+import { RiCloseLine, RiLinkM } from "@remixicon/react";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useSelector } from "@tanstack/react-store";
@@ -19,6 +19,7 @@ import {
 } from "#/components/ui/breadcrumb";
 import { Button } from "#/components/ui/button";
 import { Card, CardContent, CardTitle } from "#/components/ui/card";
+import { Copyable } from "#/components/ui/copyable";
 import { Link } from "#/components/ui/link";
 import { Spinner } from "#/components/ui/spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "#/components/ui/tabs";
@@ -26,6 +27,7 @@ import { commentsOptions } from "#/lib/api/comments";
 import { issueOptions } from "#/lib/api/issues";
 import { checklistText, parseChecklist } from "#/lib/checklist";
 import { useChecklistSync, withChanges } from "#/lib/checklist-sync";
+import { jiraIssueUrl } from "#/lib/jira-url";
 import { store } from "#/lib/store";
 
 const searchSchema = z.object({
@@ -54,6 +56,7 @@ function RouteComponent() {
     ...commentsOptions(issue?.key ?? ""),
     enabled: !!issue,
   });
+  const baseUrl = useSelector(store, (state) => state.baseUrl);
   const checklistField = useSelector(store, (state) => state.checklistField);
   const checklistSync = useChecklistSync(issue?.key);
   const rawChecklist =
@@ -128,6 +131,14 @@ function RouteComponent() {
                   ) : null}
                   <BreadcrumbItem>
                     <BreadcrumbPage>{issue.key}</BreadcrumbPage>
+                    {baseUrl ? (
+                      <Copyable
+                        value={jiraIssueUrl(baseUrl, issue.key)}
+                        icon={RiLinkM}
+                        tooltip="Copy link to ticket"
+                        className="text-muted-foreground hover:text-foreground"
+                      />
+                    ) : null}
                   </BreadcrumbItem>
                 </BreadcrumbList>
               </Breadcrumb>
