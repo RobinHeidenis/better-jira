@@ -72,9 +72,14 @@ const mergeRequestSchema = z.object({
   web_url: z.string(),
   source_branch: z.string(),
   updated_at: z.string(),
+  merged_at: z.string().nullish(),
   references: z.object({ full: z.string() }),
   author: z
-    .object({ name: z.string(), avatar_url: z.string().nullish() })
+    .object({
+      id: z.number().optional(),
+      name: z.string(),
+      avatar_url: z.string().nullish(),
+    })
     .nullish(),
 });
 
@@ -238,25 +243,49 @@ export const mergeRequestDetailOptions = (projectId: number, iid: number) => {
 };
 
 /**
- * The token owner's user id. `/user` needs the `read_user` scope, which a
- * `read_api` token lacks, so the token's own details are asked first.
+ * The token owner's user id. `/user` needs the `read_user` scope, or the
+ * "User: Read" permission on a fine-grained token, which a token made for
+ * reading merge requests often lacks. "Created by me" works without either,
+ * so the author of any of the user's merge requests is the last resort.
  */
 export const gitlabUserIdOptions = () =>
   queryOptions({
     queryKey: ["gitlab-user-id"],
     queryFn: async () => {
-      try {
-        const token = await request(
-          "/personal_access_tokens/self",
-          z.object({ user_id: z.number() }),
-        );
-        return token.user_id;
-      } catch {
-        const user = await request("/user", z.object({ id: z.number() }));
-        return user.id;
+      const attempts = [
+        async () =>
+          (
+            await request(
+              "/personal_access_tokens/self",
+              z.object({ user_id: z.number() }),
+            )
+          ).user_id,
+        async () => (await request("/user", z.object({ id: z.number() }))).id,
+        async () => {
+          const [own] = await request(
+            "/merge_requests?scope=created_by_me&state=all&per_page=1",
+            z.array(mergeRequestSchema),
+          );
+          if (own?.author?.id === undefined) {
+            throw new Error(
+              'GitLab won\'t say who you are: give your token read_user (or "User: Read"), or open a merge request first.',
+            );
+          }
+          return own.author.id;
+        },
+      ];
+      let lastError: unknown;
+      for (const attempt of attempts) {
+        try {
+          return await attempt();
+        } catch (error) {
+          lastError = error;
+        }
       }
+      throw lastError;
     },
     staleTime: Number.POSITIVE_INFINITY,
+    gcTime: Number.POSITIVE_INFINITY,
     retry: false,
   });
 
@@ -301,4 +330,93 @@ export const authoredMergeRequestsOptions = (projectIds: number[]) =>
       return list.filter(inProjects(projectIds)).sort(newest);
     },
     refetchInterval: 2 * 60 * 1000,
+  });
+
+const noteSchema = z.object({
+  body: z.string(),
+  system: z.boolean(),
+  created_at: z.string(),
+  author: z.object({ id: z.number() }),
+});
+
+export type ReviewedMergeRequest = MergeRequest & {
+  approved: boolean;
+  comments: number;
+};
+
+/**
+ * Merge requests the user reviewed since a moment: approved or commented on.
+ * GitLab records an approval as a system note, so the notes cover both.
+ */
+export const reviewedMergeRequestsOptions = (
+  projectIds: number[],
+  since: string,
+) =>
+  queryOptions({
+    queryKey: ["gitlab-reviewed-merge-requests", projectIds, since],
+    queryFn: async ({ client }) => {
+      const userId = await client.fetchQuery(gitlabUserIdOptions());
+      const candidates = (
+        await request(
+          `/merge_requests?${new URLSearchParams({
+            scope: "all",
+            state: "all",
+            reviewer_id: String(userId),
+            updated_after: since,
+            per_page: "100",
+          })}`,
+          z.array(mergeRequestSchema),
+        )
+      ).filter(inProjects(projectIds));
+
+      const reviewed = await Promise.all(
+        candidates.map(async (mergeRequest) => {
+          const notes = await request(
+            `/projects/${mergeRequest.project_id}/merge_requests/${mergeRequest.iid}/notes?${new URLSearchParams(
+              { sort: "desc", order_by: "created_at", per_page: "100" },
+            )}`,
+            z.array(noteSchema),
+          );
+          const mine = notes.filter(
+            (note) => note.author.id === userId && note.created_at >= since,
+          );
+          return {
+            ...mergeRequest,
+            approved: mine.some(
+              (note) => note.system && /^approved\b/i.test(note.body),
+            ),
+            comments: mine.filter((note) => !note.system).length,
+          };
+        }),
+      );
+      return reviewed
+        .filter(
+          (mergeRequest) => mergeRequest.approved || mergeRequest.comments,
+        )
+        .sort(newest);
+    },
+  });
+
+/** The user's merge requests merged since a moment. */
+export const mergedMergeRequestsOptions = (
+  projectIds: number[],
+  since: string,
+) =>
+  queryOptions({
+    queryKey: ["gitlab-merged-merge-requests", projectIds, since],
+    queryFn: async () => {
+      const list = await request(
+        `/merge_requests?${new URLSearchParams({
+          scope: "created_by_me",
+          state: "merged",
+          updated_after: since,
+          per_page: "100",
+        })}`,
+        z.array(mergeRequestSchema),
+      );
+      return list
+        .filter(inProjects(projectIds))
+        .filter((mergeRequest) => (mergeRequest.merged_at ?? "") >= since)
+        .sort(newest);
+    },
   });
