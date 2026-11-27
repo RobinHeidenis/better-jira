@@ -179,10 +179,12 @@ const describe = (value: FormValue) => {
 const TransitionForm = ({
   issue,
   transition,
+  others = [],
   onClose,
 }: {
   issue: TransitionTarget;
   transition: Transition;
+  others?: { issue: TransitionTarget; transition: Transition }[];
   onClose: () => void;
 }) => {
   const queryClient = useQueryClient();
@@ -245,6 +247,9 @@ const TransitionForm = ({
     if (missing.length) return;
     onClose();
     void runTransition(queryClient, issue, transition, values);
+    for (const other of others) {
+      void runTransition(queryClient, other.issue, other.transition, values);
+    }
   };
 
   return (
@@ -260,14 +265,20 @@ const TransitionForm = ({
         <DialogTitle>
           {customizing
             ? `Form for moving to ${transition.to.name}`
-            : `Move ${issue.key} to ${transition.to.name}`}
+            : others.length
+              ? `Move ${others.length + 1} tickets to ${transition.to.name}`
+              : `Move ${issue.key} to ${transition.to.name}`}
         </DialogTitle>
         <DialogDescription>
           {customizing
             ? "Pick which fields to ask for. The values you fill in become the defaults for every ticket moved here."
-            : transition.name !== transition.to.name
-              ? transition.name
-              : issue.summary}
+            : others.length
+              ? [issue, ...others.map((other) => other.issue)]
+                  .map((target) => target.key)
+                  .join(", ")
+              : transition.name !== transition.to.name
+                ? transition.name
+                : issue.summary}
         </DialogDescription>
       </DialogHeader>
 
@@ -430,6 +441,7 @@ export const TransitionHost = () => {
               key={`${request.issue.key}:${request.transition.id}`}
               issue={request.issue}
               transition={request.transition}
+              others={request.others}
               onClose={close}
             />
           ) : null}

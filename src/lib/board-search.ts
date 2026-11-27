@@ -77,3 +77,56 @@ export const boardScroll = {
   left: 0,
   measurements: new Map<string, VirtualItem[]>(),
 };
+
+export type SelectedIssue = {
+  id: string;
+  key: string;
+  summary: string;
+  statusId: string;
+};
+
+/** Cards picked for a bulk action, and the last one clicked for ranges. */
+export const boardSelection = createStore<{
+  issues: SelectedIssue[];
+  anchorId: string | null;
+}>({ issues: [], anchorId: null });
+
+export const clearSelection = () =>
+  boardSelection.setState(() => ({ issues: [], anchorId: null }));
+
+const toSelected = (issue: JiraBoardIssue): SelectedIssue => ({
+  id: issue.id,
+  key: issue.key,
+  summary: issue.fields.summary,
+  statusId: issue.fields.status.id,
+});
+
+/**
+ * Cmd/Ctrl-click toggles one card. Shift-click adds the cards between the
+ * last one clicked and this one, when both are in the same column.
+ */
+export const selectCard = (
+  issue: JiraBoardIssue,
+  column: JiraBoardIssue[],
+  range: boolean,
+) =>
+  boardSelection.setState(({ issues, anchorId }) => {
+    const anchorIndex = column.findIndex((other) => other.id === anchorId);
+    const index = column.findIndex((other) => other.id === issue.id);
+    if (range && anchorIndex !== -1 && index !== -1) {
+      const [from, to] = [anchorIndex, index].sort((a, b) => a - b);
+      const ids = new Set(issues.map((selected) => selected.id));
+      const added = column
+        .slice(from, to + 1)
+        .filter((other) => !ids.has(other.id))
+        .map(toSelected);
+      return { issues: [...issues, ...added], anchorId: issue.id };
+    }
+    const selected = issues.some((other) => other.id === issue.id);
+    return {
+      issues: selected
+        ? issues.filter((other) => other.id !== issue.id)
+        : [...issues, toSelected(issue)],
+      anchorId: issue.id,
+    };
+  });

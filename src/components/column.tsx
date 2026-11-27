@@ -4,7 +4,13 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { cn } from "cn";
 import { type RefObject, useEffect, useRef, useState } from "react";
 import { transitionsOptions } from "#/lib/api/transitions";
-import { boardDrag, boardScroll, boardSearch } from "#/lib/board-search";
+import {
+  boardDrag,
+  boardScroll,
+  boardSearch,
+  boardSelection,
+  selectCard,
+} from "#/lib/board-search";
 import { reportError, startTransition } from "#/lib/transition";
 import { IssueCard } from "./issue-card";
 import { CardTitle } from "./ui/card";
@@ -35,6 +41,11 @@ export const Column = ({
   const activeIssueId = useSelector(
     boardSearch,
     (state) => state.activeIssueId,
+  );
+  const selectedIds = new Set(
+    useSelector(boardSelection, (state) => state.issues).map(
+      (issue) => issue.id,
+    ),
   );
   const columnRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
@@ -189,6 +200,15 @@ export const Column = ({
                   }));
                   void queryClient.prefetchQuery(transitionsOptions(issue.key));
                 }}
+                onClickCapture={(event) => {
+                  if (!(event.metaKey || event.ctrlKey || event.shiftKey)) {
+                    return;
+                  }
+                  // A modified click selects instead of opening the ticket.
+                  event.preventDefault();
+                  event.stopPropagation();
+                  selectCard(issue, issues, event.shiftKey);
+                }}
                 onDragEnd={() => {
                   // Cleared on drop already; this covers a cancelled drag.
                   if (boardDrag.state) boardDrag.setState(() => null);
@@ -198,6 +218,8 @@ export const Column = ({
                   issue.id === activeIssueId &&
                     "ring-2 ring-primary ring-offset-2 ring-offset-background",
                   dragged?.id === issue.id && "opacity-50",
+                  selectedIds.has(issue.id) &&
+                    "ring-2 ring-sky-500 ring-offset-2 ring-offset-background",
                 )}
                 style={{
                   transform: `translateY(${row.start - virtualizer.options.scrollMargin}px)`,

@@ -23,6 +23,8 @@ export type TransitionTarget = {
 export const transitionDialog = createStore<{
   issue: TransitionTarget;
   transition: Transition;
+  /** More issues moved with the same form, for a bulk move. */
+  others?: { issue: TransitionTarget; transition: Transition }[];
 } | null>(null);
 
 export const transitionErrors = createStore<{ id: number; message: string }[]>(
@@ -174,4 +176,38 @@ export const startTransition = (
     return;
   }
   transitionDialog.setState(() => ({ issue, transition }));
+};
+
+/**
+ * Moves several issues into one status, each through its own transition. One
+ * form, filled in once, serves them all when the lane asks for fields.
+ */
+export const startBulkTransition = (
+  queryClient: QueryClient,
+  moves: { issue: TransitionTarget; transition: Transition }[],
+) => {
+  const [first, ...others] = moves;
+  if (!first) return;
+  const hidden = new Set(
+    store.state.transitionForms[first.transition.to.id]?.hidden ?? [],
+  );
+  const needsForm = moves.some(({ transition }) => {
+    const fields = formFields(transition);
+    return (
+      fields.some((entry) => !hidden.has(entry.key)) ||
+      missingFields(fields, formDefaults(transition)).length > 0
+    );
+  });
+  if (!needsForm) {
+    for (const { issue, transition } of moves) {
+      void runTransition(
+        queryClient,
+        issue,
+        transition,
+        formDefaults(transition),
+      );
+    }
+    return;
+  }
+  transitionDialog.setState(() => ({ ...first, others }));
 };

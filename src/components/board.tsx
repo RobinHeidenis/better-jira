@@ -7,6 +7,7 @@ import { store } from "#/lib/store";
 import { BoardFilters } from "./board-filters";
 import { BoardKeyboard } from "./board-keyboard";
 import { BoardSearch } from "./board-search";
+import { BulkActions } from "./bulk-actions";
 import { Column } from "./column";
 import { ErrorState } from "./error-state";
 import { Spinner } from "./ui/spinner";
@@ -55,6 +56,7 @@ export const Board = () => {
   return (
     <>
       <BoardKeyboard boardId={boardId} jql={jql} columns={columns} />
+      <BulkActions />
       <BoardFilters
         search={<BoardSearch boardId={boardId} jql={jql} columns={columns} />}
       />
