@@ -1,9 +1,9 @@
 import { RiCloseLine } from "@remixicon/react";
-import { type UseQueryResult, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useSelector } from "@tanstack/react-store";
 import { cn } from "cn";
-import { type ReactNode, useEffect } from "react";
+import { useEffect } from "react";
 import { ErrorState } from "#/components/error-state";
 import { IssueRow } from "#/components/issue-row";
 import { MergeRequestRow } from "#/components/merge-requests-popover";
@@ -13,11 +13,12 @@ import { Button } from "#/components/ui/button";
 import { Card, CardContent, CardTitle } from "#/components/ui/card";
 import { Link } from "#/components/ui/link";
 import { Skeleton } from "#/components/ui/skeleton";
+import { QueryList, Section, TicketSection } from "#/components/work-lists";
 import {
   authoredMergeRequestsOptions,
   type MergeRequest,
-  reviewMergeRequestsOptions,
 } from "#/lib/api/gitlab";
+import { reviewTicketsOptions } from "#/lib/api/merge-request-tickets";
 import { type MyIssue, myIssuesOptions } from "#/lib/api/my-work";
 import { store } from "#/lib/store";
 import { isPopupOpen } from "#/lib/utils";
@@ -30,28 +31,6 @@ export const Route = createFileRoute("/my-work")({
   },
   component: MyWorkPage,
 });
-
-const Section = ({
-  title,
-  count,
-  children,
-}: {
-  title: string;
-  count?: number;
-  children: ReactNode;
-}) => (
-  <section className="space-y-2">
-    <h2 className="flex items-baseline gap-2 text-sm font-semibold">
-      {title}
-      {count !== undefined ? (
-        <span className="text-xs font-normal text-muted-foreground tabular-nums">
-          {count}
-        </span>
-      ) : null}
-    </h2>
-    {children}
-  </section>
-);
 
 const Loading = () => (
   <div className="space-y-2">
@@ -122,57 +101,45 @@ const Tickets = () => {
   );
 };
 
-const MergeRequestSection = ({
-  title,
-  query,
-  empty,
-}: {
-  title: string;
-  query: UseQueryResult<MergeRequest[]>;
-  empty: string;
-}) => {
-  const { data, isPending, error, refetch } = query;
+/** The projects of a ticket's merge requests, like "hooray, hooray-frontend". */
+const projectNote = (mergeRequests: MergeRequest[]) =>
+  [
+    ...new Set(
+      mergeRequests.map(
+        (mergeRequest) =>
+          mergeRequest.references.full.split("!")[0]?.split("/").at(-1) ?? "",
+      ),
+    ),
+  ]
+    .filter(Boolean)
+    .join(", ");
+
+const GitLab = ({ projectIds }: { projectIds: number[] }) => {
+  const toReview = useQuery(reviewTicketsOptions(projectIds));
+  const authored = useQuery(authoredMergeRequestsOptions(projectIds));
   return (
-    <Section title={title} count={data?.length}>
-      {isPending ? (
-        <Loading />
-      ) : error ? (
-        <ErrorState
-          title={`Couldn't load ${title.toLowerCase()}`}
-          error={error}
-          onRetry={() => void refetch()}
-        />
-      ) : data.length ? (
-        <ul className="divide-y divide-border/60">
-          {data.map((mergeRequest) => (
+    <>
+      <TicketSection
+        title="Waiting for your review"
+        empty="No open merge requests have you as a reviewer."
+        unlinkedLabel="Also waiting, without a ticket:"
+        query={toReview}
+        note={projectNote}
+      />
+      <QueryList
+        title="Your merge requests"
+        query={authored}
+        empty="You have none open."
+      >
+        {(items) =>
+          items.map((mergeRequest) => (
             <MergeRequestRow
               key={mergeRequest.id}
               mergeRequest={mergeRequest}
             />
-          ))}
-        </ul>
-      ) : (
-        <p className="text-muted-foreground">{empty}</p>
-      )}
-    </Section>
-  );
-};
-
-const GitLab = ({ projectIds }: { projectIds: number[] }) => {
-  const toReview = useQuery(reviewMergeRequestsOptions(projectIds));
-  const authored = useQuery(authoredMergeRequestsOptions(projectIds));
-  return (
-    <>
-      <MergeRequestSection
-        title="Waiting for your review"
-        query={toReview}
-        empty="No open merge requests have you as a reviewer."
-      />
-      <MergeRequestSection
-        title="Your merge requests"
-        query={authored}
-        empty="You have none open."
-      />
+          ))
+        }
+      </QueryList>
     </>
   );
 };

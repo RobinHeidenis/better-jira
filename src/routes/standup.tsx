@@ -3,9 +3,7 @@ import { type UseQueryResult, useQuery } from "@tanstack/react-query";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useSelector } from "@tanstack/react-store";
 import { type ReactNode, useEffect } from "react";
-import { ErrorState } from "#/components/error-state";
 import { IssueRow } from "#/components/issue-row";
-import { MergeRequestRow } from "#/components/merge-requests-popover";
 import { Button } from "#/components/ui/button";
 import {
   Card,
@@ -14,7 +12,7 @@ import {
   CardTitle,
 } from "#/components/ui/card";
 import { Link } from "#/components/ui/link";
-import { Skeleton } from "#/components/ui/skeleton";
+import { QueryList, TicketSection } from "#/components/work-lists";
 import { boardConfigurationOptions } from "#/lib/api/boards";
 import type { MergeRequest, ReviewedMergeRequest } from "#/lib/api/gitlab";
 import { type MyIssue, myIssuesOptions } from "#/lib/api/my-work";
@@ -24,7 +22,6 @@ import {
   movedToReviewOptions,
   plannedTodosOptions,
   reviewedTicketsOptions,
-  type TicketMergeRequests,
 } from "#/lib/api/standup";
 import { store } from "#/lib/store";
 import { isPopupOpen } from "#/lib/utils";
@@ -48,63 +45,6 @@ const shortDate = new Intl.DateTimeFormat(undefined, {
   month: "short",
 });
 
-const Section = ({
-  title,
-  count,
-  children,
-}: {
-  title: string;
-  count?: number;
-  children: ReactNode;
-}) => (
-  <section className="space-y-2">
-    <h2 className="flex items-baseline gap-2 text-sm font-semibold">
-      {title}
-      {count !== undefined ? (
-        <span className="text-xs font-normal text-muted-foreground tabular-nums">
-          {count}
-        </span>
-      ) : null}
-    </h2>
-    {children}
-  </section>
-);
-
-/** Loading, error and empty states around a list. */
-const QueryList = <T,>({
-  title,
-  query,
-  empty,
-  children,
-}: {
-  title: string;
-  query: UseQueryResult<T[]>;
-  empty: string;
-  children: (items: T[]) => ReactNode;
-}) => {
-  const { data, isPending, error, refetch } = query;
-  return (
-    <Section title={title} count={data?.length}>
-      {isPending ? (
-        <div className="space-y-2">
-          <Skeleton className="h-9 w-full" />
-          <Skeleton className="h-9 w-full" />
-        </div>
-      ) : error ? (
-        <ErrorState
-          title={`Couldn't load ${title.toLowerCase()}`}
-          error={error}
-          onRetry={() => void refetch()}
-        />
-      ) : data.length ? (
-        <ul className="divide-y divide-border/60">{children(data)}</ul>
-      ) : (
-        <p className="text-muted-foreground">{empty}</p>
-      )}
-    </Section>
-  );
-};
-
 const reviewNote = (mergeRequests: ReviewedMergeRequest[]) => {
   const comments = mergeRequests.reduce(
     (total, mergeRequest) => total + mergeRequest.comments,
@@ -124,60 +64,6 @@ const mergedNote = (mergeRequests: MergeRequest[]) =>
   mergeRequests.length === 1
     ? "1 merge request"
     : `${mergeRequests.length} merge requests`;
-
-/** Tickets behind a set of merge requests, plus the ones that name none. */
-const TicketSection = <T extends MergeRequest>({
-  title,
-  verb,
-  query,
-  note,
-}: {
-  title: string;
-  /** Completes "Nothing …" and "Also …, without a ticket". */
-  verb: string;
-  query: UseQueryResult<{
-    tickets: TicketMergeRequests<T>[];
-    unlinked: T[];
-  }>;
-  note: (mergeRequests: T[]) => string;
-}) => {
-  const tickets = {
-    ...query,
-    data: query.data?.tickets,
-  } as UseQueryResult<TicketMergeRequests<T>[]>;
-  const unlinked = query.data?.unlinked ?? [];
-  return (
-    <>
-      <QueryList title={title} query={tickets} empty={`Nothing ${verb}.`}>
-        {(items) =>
-          items.map((ticket) => (
-            <IssueRow
-              key={ticket.issue.id}
-              issue={ticket.issue}
-              date={note(ticket.mergeRequests)}
-            />
-          ))
-        }
-      </QueryList>
-      {unlinked.length ? (
-        <div className="-mt-6 space-y-1">
-          <p className="text-muted-foreground">
-            Also {verb}, without a ticket:
-          </p>
-          <ul className="divide-y divide-border/60">
-            {unlinked.map((mergeRequest) => (
-              <MergeRequestRow
-                key={mergeRequest.id}
-                mergeRequest={mergeRequest}
-                note={note([mergeRequest])}
-              />
-            ))}
-          </ul>
-        </div>
-      ) : null}
-    </>
-  );
-};
 
 const issues = (items: MyIssue[], date?: (issue: MyIssue) => ReactNode) =>
   items.map((issue) => (
@@ -271,7 +157,8 @@ function StandupPage() {
           {hasGitlab ? (
             <TicketSection
               title="Reviewed"
-              verb="reviewed"
+              empty="Nothing reviewed."
+              unlinkedLabel="Also reviewed, without a ticket:"
               query={reviewed}
               note={reviewNote}
             />
@@ -290,7 +177,8 @@ function StandupPage() {
           {hasGitlab ? (
             <TicketSection
               title="Merged"
-              verb="merged"
+              empty="Nothing merged."
+              unlinkedLabel="Also merged, without a ticket:"
               query={merged}
               note={mergedNote}
             />
