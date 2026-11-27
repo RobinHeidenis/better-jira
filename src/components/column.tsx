@@ -238,6 +238,11 @@ export const Column = ({
                   if (!(event.metaKey || event.ctrlKey || event.shiftKey)) {
                     return;
                   }
+                  // Popovers are portalled but React still bubbles their
+                  // clicks here; leave Cmd-click on their links alone.
+                  if (!event.currentTarget.contains(event.target as Node)) {
+                    return;
+                  }
                   // A modified click selects instead of opening the ticket.
                   event.preventDefault();
                   event.stopPropagation();
