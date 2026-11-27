@@ -1,6 +1,6 @@
 import { RiCloseLine, RiLinkM } from "@remixicon/react";
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useSelector } from "@tanstack/react-store";
 import { useEffect } from "react";
 import { z } from "zod";
@@ -46,6 +46,11 @@ const isNotFound = (error: Error) => /failed: 404\b/.test(error.message);
 
 export const Route = createFileRoute("/issue/$issueId")({
   validateSearch: searchSchema,
+  // The settings store is browser-only, so the server would always redirect.
+  ssr: false,
+  beforeLoad: () => {
+    if (!store.state.apiToken) throw redirect({ to: "/setup/account" });
+  },
   component: RouteComponent,
 });
 
