@@ -24,7 +24,7 @@ import {
   attachmentUrlOptions,
   formatFileSize,
 } from "#/lib/api/attachments";
-import { jiraIssueUrl } from "#/lib/jira-url";
+import { jiraOpenUrl } from "#/lib/jira-url";
 import { store } from "#/lib/store";
 import { cn } from "#/lib/utils";
 import { useAdfContext } from "./adf-context";
@@ -46,7 +46,7 @@ export const JiraFileChip = ({ name }: { name: string }) => {
   const baseUrl = useSelector(store, (state) => state.baseUrl);
   const { issueKey } = useAdfContext();
   const href =
-    baseUrl && issueKey ? safeUrl(jiraIssueUrl(baseUrl, issueKey)) : null;
+    baseUrl && issueKey ? safeUrl(jiraOpenUrl(baseUrl, issueKey)) : null;
 
   const label = (
     <>

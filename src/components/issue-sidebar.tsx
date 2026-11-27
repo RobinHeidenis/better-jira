@@ -7,7 +7,7 @@ import {
   type JiraBoardIssue,
   type JiraIssueLink,
 } from "#/lib/api/issues";
-import { jiraIssueUrl } from "#/lib/jira-url";
+import { jiraOpenUrl } from "#/lib/jira-url";
 import { store } from "#/lib/store";
 import { initials, timeAgo } from "#/lib/utils";
 import {
@@ -251,7 +251,7 @@ export const IssueSidebar = ({ issue }: { issue: SidebarIssue }) => {
         {fields.updated ? <p>Updated {timeAgo(fields.updated)}</p> : null}
         {baseUrl ? (
           <a
-            href={jiraIssueUrl(baseUrl, issue.key)}
+            href={jiraOpenUrl(baseUrl, issue.key)}
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-1 hover:text-foreground"

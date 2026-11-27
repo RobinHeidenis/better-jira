@@ -8,7 +8,7 @@ import { useSelector } from "@tanstack/react-store";
 import { cn } from "cn";
 import { useState } from "react";
 import type { Transition } from "#/lib/api/transitions";
-import { jiraIssueUrl } from "#/lib/jira-url";
+import { jiraOpenUrl } from "#/lib/jira-url";
 import { store } from "#/lib/store";
 import {
   dismissTransitionError,
@@ -353,7 +353,7 @@ const TransitionForm = ({
               <>
                 {" "}
                 <a
-                  href={jiraIssueUrl(baseUrl, issue.key)}
+                  href={jiraOpenUrl(baseUrl, issue.key)}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-1 underline"

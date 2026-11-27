@@ -51,6 +51,10 @@ Atlassian sends no CORS headers, so every Jira call goes through the server func
 
 GitLab (`src/lib/api/gitlab.ts`) is called straight from the browser against `gitlab.com`, with a personal access token that has the `read_api` and `read_user` scopes.
 
+### Browser extension
+
+`extension/` is a plain-JavaScript Manifest V3 extension, loaded unpacked, with no build step. It redirects Jira ticket links to `/issue/<key>` with `declarativeNetRequest` rules built in `extension/rules.js` from the address set on its options page. Links the app opens Jira with go through `jiraOpenUrl` (`src/lib/jira-url.ts`), which adds the `bj-open=1` marker the extension lets through; links meant for copying use `jiraIssueUrl`.
+
 ### API modules
 
 There is one file per resource in `src/lib/api/`. Each defines a Zod schema, a fetch function and a `xxxOptions()` that returns `queryOptions(...)`. Components call `useQuery(xxxOptions(...))`. Follow this shape for anything new.

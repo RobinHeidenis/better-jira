@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "better-jira links",
+  "description": "Opens Jira ticket links in better-jira instead of Jira.",
+  "version": "1.0.0",
+  "icons": { "128": "icon.png" },
+  "permissions": ["declarativeNetRequestWithHostAccess", "storage"],
+  "host_permissions": ["https://*.atlassian.net/*"],
+  "background": { "service_worker": "background.js", "type": "module" },
+  "options_ui": { "page": "options.html", "open_in_tab": true },
+  "action": { "default_title": "better-jira links settings" }
+}

@@ -17,7 +17,7 @@ import {
   updateComment,
 } from "#/lib/api/comments";
 import { currentUserOptions } from "#/lib/api/current-user";
-import { jiraIssueUrl } from "#/lib/jira-url";
+import { jiraOpenUrl } from "#/lib/jira-url";
 import { store } from "#/lib/store";
 import { initials, timeAgo } from "#/lib/utils";
 import { Adf } from "./adf/adf";
@@ -186,7 +186,9 @@ const Comment = ({
               editable={plainText !== null}
               jiraUrl={
                 baseUrl
-                  ? `${jiraIssueUrl(baseUrl, issueKey)}?focusedCommentId=${comment.id}`
+                  ? jiraOpenUrl(baseUrl, issueKey, {
+                      focusedCommentId: comment.id,
+                    })
                   : null
               }
               onEdit={() => {

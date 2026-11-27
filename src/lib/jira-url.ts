@@ -30,3 +30,20 @@ export const jiraBaseUrlSchema = z.url({
  */
 export const jiraIssueUrl = (baseUrl: string, issueKey: string) =>
   `${baseUrl.replace(/\/+$/, "")}/browse/${issueKey}`;
+
+/**
+ * The browser extension in `extension/` sends Jira ticket links to this app;
+ * this marker tells it to let the link through to Jira instead.
+ */
+export const JIRA_PASS_THROUGH = "bj-open";
+
+/** A ticket's Jira URL for opening Jira itself, past the extension. */
+export const jiraOpenUrl = (
+  baseUrl: string,
+  issueKey: string,
+  params: Record<string, string> = {},
+) =>
+  `${jiraIssueUrl(baseUrl, issueKey)}?${new URLSearchParams({
+    ...params,
+    [JIRA_PASS_THROUGH]: "1",
+  })}`;

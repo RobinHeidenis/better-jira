@@ -46,6 +46,16 @@ GitHub Actions also builds the image on every push to `main` and publishes it to
 
 Put it behind your reverse proxy with HTTPS. Your tokens travel from the browser to this server on every Jira request, so plain HTTP on a network you don't control would expose them. The server only forwards to `*.atlassian.net` with the caller's own token, but it's still best kept on a private network or behind your proxy's login.
 
+## Opening Jira links in better-jira
+
+The `extension/` folder holds a small browser extension for Chrome, Arc, Edge and Brave. With it, Jira ticket links (`…atlassian.net/browse/KEY` and board links with `?selectedIssue=KEY`) open in better-jira instead, whether you click them in Slack, an email or another tab. better-jira's own "Open in Jira" links still go to Jira. Copied ticket links stay plain Jira links.
+
+1. Open `chrome://extensions` (or your browser's extensions page) and turn on developer mode.
+2. Click "Load unpacked" and pick the `extension` folder.
+3. On the settings page that opens, enter where you open better-jira, like `http://localhost:3001`. Optionally limit it to your Jira site. Click the extension's icon to come back to these settings.
+
+Only ticket links are redirected; dashboards, filters and Confluence open in Jira as usual.
+
 ## Where your credentials go
 
 Your Jira and GitLab tokens stay in your browser's local storage. GitLab is called straight from the browser. Jira calls go through this app's own server, because Atlassian's REST API sends no CORS headers. That server only forwards requests to `*.atlassian.net` and stores nothing.

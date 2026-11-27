@@ -1,6 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { jiraIssueUrl } from "#/lib/jira-url";
+import { jiraIssueUrl, jiraOpenUrl } from "#/lib/jira-url";
 import { store } from "#/lib/store";
 import { isPopupOpen } from "#/lib/utils";
 
@@ -60,7 +60,7 @@ export const IssueKeyboard = ({
         },
         e: () => {
           const { baseUrl } = store.get();
-          if (baseUrl) window.open(jiraIssueUrl(baseUrl, issueKey), "_blank");
+          if (baseUrl) window.open(jiraOpenUrl(baseUrl, issueKey), "_blank");
         },
         y: () => {
           const { baseUrl } = store.get();
