@@ -11,7 +11,7 @@ A faster front end for Jira Cloud boards and tickets, with GitLab merge requests
 - **Bulk actions.** Cmd/Ctrl-click cards (Shift-click for a range in a column) and move them, or set their assignee or developer, from the bar at the bottom. Dragging one of them onto a lane moves them all.
 - **My work.** Your open tickets (as assignee or developer) grouped by status, work under way first, plus the tickets with merge requests waiting for your review and your own open merge requests.
 - **Standup.** What you did since the previous working day: tickets whose merge requests you reviewed (approved or commented on), tickets you put on review, tickets whose merge requests got merged, plus what you're still working on and your To Do tickets with a start date.
-- **Checklists.** If your site uses Issue Checklist Pro, the checklist shows in its own tab, grouped, with progress. Custom statuses like "done by dev" are shown separately from done. Click a box to tick it off, "Check all" ticks off everything left, or use the menu next to an item to pick another status (Open, In Progress, done by dev, Done or Skipped). The change is saved to Jira, and Issue Checklist Pro picks it up.
+- **Checklists.** If your site uses Issue Checklist Pro, the checklist shows in its own tab, grouped, with progress. Custom statuses like "done by dev" are shown separately from done. Click a box to tick it off, "Check all" ticks off everything left, or use the menu next to an item to pick another status. Issue Checklist Pro has no API for its statuses, so list yours in settings (it starts with the app's defaults: Open, In Progress, Done and Skipped); statuses a checklist already uses are offered as well. The change is saved to Jira, and Issue Checklist Pro picks it up.
 - **Moving tickets.** Change a ticket's status from the sidebar, from the button on a card, with `s` on the board, or by dragging a card to another column. Transitions with a form in Jira open the same form here, and per lane you can choose which fields it asks for and set defaults, or skip the form entirely. An assignee shortlist in settings keeps the people picker to the people you actually assign.
 - **Merge requests.** A popover on each card and a list in the sidebar show the merge requests that name the ticket or its subtasks, with pipeline status, approvals and conflicts.
 
@@ -27,7 +27,7 @@ pnpm dev
 It runs at http://localhost:3001. The first visit walks you through setup.
 
 1. **Account.** Your Jira Cloud URL (`https://yourcompany.atlassian.net`), your Atlassian email and an API token. Create the token at https://id.atlassian.com/manage-profile/security/api-tokens.
-2. **Board.** The board to show, which columns to hide, and optionally the custom fields your site uses for the developer, story points and the checklist.
+2. **Board.** The board to show, which columns to hide, and optionally the custom fields your site uses for the developer, story points, the checklist and the start date.
 3. **GitLab** (optional). A personal access token with the `read_api` and `read_user` scopes, created at https://gitlab.com/-/user_settings/personal_access_tokens, and the projects to search for merge requests.
 
 Everything except the account can be changed later in settings, behind the gear on the board.

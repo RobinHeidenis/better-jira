@@ -6,7 +6,7 @@ A faster, nicer front end for Jira Cloud boards and issues, with GitLab merge re
 
 - **No tests.** Don't write, add, scaffold or suggest tests, test frameworks or test scripts.
 - **Ask before adding a dependency.** That includes shadcn components that pull in new packages.
-- **No hardcoded site-specific values.** Custom field IDs (`customfield_*`), user names, initials, issue types and hosts belong in settings or come from the Jira API. Existing hardcoded ones are debt (see below). Don't copy them.
+- **No hardcoded site-specific values.** Custom field IDs (`customfield_*`), user names, initials, issue types, statuses and hosts belong in settings or come from the Jira API.
 - **Never edit `src/routeTree.gen.ts`.** The router plugin regenerates it. Run `pnpm generate-routes` if it is stale.
 
 ## Verify before you say you're done
@@ -96,7 +96,7 @@ Zod node schemas are in `src/lib/adf/` (`block-nodes.ts`, `inline-nodes.ts`). `s
 
 ### Custom fields
 
-Custom field ids differ per Jira site. The developer, story points, checklist and start date fields are picked during board setup and stored as `developerField`, `storyPointsField`, `checklistField` and `startDateField`. The checklist is Issue Checklist Pro's text field, parsed in `src/lib/checklist.ts`. Ticking an item rewrites its line in a fresh copy of the field through API v2 (`src/lib/api/checklist.ts`), and the app syncs its checklist from the field. The app also writes the field back a few seconds later, which undoes any write made in between, so `src/lib/checklist-sync.ts` batches clicks and re-checks after each write. The status menu lists a fixed set of statuses in `src/components/checklist.tsx`, because the app has no API for its configured statuses. `src/lib/api/issues.ts` requests them by id and parses them out of the loose `fields` object (`issueDeveloper`, `issueStoryPoints`). When a setting is null, the UI hides that part.
+Custom field ids differ per Jira site. The developer, story points, checklist and start date fields are picked during board setup and stored as `developerField`, `storyPointsField`, `checklistField` and `startDateField`. The checklist is Issue Checklist Pro's text field, parsed in `src/lib/checklist.ts`. Ticking an item rewrites its line in a fresh copy of the field through API v2 (`src/lib/api/checklist.ts`), and the app syncs its checklist from the field. The app also writes the field back a few seconds later, which undoes any write made in between, so `src/lib/checklist-sync.ts` batches clicks and re-checks after each write. The status menu offers the `checklistStatuses` setting plus any status the checklist already uses (`src/components/checklist.tsx`), because the app has no API for its configured statuses. `src/lib/api/issues.ts` requests them by id and parses them out of the loose `fields` object (`issueDeveloper`, `issueStoryPoints`). When a setting is null, the UI hides that part.
 
 <!-- intent-skills:start -->
 ## Skill Loading

@@ -11,6 +11,7 @@ import {
   CardDescription,
   CardTitle,
 } from "#/components/ui/card";
+import { Input } from "#/components/ui/input";
 import { Link } from "#/components/ui/link";
 import {
   Select,
@@ -275,6 +276,28 @@ function SettingsPage() {
                 disabled={isFieldsPending}
               />
             </Row>
+            {settings.checklistField ? (
+              <Row
+                label="Checklist statuses"
+                description="The statuses configured in Issue Checklist Pro, comma-separated. The app has no API for them. Statuses a checklist already uses are offered too."
+              >
+                <Input
+                  key={settings.checklistStatuses.join(",")}
+                  className="w-72"
+                  aria-label="Checklist statuses"
+                  defaultValue={settings.checklistStatuses.join(", ")}
+                  onBlur={(event) => {
+                    const statuses = event.currentTarget.value
+                      .split(",")
+                      .map((status) => status.trim())
+                      .filter(Boolean);
+                    if (statuses.length) {
+                      update({ checklistStatuses: [...new Set(statuses)] });
+                    }
+                  }}
+                />
+              </Row>
+            ) : null}
             <Row
               label="Start date"
               description="A date field. Standup lists your To Do tickets that have one."

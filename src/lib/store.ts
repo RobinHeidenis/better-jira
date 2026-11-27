@@ -14,6 +14,9 @@ const settingsSchema = z.object({
   developerField: z.string().nullable(),
   storyPointsField: z.string().nullable().default(null),
   startDateField: z.string().nullable().default(null),
+  checklistStatuses: z
+    .array(z.string())
+    .default(["Open", "In Progress", "Done", "Skipped"]),
   reviewColumn: z.string().nullable().default(null),
   checklistField: z.string().nullable().default(null),
   onlyMine: z.boolean().default(false),
@@ -48,6 +51,7 @@ const defaults: Settings = {
   developerField: null,
   storyPointsField: null,
   startDateField: null,
+  checklistStatuses: ["Open", "In Progress", "Done", "Skipped"],
   reviewColumn: null,
   checklistField: null,
   onlyMine: false,

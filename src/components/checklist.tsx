@@ -8,6 +8,7 @@ import {
   RiMoreFill,
 } from "@remixicon/react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useSelector } from "@tanstack/react-store";
 import { cn } from "cn";
 import { createContext, use, useState } from "react";
 import { issueOptions } from "#/lib/api/issues";
@@ -21,6 +22,7 @@ import {
   dismissChecklistError,
   queueChecklistChange,
 } from "#/lib/checklist-sync";
+import { store } from "#/lib/store";
 import { Button } from "./ui/button";
 import {
   Collapsible,
@@ -207,12 +209,10 @@ const Group = ({ group }: { group: ChecklistGroup }) => {
 };
 
 // Issue Checklist Pro's statuses are configured in the app, which offers no
-// API to read them, so these are the ones this site uses.
-const STATUSES = ["Open", "In Progress", "done by dev", "Done", "Skipped"];
-
-/** The statuses above, plus any other one this checklist already uses. */
-const statusesOf = (checklist: ChecklistData) => {
-  const known = STATUSES.map((label) => ({
+// API to read them, so they come from settings.
+/** The statuses from settings, plus any other one this checklist uses. */
+const statusesOf = (checklist: ChecklistData, statuses: string[]) => {
+  const known = statuses.map((label) => ({
     value: label.toLowerCase(),
     label,
   }));
@@ -243,6 +243,7 @@ export const Checklist = ({
   error: string | null;
 }) => {
   const queryClient = useQueryClient();
+  const statuses = useSelector(store, (state) => state.checklistStatuses);
   const setStatus = (item: ChecklistItem, status: string) => {
     if (item.status === status) return;
     queueChecklistChange(
@@ -264,7 +265,9 @@ export const Checklist = ({
   const partial = Object.entries(checklist.partial);
   const partialTotal = partial.reduce((sum, [, count]) => sum + count, 0);
   return (
-    <EditingContext value={{ statuses: statusesOf(checklist), setStatus }}>
+    <EditingContext
+      value={{ statuses: statusesOf(checklist, statuses), setStatus }}
+    >
       <div className="space-y-3">
         <div className="space-y-2">
           <div className="flex items-center gap-4 font-semibold">
