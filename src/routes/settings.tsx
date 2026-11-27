@@ -4,6 +4,7 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useSelector } from "@tanstack/react-store";
 import type { ReactNode } from "react";
 import { Picker, type PickerOption } from "#/components/settings/field-picker";
+import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import {
   Card,
@@ -11,7 +12,6 @@ import {
   CardDescription,
   CardTitle,
 } from "#/components/ui/card";
-import { Input } from "#/components/ui/input";
 import { Link } from "#/components/ui/link";
 import {
   Select,
@@ -52,6 +52,56 @@ const fieldOptions = (
       label: field.name,
       description: field.id,
     }));
+
+/** Editable chips: Enter adds what's typed, Backspace on empty removes the last. */
+const StatusChips = ({
+  statuses,
+  onChange,
+}: {
+  statuses: string[];
+  onChange: (statuses: string[]) => void;
+}) => (
+  <div className="flex w-72 flex-wrap items-center gap-1 border border-input px-1.5 py-1 focus-within:border-ring">
+    {statuses.map((status) => (
+      <Badge key={status} variant="secondary" className="gap-0.5 pr-0.5">
+        {status}
+        <button
+          type="button"
+          aria-label={`Remove ${status}`}
+          // At least one status has to stay for the menu to offer anything.
+          disabled={statuses.length === 1}
+          onClick={() => onChange(statuses.filter((other) => other !== status))}
+          className="cursor-pointer text-muted-foreground hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          <RiCloseLine className="size-3" />
+        </button>
+      </Badge>
+    ))}
+    <input
+      aria-label="Add a checklist status"
+      placeholder="Add a status"
+      className="h-6 min-w-24 flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
+      onKeyDown={(event) => {
+        const input = event.currentTarget;
+        const status = input.value.trim();
+        if ((event.key === "Enter" || event.key === ",") && status) {
+          event.preventDefault();
+          const exists = statuses.some(
+            (other) => other.toLowerCase() === status.toLowerCase(),
+          );
+          if (!exists) onChange([...statuses, status]);
+          input.value = "";
+        } else if (
+          event.key === "Backspace" &&
+          !input.value &&
+          statuses.length > 1
+        ) {
+          onChange(statuses.slice(0, -1));
+        }
+      }}
+    />
+  </div>
+);
 
 const Section = ({
   title,
@@ -279,22 +329,13 @@ function SettingsPage() {
             {settings.checklistField ? (
               <Row
                 label="Checklist statuses"
-                description="The statuses configured in Issue Checklist Pro, comma-separated. The app has no API for them. Statuses a checklist already uses are offered too."
+                description="The statuses configured in Issue Checklist Pro, since the app has no API for them. Type one and press Enter to add it. Statuses a checklist already uses are offered too."
               >
-                <Input
-                  key={settings.checklistStatuses.join(",")}
-                  className="w-72"
-                  aria-label="Checklist statuses"
-                  defaultValue={settings.checklistStatuses.join(", ")}
-                  onBlur={(event) => {
-                    const statuses = event.currentTarget.value
-                      .split(",")
-                      .map((status) => status.trim())
-                      .filter(Boolean);
-                    if (statuses.length) {
-                      update({ checklistStatuses: [...new Set(statuses)] });
-                    }
-                  }}
+                <StatusChips
+                  statuses={settings.checklistStatuses}
+                  onChange={(checklistStatuses) =>
+                    update({ checklistStatuses })
+                  }
                 />
               </Row>
             ) : null}
