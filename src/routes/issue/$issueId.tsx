@@ -8,6 +8,7 @@ import { Adf } from "#/components/adf/adf";
 import { Checklist } from "#/components/checklist";
 import { Comments } from "#/components/comments";
 import { ErrorState } from "#/components/error-state";
+import { IssueKeyboard } from "#/components/issue-keyboard";
 import { IssueSidebar } from "#/components/issue-sidebar";
 import {
   Breadcrumb,
@@ -97,6 +98,7 @@ function RouteComponent() {
     <div className="h-screen w-full flex justify-center">
       {issue ? (
         <Card className="w-7xl my-8 overflow-auto pt-0">
+          <IssueKeyboard issueKey={issue.key} hasChecklist={!!checklist} />
           <CardContent>
             <div className="sticky top-0 z-10 flex items-center justify-between gap-2 bg-card pt-[var(--card-spacing)] pb-2">
               <Breadcrumb>

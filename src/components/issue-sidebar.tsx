@@ -107,7 +107,12 @@ export const IssueSidebar = ({ issue }: { issue: SidebarIssue }) => {
               issue={{ key: issue.key, summary: fields.summary }}
               statusId={fields.status.id}
               trigger={
-                <Button variant="outline" size="xs" className="max-w-full">
+                <Button
+                  variant="outline"
+                  size="xs"
+                  aria-label="Change status"
+                  className="max-w-full"
+                >
                   <span className="truncate">{fields.status.name}</span>
                   <RiArrowDownSLine />
                 </Button>

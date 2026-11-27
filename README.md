@@ -63,7 +63,19 @@ On the board:
 | `/`            | Search the board                        |
 | `Cmd/Ctrl+F`   | Search the board (press again for the browser's own find) |
 
-On a ticket, `Esc` goes back to the board.
+On a ticket:
+
+| Key           | Action                                   |
+| ------------- | ---------------------------------------- |
+| `s`           | Change the status                        |
+| `a` / `d`     | Change the assignee or developer         |
+| `p`           | Change the priority                      |
+| `l` / `v`     | Edit the labels or fix versions          |
+| `c`           | Write a comment                          |
+| `1` `2` `3`   | Description, checklist and comments tabs |
+| `e`           | Open the ticket in Jira                  |
+| `y`           | Copy the link to the ticket              |
+| `Esc`         | Back to the board                        |
 
 ## Scripts
 
