@@ -31,6 +31,7 @@ import { checklistText, parseChecklist } from "#/lib/checklist";
 import { useChecklistSync, withChanges } from "#/lib/checklist-sync";
 import { jiraIssueUrl } from "#/lib/jira-url";
 import { store } from "#/lib/store";
+import { isPopupOpen } from "#/lib/utils";
 
 const searchSchema = z.object({
   tab: z
@@ -73,7 +74,7 @@ function RouteComponent() {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Escape" || event.defaultPrevented) return;
       // Esc belongs to an open dialog (the image viewer) or a text field first.
-      if (document.querySelector("[role=dialog]")) return;
+      if (isPopupOpen()) return;
       if (
         event.target instanceof HTMLElement &&
         event.target.closest("input, textarea, [contenteditable=true]")
@@ -98,7 +99,7 @@ function RouteComponent() {
   return (
     <div className="h-screen w-full flex justify-center">
       {issue ? (
-        <Card className="w-7xl my-8 overflow-auto pt-0">
+        <Card className="w-7xl my-8 overflow-auto pt-0 [scrollbar-gutter:stable]">
           <IssueKeyboard issueKey={issue.key} hasChecklist={!!checklist} />
           <CardContent>
             <div className="sticky top-0 z-10 flex items-center justify-between gap-2 bg-card pt-[var(--card-spacing)] pb-2">

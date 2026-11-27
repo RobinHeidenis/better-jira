@@ -26,3 +26,12 @@ export const timeAgo = (iso: string) => {
   }
   return "just now";
 };
+
+/**
+ * Whether a dialog, menu or dropdown is showing. Some closed popups stay in
+ * the page invisibly (like a select's list), so only visible ones count.
+ */
+export const isPopupOpen = () =>
+  [
+    ...document.querySelectorAll("[role=dialog], [role=menu], [role=listbox]"),
+  ].some((element) => element.checkVisibility());

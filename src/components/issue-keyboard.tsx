@@ -2,6 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { jiraIssueUrl } from "#/lib/jira-url";
 import { store } from "#/lib/store";
+import { isPopupOpen } from "#/lib/utils";
 
 const isTyping = (target: EventTarget | null) =>
   target instanceof HTMLElement &&
@@ -36,11 +37,7 @@ export const IssueKeyboard = ({
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.metaKey || event.ctrlKey || event.altKey) return;
       if (event.defaultPrevented || isTyping(event.target)) return;
-      if (
-        document.querySelector("[role=dialog], [role=menu], [role=listbox]")
-      ) {
-        return;
-      }
+      if (isPopupOpen()) return;
 
       const actions: Record<string, () => void> = {
         s: () => click('[aria-label="Change status"]'),

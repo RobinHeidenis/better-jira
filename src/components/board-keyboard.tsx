@@ -2,6 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useSelector } from "@tanstack/react-store";
 import { useEffect } from "react";
 import { boardSearch } from "#/lib/board-search";
+import { isPopupOpen } from "#/lib/utils";
 import type { BoardSearchColumn } from "./board-search";
 import { useBoardIssues } from "./use-board-issues";
 
@@ -40,7 +41,7 @@ export const BoardKeyboard = ({
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.metaKey || event.ctrlKey || event.altKey) return;
       if (isTyping(event.target)) return;
-      if (document.querySelector("[role=dialog], [role=menu]")) return;
+      if (isPopupOpen()) return;
 
       if (event.key === "/") {
         event.preventDefault();
