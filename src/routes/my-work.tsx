@@ -1,5 +1,5 @@
 import { RiCloseLine } from "@remixicon/react";
-import { useQuery } from "@tanstack/react-query";
+import { type UseQueryResult, useQuery } from "@tanstack/react-query";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useSelector } from "@tanstack/react-store";
 import { cn } from "cn";
@@ -12,7 +12,11 @@ import { Button } from "#/components/ui/button";
 import { Card, CardContent, CardTitle } from "#/components/ui/card";
 import { Link } from "#/components/ui/link";
 import { Skeleton } from "#/components/ui/skeleton";
-import { type MergeRequest, myMergeRequestsOptions } from "#/lib/api/gitlab";
+import {
+  authoredMergeRequestsOptions,
+  type MergeRequest,
+  reviewMergeRequestsOptions,
+} from "#/lib/api/gitlab";
 import { type MyIssue, myIssuesOptions } from "#/lib/api/my-work";
 import { store } from "#/lib/store";
 import { isPopupOpen, timeAgo } from "#/lib/utils";
@@ -163,55 +167,57 @@ const Tickets = () => {
   );
 };
 
-const MergeRequests = ({
-  list,
+const MergeRequestSection = ({
+  title,
+  query,
   empty,
 }: {
-  list: MergeRequest[];
+  title: string;
+  query: UseQueryResult<MergeRequest[]>;
   empty: string;
-}) =>
-  list.length ? (
-    <ul className="divide-y divide-border/60">
-      {list.map((mergeRequest) => (
-        <MergeRequestRow key={mergeRequest.id} mergeRequest={mergeRequest} />
-      ))}
-    </ul>
-  ) : (
-    <p className="text-muted-foreground">{empty}</p>
+}) => {
+  const { data, isPending, error, refetch } = query;
+  return (
+    <Section title={title} count={data?.length}>
+      {isPending ? (
+        <Loading />
+      ) : error ? (
+        <ErrorState
+          title={`Couldn't load ${title.toLowerCase()}`}
+          error={error}
+          onRetry={() => void refetch()}
+        />
+      ) : data.length ? (
+        <ul className="divide-y divide-border/60">
+          {data.map((mergeRequest) => (
+            <MergeRequestRow
+              key={mergeRequest.id}
+              mergeRequest={mergeRequest}
+            />
+          ))}
+        </ul>
+      ) : (
+        <p className="text-muted-foreground">{empty}</p>
+      )}
+    </Section>
   );
+};
 
 const GitLab = ({ projectIds }: { projectIds: number[] }) => {
-  const { data, isPending, error, refetch } = useQuery(
-    myMergeRequestsOptions(projectIds),
-  );
-  if (error) {
-    return (
-      <ErrorState
-        title="Couldn't load your merge requests"
-        error={error}
-        onRetry={() => void refetch()}
-      />
-    );
-  }
+  const toReview = useQuery(reviewMergeRequestsOptions(projectIds));
+  const authored = useQuery(authoredMergeRequestsOptions(projectIds));
   return (
     <>
-      <Section title="Waiting for your review" count={data?.toReview.length}>
-        {isPending ? (
-          <Loading />
-        ) : (
-          <MergeRequests
-            list={data.toReview}
-            empty="No open merge requests have you as a reviewer."
-          />
-        )}
-      </Section>
-      <Section title="Your merge requests" count={data?.mine.length}>
-        {isPending ? (
-          <Loading />
-        ) : (
-          <MergeRequests list={data.mine} empty="You have none open." />
-        )}
-      </Section>
+      <MergeRequestSection
+        title="Waiting for your review"
+        query={toReview}
+        empty="No open merge requests have you as a reviewer."
+      />
+      <MergeRequestSection
+        title="Your merge requests"
+        query={authored}
+        empty="You have none open."
+      />
     </>
   );
 };
@@ -252,10 +258,10 @@ function MyWorkPage() {
               <RiCloseLine />
             </Button>
           </div>
+          {hasGitlab ? <GitLab projectIds={projectIds} /> : null}
           <Section title="Your tickets" count={tickets?.length}>
             <Tickets />
           </Section>
-          {hasGitlab ? <GitLab projectIds={projectIds} /> : null}
         </CardContent>
       </Card>
     </div>

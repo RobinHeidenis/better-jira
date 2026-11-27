@@ -20,7 +20,19 @@ const request = async <TSchema extends z.ZodType>(
   const response = await fetch(url, options);
 
   if (!response.ok) {
-    throw new Error(`GitLab error: ${response.status} ${response.statusText}`);
+    // GitLab explains refusals in the body, like a missing token scope.
+    const body = await response.json().catch(() => null);
+    const detail =
+      body && typeof body === "object"
+        ? (body.message ?? body.error_description ?? body.error)
+        : null;
+    throw new Error(
+      `GitLab error: ${response.status} ${response.statusText}${
+        detail
+          ? ` (${typeof detail === "string" ? detail : JSON.stringify(detail)})`
+          : ""
+      }`,
+    );
   }
 
   return schema.parse(await response.json());
@@ -225,46 +237,68 @@ export const mergeRequestDetailOptions = (projectId: number, iid: number) => {
   });
 };
 
-const gitlabUserSchema = z.object({ id: z.number(), username: z.string() });
-
-export const gitlabUserOptions = () =>
+/**
+ * The token owner's user id. `/user` needs the `read_user` scope, which a
+ * `read_api` token lacks, so the token's own details are asked first.
+ */
+export const gitlabUserIdOptions = () =>
   queryOptions({
-    queryKey: ["gitlab-user"],
-    queryFn: () => request("/user", gitlabUserSchema),
+    queryKey: ["gitlab-user-id"],
+    queryFn: async () => {
+      try {
+        const token = await request(
+          "/personal_access_tokens/self",
+          z.object({ user_id: z.number() }),
+        );
+        return token.user_id;
+      } catch {
+        const user = await request("/user", z.object({ id: z.number() }));
+        return user.id;
+      }
+    },
     staleTime: Number.POSITIVE_INFINITY,
+    retry: false,
   });
 
-/**
- * Open merge requests in the selected projects that the user reviews or
- * wrote. GitLab answers these across every project, so the rest are dropped.
- */
-export const myMergeRequestsOptions = (projectIds: number[]) =>
+const listOpenMergeRequests = (filter: Record<string, string>) =>
+  request(
+    `/merge_requests?${new URLSearchParams({
+      state: "opened",
+      per_page: "100",
+      ...filter,
+    })}`,
+    z.array(mergeRequestSchema),
+  );
+
+const newest = (a: MergeRequest, b: MergeRequest) =>
+  b.updated_at.localeCompare(a.updated_at);
+
+// GitLab answers these across every project, so the rest are dropped.
+const inProjects = (projectIds: number[]) => (mergeRequest: MergeRequest) =>
+  projectIds.includes(mergeRequest.project_id);
+
+/** Open merge requests in the selected projects the user is a reviewer on. */
+export const reviewMergeRequestsOptions = (projectIds: number[]) =>
   queryOptions({
-    queryKey: ["gitlab-my-merge-requests", projectIds],
+    queryKey: ["gitlab-review-merge-requests", projectIds],
     queryFn: async ({ client }) => {
-      const user = await client.ensureQueryData(gitlabUserOptions());
-      const list = (filter: Record<string, string>) =>
-        request(
-          `/merge_requests?${new URLSearchParams({
-            state: "opened",
-            scope: "all",
-            per_page: "100",
-            ...filter,
-          })}`,
-          z.array(mergeRequestSchema),
-        );
-      const [toReview, mine] = await Promise.all([
-        list({ reviewer_id: String(user.id) }),
-        list({ author_id: String(user.id) }),
-      ]);
-      const inProjects = (mergeRequest: MergeRequest) =>
-        projectIds.includes(mergeRequest.project_id);
-      const newest = (a: MergeRequest, b: MergeRequest) =>
-        b.updated_at.localeCompare(a.updated_at);
-      return {
-        toReview: toReview.filter(inProjects).sort(newest),
-        mine: mine.filter(inProjects).sort(newest),
-      };
+      const userId = await client.fetchQuery(gitlabUserIdOptions());
+      const list = await listOpenMergeRequests({
+        scope: "all",
+        reviewer_id: String(userId),
+      });
+      return list.filter(inProjects(projectIds)).sort(newest);
+    },
+    refetchInterval: 2 * 60 * 1000,
+  });
+
+/** The user's own open merge requests in the selected projects. */
+export const authoredMergeRequestsOptions = (projectIds: number[]) =>
+  queryOptions({
+    queryKey: ["gitlab-authored-merge-requests", projectIds],
+    queryFn: async () => {
+      const list = await listOpenMergeRequests({ scope: "created_by_me" });
+      return list.filter(inProjects(projectIds)).sort(newest);
     },
     refetchInterval: 2 * 60 * 1000,
   });
