@@ -18,7 +18,11 @@ const myIssueSchema = z.object({
       statusCategory: z.object({ name: z.string() }).optional(),
     }),
     issuetype: z
-      .object({ name: z.string(), iconUrl: z.string().optional() })
+      .object({
+        name: z.string(),
+        iconUrl: z.string().optional(),
+        hierarchyLevel: z.number().optional(),
+      })
       .optional(),
     priority: z
       .object({ name: z.string(), iconUrl: z.string().optional() })
@@ -88,7 +92,11 @@ export const searchWithRoles = async (
   }
 
   const { accountId } = await client.ensureQueryData(currentUserOptions());
-  return issues.map((issue): MyIssue => {
+  // Epics (one level above standard issues) are containers, not work items.
+  const work = issues.filter(
+    (issue) => (issue.fields.issuetype?.hierarchyLevel ?? 0) < 1,
+  );
+  return work.map((issue): MyIssue => {
     const developer = developerField
       ? userRefSchema.catch(null).parse(issue.fields[developerField])
       : null;
@@ -115,7 +123,7 @@ const getMyIssues = (client: QueryClient, developerField: string | null) =>
 export const myIssuesOptions = () => {
   const { developerField } = store.get();
   return queryOptions({
-    queryKey: ["my-work", "issues", developerField],
+    queryKey: ["my-work", "issues", 2, developerField],
     queryFn: ({ client }) => getMyIssues(client, developerField),
     refetchOnWindowFocus: refetchOnReturn,
   });

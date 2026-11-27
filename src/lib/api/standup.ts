@@ -22,7 +22,7 @@ const jqlDate = (date: Date) => {
 export const movedToReviewOptions = (statusIds: string[], since: Date) => {
   const { developerField } = store.get();
   return queryOptions({
-    queryKey: ["standup", "moved-to-review", statusIds, since.toISOString()],
+    queryKey: ["standup", "moved-to-review", 2, statusIds, since.toISOString()],
     queryFn: statusIds.length
       ? ({ client }) =>
           searchWithRoles(
@@ -39,7 +39,7 @@ export const movedToReviewOptions = (statusIds: string[], since: Date) => {
 export const plannedTodosOptions = () => {
   const { developerField, startDateField } = store.get();
   return queryOptions({
-    queryKey: ["standup", "planned-todos", developerField, startDateField],
+    queryKey: ["standup", "planned-todos", 2, developerField, startDateField],
     queryFn: startDateField
       ? ({ client }) => {
           const start = jqlField(startDateField);
