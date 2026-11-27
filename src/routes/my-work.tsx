@@ -13,11 +13,13 @@ import { Button } from "#/components/ui/button";
 import { Card, CardContent, CardTitle } from "#/components/ui/card";
 import { Link } from "#/components/ui/link";
 import { Skeleton } from "#/components/ui/skeleton";
-import { QueryList, Section, TicketSection } from "#/components/work-lists";
 import {
-  authoredMergeRequestsOptions,
-  type MergeRequest,
-} from "#/lib/api/gitlab";
+  projectNames,
+  QueryList,
+  Section,
+  TicketSection,
+} from "#/components/work-lists";
+import { authoredMergeRequestsOptions } from "#/lib/api/gitlab";
 import { reviewTicketsOptions } from "#/lib/api/merge-request-tickets";
 import { type MyIssue, myIssuesOptions } from "#/lib/api/my-work";
 import { store } from "#/lib/store";
@@ -101,19 +103,6 @@ const Tickets = () => {
   );
 };
 
-/** The projects of a ticket's merge requests, like "hooray, hooray-frontend". */
-const projectNote = (mergeRequests: MergeRequest[]) =>
-  [
-    ...new Set(
-      mergeRequests.map(
-        (mergeRequest) =>
-          mergeRequest.references.full.split("!")[0]?.split("/").at(-1) ?? "",
-      ),
-    ),
-  ]
-    .filter(Boolean)
-    .join(", ");
-
 const GitLab = ({ projectIds }: { projectIds: number[] }) => {
   const toReview = useQuery(reviewTicketsOptions(projectIds));
   const authored = useQuery(authoredMergeRequestsOptions(projectIds));
@@ -124,7 +113,7 @@ const GitLab = ({ projectIds }: { projectIds: number[] }) => {
         empty="No open merge requests have you as a reviewer."
         unlinkedLabel="Also waiting, without a ticket:"
         query={toReview}
-        note={projectNote}
+        note={projectNames}
       />
       <QueryList
         title="Your merge requests"

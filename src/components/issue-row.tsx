@@ -6,9 +6,12 @@ import { Link } from "./ui/link";
 /** A ticket in a list, with the user's roles on it and a date at the end. */
 export const IssueRow = ({
   issue,
+  chips = [],
   date,
 }: {
   issue: MyIssue;
+  /** Extra context shown next to the roles, like merge request projects. */
+  chips?: string[];
   /** Replaces the last-updated time. */
   date?: ReactNode;
 }) => {
@@ -39,7 +42,15 @@ export const IssueRow = ({
             </span>
           ) : null}
         </span>
-        <span className="flex shrink-0 gap-1">
+        <span className="flex shrink-0 flex-wrap justify-end gap-1">
+          {chips.map((chip) => (
+            <span
+              key={chip}
+              className="border px-1 whitespace-nowrap text-muted-foreground"
+            >
+              {chip}
+            </span>
+          ))}
           {issue.roles.map((role) => (
             <span
               key={role}
@@ -49,7 +60,7 @@ export const IssueRow = ({
             </span>
           ))}
         </span>
-        <span className="w-20 shrink-0 text-right text-muted-foreground">
+        <span className="w-24 shrink-0 text-right whitespace-nowrap text-muted-foreground">
           {date ?? timeAgo(fields.updated)}
         </span>
       </Link>

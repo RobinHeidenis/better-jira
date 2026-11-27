@@ -2,6 +2,7 @@ import type { UseQueryResult } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import type { MergeRequest } from "#/lib/api/gitlab";
 import type { TicketMergeRequests } from "#/lib/api/merge-request-tickets";
+import { timeAgo } from "#/lib/utils";
 import { ErrorState } from "./error-state";
 import { IssueRow } from "./issue-row";
 import { MergeRequestRow } from "./merge-requests-popover";
@@ -80,7 +81,8 @@ export const TicketSection = <T extends MergeRequest>({
     tickets: TicketMergeRequests<T>[];
     unlinked: T[];
   }>;
-  note: (mergeRequests: T[]) => string;
+  /** Shown as chips on the ticket, and joined on a bare merge request. */
+  note: (mergeRequests: T[]) => string[];
 }) => {
   const tickets = {
     ...query,
@@ -95,7 +97,13 @@ export const TicketSection = <T extends MergeRequest>({
             <IssueRow
               key={ticket.issue.id}
               issue={ticket.issue}
-              date={note(ticket.mergeRequests)}
+              chips={note(ticket.mergeRequests)}
+              date={timeAgo(
+                ticket.mergeRequests
+                  .map((mergeRequest) => mergeRequest.updated_at)
+                  .sort()
+                  .at(-1) ?? ticket.issue.fields.updated,
+              )}
             />
           ))
         }
@@ -108,7 +116,7 @@ export const TicketSection = <T extends MergeRequest>({
               <MergeRequestRow
                 key={mergeRequest.id}
                 mergeRequest={mergeRequest}
-                note={note([mergeRequest])}
+                note={note([mergeRequest]).join(", ")}
               />
             ))}
           </ul>
@@ -117,3 +125,14 @@ export const TicketSection = <T extends MergeRequest>({
     </>
   );
 };
+
+/** The projects of some merge requests, like "hooray" and "hooray-frontend". */
+export const projectNames = (mergeRequests: MergeRequest[]) =>
+  [
+    ...new Set(
+      mergeRequests.map(
+        (mergeRequest) =>
+          mergeRequest.references.full.split("!")[0]?.split("/").at(-1) ?? "",
+      ),
+    ),
+  ].filter(Boolean);

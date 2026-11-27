@@ -12,9 +12,13 @@ import {
   CardTitle,
 } from "#/components/ui/card";
 import { Link } from "#/components/ui/link";
-import { QueryList, TicketSection } from "#/components/work-lists";
+import {
+  projectNames,
+  QueryList,
+  TicketSection,
+} from "#/components/work-lists";
 import { boardConfigurationOptions } from "#/lib/api/boards";
-import type { MergeRequest, ReviewedMergeRequest } from "#/lib/api/gitlab";
+import type { ReviewedMergeRequest } from "#/lib/api/gitlab";
 import { type MyIssue, myIssuesOptions } from "#/lib/api/my-work";
 import {
   lastWorkingDay,
@@ -51,19 +55,14 @@ const reviewNote = (mergeRequests: ReviewedMergeRequest[]) => {
     0,
   );
   return [
-    mergeRequests.some((mergeRequest) => mergeRequest.approved)
-      ? "Approved"
-      : null,
-    comments ? `${comments} ${comments === 1 ? "comment" : "comments"}` : null,
-  ]
-    .filter(Boolean)
-    .join(", ");
+    ...(mergeRequests.some((mergeRequest) => mergeRequest.approved)
+      ? ["Approved"]
+      : []),
+    ...(comments
+      ? [`${comments} ${comments === 1 ? "comment" : "comments"}`]
+      : []),
+  ];
 };
-
-const mergedNote = (mergeRequests: MergeRequest[]) =>
-  mergeRequests.length === 1
-    ? "1 merge request"
-    : `${mergeRequests.length} merge requests`;
 
 const issues = (items: MyIssue[], date?: (issue: MyIssue) => ReactNode) =>
   items.map((issue) => (
@@ -180,7 +179,7 @@ function StandupPage() {
               empty="Nothing merged."
               unlinkedLabel="Also merged, without a ticket:"
               query={merged}
-              note={mergedNote}
+              note={projectNames}
             />
           ) : null}
 
