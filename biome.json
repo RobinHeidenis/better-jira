@@ -11,6 +11,8 @@
       "**/src/**/*",
       "**/extension/**/*",
       "!**/extension/**/*.png",
+      "!**/extension/.output",
+      "!**/extension/.wxt",
       "**/.vscode/**/*",
       "**/index.html",
       "**/vite.config.ts",

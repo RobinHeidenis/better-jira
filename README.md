@@ -48,13 +48,21 @@ Put it behind your reverse proxy with HTTPS. Your tokens travel from the browser
 
 ## Opening Jira links in better-jira
 
-The `extension/` folder holds a small browser extension for Chrome, Arc, Edge and Brave. With it, Jira ticket links (`…atlassian.net/browse/KEY` and board links with `?selectedIssue=KEY`) open in better-jira instead, whether you click them in Slack, an email or another tab. better-jira's own "Open in Jira" links still go to Jira. Copied ticket links stay plain Jira links.
+The `extension/` folder holds a small browser extension for Firefox and Chrome (and Arc, Edge and Brave), built with [WXT](https://wxt.dev). With it, Jira ticket links (`…atlassian.net/browse/KEY` and board links with `?selectedIssue=KEY`) open in better-jira instead, whether you click them in Slack, an email or another tab. better-jira's own "Open in Jira" links still go to Jira. Copied ticket links stay plain Jira links. Only ticket links are redirected; dashboards, filters and Confluence open in Jira as usual.
 
-1. Open `chrome://extensions` (or your browser's extensions page) and turn on developer mode.
-2. Click "Load unpacked" and pick the `extension` folder.
-3. On the settings page that opens, enter where you open better-jira, like `http://localhost:3001`. Optionally limit it to your Jira site. Click the extension's icon to come back to these settings.
+Build it with `pnpm --filter better-jira-links build`, which writes `extension/.output/firefox-mv3` and `extension/.output/chrome-mv3`. On first install a settings page opens: enter where you open better-jira, like `http://localhost:3001`, and optionally limit it to your Jira site. Click the extension's icon to get back to it.
 
-Only ticket links are redirected; dashboards, filters and Confluence open in Jira as usual.
+**Firefox.** Release Firefox only keeps signed extensions, so pick one:
+
+- **To try it:** open `about:debugging#/runtime/this-firefox`, click "Load Temporary Add-on…" and pick `extension/.output/firefox-mv3/manifest.json`. It stays until Firefox restarts.
+- **To keep it:** run `pnpm --filter better-jira-links zip`, upload the Firefox zip from `extension/.output/` at [addons.mozilla.org/developers](https://addons.mozilla.org/developers/addon/submit/distribution) and choose "On your own". Mozilla signs it without listing it publicly, usually within minutes. Install the signed `.xpi` you get back.
+- **Firefox Developer Edition or Nightly:** set `xpinstall.signatures.required` to `false` in `about:config`, then install the zip from the add-ons page with "Install Add-on From File…".
+
+If the settings page says it can't see Jira pages, click "Allow access to Jira".
+
+**Chrome and friends.** Open `chrome://extensions`, turn on developer mode, click "Load unpacked" and pick `extension/.output/chrome-mv3`.
+
+**Working on it.** `pnpm --filter better-jira-links dev` opens Firefox with the extension loaded and reloads it as you edit (`dev:chrome` for Chrome).
 
 ## Where your credentials go
 

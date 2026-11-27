@@ -3,57 +3,18 @@
   <head>
     <meta charset="utf-8" />
     <title>better-jira links</title>
-    <style>
-      :root {
-        color-scheme: light dark;
-        font: 14px/1.5 system-ui, sans-serif;
-      }
-      body {
-        max-width: 32rem;
-        margin: 3rem auto;
-        padding: 0 1rem;
-      }
-      label {
-        display: block;
-        margin-top: 1.25rem;
-        font-weight: 600;
-      }
-      input[type="text"],
-      input[type="url"] {
-        box-sizing: border-box;
-        width: 100%;
-        margin-top: 0.25rem;
-        padding: 0.4rem 0.5rem;
-        font: inherit;
-      }
-      .hint {
-        margin: 0.25rem 0 0;
-        opacity: 0.7;
-      }
-      .checkbox {
-        display: flex;
-        gap: 0.5rem;
-        align-items: center;
-        font-weight: normal;
-      }
-      button {
-        margin-top: 1.5rem;
-        padding: 0.4rem 1rem;
-        font: inherit;
-      }
-      #status {
-        margin-left: 0.75rem;
-      }
-      .error {
-        color: #dc2626;
-      }
-    </style>
+    <meta name="manifest.open_in_tab" content="true" />
+    <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
     <h1>better-jira links</h1>
     <p>
       Jira ticket links open in better-jira. Its "Open in Jira" links still go
       to Jira.
+    </p>
+    <p id="access" class="error" hidden>
+      The extension can't see Jira pages yet, so links aren't redirected.
+      <button id="grant" type="button">Allow access to Jira</button>
     </p>
     <form id="form">
       <label for="appUrl">better-jira address</label>
@@ -80,6 +41,6 @@
       <button type="submit">Save</button>
       <span id="status" role="status"></span>
     </form>
-    <script type="module" src="options.js"></script>
+    <script type="module" src="./main.ts"></script>
   </body>
 </html>
