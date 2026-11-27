@@ -126,7 +126,7 @@ export const TicketSection = <T extends MergeRequest>({
   );
 };
 
-/** The projects of some merge requests, like "hooray" and "hooray-frontend". */
+/** The projects of some merge requests, like "api" and "web". */
 export const projectNames = (mergeRequests: MergeRequest[]) =>
   [
     ...new Set(

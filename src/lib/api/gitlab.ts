@@ -88,7 +88,7 @@ export type MergeRequest = z.infer<typeof mergeRequestSchema>;
 const escapeRegExp = (value: string) =>
   value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-// GitLab's search is a substring match, so HR-12 would also find HR-123.
+// GitLab's search is a substring match, so PROJ-12 would also find PROJ-123.
 const mentionsKey = (mergeRequest: MergeRequest, issueKey: string) => {
   const pattern = new RegExp(
     `(^|[^A-Za-z0-9])${escapeRegExp(issueKey)}($|[^0-9])`,

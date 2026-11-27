@@ -4,7 +4,7 @@ import { type MergeRequest, reviewMergeRequestsOptions } from "./gitlab";
 import { type MyIssue, searchWithRoles } from "./my-work";
 import { refetchOnReturn } from "./refetch";
 
-/** Issue keys an MR names in its title or branch, like HR-123 or hr-123-fix. */
+/** Issue keys an MR names in its title or branch, like PROJ-123 or proj-123-fix. */
 const issueKeys = (mergeRequest: MergeRequest) => {
   const text = `${mergeRequest.title} ${mergeRequest.source_branch}`;
   return [
