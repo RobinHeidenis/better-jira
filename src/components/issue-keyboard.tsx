@@ -10,7 +10,7 @@ const isTyping = (target: EventTarget | null) =>
 const click = (selector: string) =>
   document.querySelector<HTMLElement>(selector)?.click();
 
-type Tab = "description" | "checklist" | "comments";
+type Tab = "description" | "checklist" | "comments" | "history";
 
 /**
  * Single keys for the ticket view. Most press the sidebar's own buttons, so a
@@ -61,9 +61,6 @@ export const IssueKeyboard = ({
             ),
           );
         },
-        "1": () => void showTab("description"),
-        "2": () => void showTab(hasChecklist ? "checklist" : "comments"),
-        "3": () => hasChecklist && void showTab("comments"),
         e: () => {
           const { baseUrl } = store.get();
           if (baseUrl) window.open(jiraIssueUrl(baseUrl, issueKey), "_blank");
@@ -75,6 +72,15 @@ export const IssueKeyboard = ({
           }
         },
       };
+
+      const tabs: Tab[] = [
+        "description",
+        ...(hasChecklist ? (["checklist"] as const) : []),
+        "comments",
+        "history",
+      ];
+      const tab = tabs[Number(event.key) - 1];
+      if (tab) actions[event.key] = () => void showTab(tab);
 
       const action = actions[event.key];
       if (!action) return;

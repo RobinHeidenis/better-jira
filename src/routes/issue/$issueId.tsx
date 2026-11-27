@@ -8,6 +8,7 @@ import { Adf } from "#/components/adf/adf";
 import { Checklist } from "#/components/checklist";
 import { Comments } from "#/components/comments";
 import { ErrorState } from "#/components/error-state";
+import { History } from "#/components/history";
 import { IssueKeyboard } from "#/components/issue-keyboard";
 import { IssueSidebar } from "#/components/issue-sidebar";
 import {
@@ -33,7 +34,7 @@ import { store } from "#/lib/store";
 
 const searchSchema = z.object({
   tab: z
-    .enum(["description", "checklist", "comments"])
+    .enum(["description", "checklist", "comments", "history"])
     .optional()
     .catch(undefined),
 });
@@ -170,7 +171,9 @@ function RouteComponent() {
                     navigate({
                       search: {
                         tab:
-                          value === "checklist" || value === "comments"
+                          value === "checklist" ||
+                          value === "comments" ||
+                          value === "history"
                             ? value
                             : undefined,
                       },
@@ -196,6 +199,7 @@ function RouteComponent() {
                         </span>
                       ) : null}
                     </TabsTrigger>
+                    <TabsTrigger value="history">History</TabsTrigger>
                   </TabsList>
                   <TabsContent value="description" className="mt-2 w-full">
                     {description}
@@ -216,6 +220,9 @@ function RouteComponent() {
                       issueKey={issue.key}
                       attachments={issue.fields.attachment}
                     />
+                  </TabsContent>
+                  <TabsContent value="history" className="mt-2">
+                    <History issueKey={issue.key} />
                   </TabsContent>
                 </Tabs>
               </div>

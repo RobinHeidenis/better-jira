@@ -66,7 +66,7 @@ There is one file per resource in `src/lib/api/`. Each defines a Zod schema, a f
 
 - `/`: the board. Redirects to setup when the account or board isn't configured.
 - `/setup/account`, `/setup/board`, `/setup/gitlab`: setup wizards built on `src/components/ui/questionnaire.tsx`.
-- `/issue/$issueId`: issue detail. Tabs for the description, checklist and comments (`?tab=`), all rendered from ADF, plus a sidebar.
+- `/issue/$issueId`: issue detail. Tabs for the description, checklist, comments and history (`?tab=`), all rendered from ADF, plus a sidebar.
 - `/settings`: edits the same settings as board setup in place and links to the account and GitLab wizards. A new setting goes in both places.
 
 ### ADF (Atlassian Document Format)
@@ -83,6 +83,10 @@ Zod node schemas are in `src/lib/adf/` (`block-nodes.ts`, `inline-nodes.ts`). `s
 ### Finding issues
 
 `IssuePalette` (`src/components/issue-palette.tsx`, mounted in the root) opens on Cmd/Ctrl+K or the board's "Find issue" button (via the `issuePaletteOpen` store) and searches all of Jira through `issueSearchOptions` (`src/lib/api/search.ts`): a key or bare number is looked up directly, and text runs a summary search and a full-text search, merged. An empty query lists `issueHistory()`.
+
+### History
+
+`src/components/history.tsx` renders the issue's change log (`src/lib/api/changelog.ts`, newest first). Changes by app accounts are hidden behind a toggle, one person's changes within five minutes merge into one row showing each field's net change, and checklist edits are diffed per item with `checklistChanges`.
 
 ### Editing issues
 

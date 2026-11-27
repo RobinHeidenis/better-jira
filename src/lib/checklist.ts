@@ -209,3 +209,36 @@ export const withItemStatus = (text: string, ref: ItemRef, status: string) => {
   );
   return { text: lines.join("\n"), previous: target.status };
 };
+
+export type ChecklistChange = {
+  text: string;
+  /** null when the item was added. */
+  from: string | null;
+  /** null when the item was removed. */
+  to: string | null;
+};
+
+/** The items whose status changed, or that were added or removed. */
+export const checklistChanges = (
+  before: string | null,
+  after: string | null,
+): ChecklistChange[] => {
+  const statuses = (text: string | null) => {
+    const map = new Map<string, string>();
+    for (const group of parseChecklist(text ?? "")?.groups ?? []) {
+      for (const item of group.items) map.set(item.text, item.status);
+    }
+    return map;
+  };
+  const from = statuses(before);
+  const to = statuses(after);
+  const changes: ChecklistChange[] = [];
+  for (const [text, status] of to) {
+    const previous = from.get(text) ?? null;
+    if (previous !== status) changes.push({ text, from: previous, to: status });
+  }
+  for (const [text, status] of from) {
+    if (!to.has(text)) changes.push({ text, from: status, to: null });
+  }
+  return changes;
+};
