@@ -2,7 +2,7 @@ import { Combobox as ComboboxPrimitive } from "@base-ui/react";
 import { RiSearchLine } from "@remixicon/react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { useSelector } from "@tanstack/react-store";
+import { Store, useSelector } from "@tanstack/react-store";
 import { cn } from "cn";
 import { useEffect, useState } from "react";
 import { type FoundIssue, issueSearchOptions } from "#/lib/api/search";
@@ -94,9 +94,16 @@ const Results = ({ onPick }: { onPick: (issue: FoundIssue) => void }) => {
   );
 };
 
+export const issuePaletteOpen = new Store(false);
+
+const setOpen = (open: boolean | ((current: boolean) => boolean)) =>
+  issuePaletteOpen.setState((current) =>
+    typeof open === "function" ? open(current) : open,
+  );
+
 /** Cmd+K (Ctrl+K) finds any issue the user can see, on the board or not. */
 export const IssuePalette = () => {
-  const [open, setOpen] = useState(false);
+  const open = useSelector(issuePaletteOpen, (state) => state);
   const navigate = useNavigate();
   const ready = useSelector(
     store,

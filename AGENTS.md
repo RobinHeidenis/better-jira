@@ -82,7 +82,7 @@ Zod node schemas are in `src/lib/adf/` (`block-nodes.ts`, `inline-nodes.ts`). `s
 
 ### Finding issues
 
-`IssuePalette` (`src/components/issue-palette.tsx`, mounted in the root) opens on Cmd/Ctrl+K and searches all of Jira through `issueSearchOptions` (`src/lib/api/search.ts`): a key or bare number is looked up directly, and text runs a summary search and a full-text search, merged. An empty query lists `issueHistory()`.
+`IssuePalette` (`src/components/issue-palette.tsx`, mounted in the root) opens on Cmd/Ctrl+K or the board's "Find issue" button (via the `issuePaletteOpen` store) and searches all of Jira through `issueSearchOptions` (`src/lib/api/search.ts`): a key or bare number is looked up directly, and text runs a summary search and a full-text search, merged. An empty query lists `issueHistory()`.
 
 ### Editing issues
 

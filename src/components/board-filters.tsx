@@ -1,7 +1,12 @@
-import { RiSettings3Line, RiUserStarLine } from "@remixicon/react";
+import {
+  RiSearchLine,
+  RiSettings3Line,
+  RiUserStarLine,
+} from "@remixicon/react";
 import { useSelector } from "@tanstack/react-store";
 import type { ReactNode } from "react";
 import { store } from "#/lib/store";
+import { issuePaletteOpen } from "./issue-palette";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Link } from "./ui/link";
@@ -34,11 +39,19 @@ export const BoardFilters = ({ search }: { search: ReactNode }) => {
         </Button>
         {search}
         <Button
+          variant="outline"
+          className="ml-auto"
+          title="Find any issue in Jira (Cmd/Ctrl+K)"
+          onClick={() => issuePaletteOpen.setState(() => true)}
+        >
+          <RiSearchLine data-icon="inline-start" />
+          Find issue
+        </Button>
+        <Button
           variant="ghost"
           size="icon"
           aria-label="Settings"
           title="Settings"
-          className="ml-auto"
           nativeButton={false}
           render={<Link to="/settings" underlined={false} />}
         >
