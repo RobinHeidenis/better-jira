@@ -227,7 +227,7 @@ function RouteComponent() {
                   </TabsContent>
                 </Tabs>
               </div>
-              <div className="self-start border-t pt-6 lg:sticky lg:top-14 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-6 lg:max-h-[calc(100vh-9rem)] lg:overflow-x-hidden lg:overflow-y-auto">
+              <div className="self-start border-t pt-6 lg:sticky lg:top-13 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-6 lg:max-h-[calc(100vh-9rem)] lg:overflow-x-hidden lg:overflow-y-auto">
                 <IssueSidebar issue={issue} />
               </div>
             </div>
