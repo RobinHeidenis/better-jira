@@ -9,9 +9,14 @@ import {
   boardScroll,
   boardSearch,
   boardSelection,
+  clearSelection,
   selectCard,
 } from "#/lib/board-search";
-import { reportError, startTransition } from "#/lib/transition";
+import {
+  reportError,
+  startBulkTransition,
+  startTransition,
+} from "#/lib/transition";
 import { IssueCard } from "./issue-card";
 import { CardTitle } from "./ui/card";
 import { Separator } from "./ui/separator";
@@ -51,31 +56,60 @@ export const Column = ({
   const queryClient = useQueryClient();
   const dragged = useSelector(boardDrag, (state) => state);
   const [dropping, setDropping] = useState(false);
-  const canDrop = !!dragged && dragged.column !== name;
+  const selection = useSelector(boardSelection, (state) => state.issues);
+  // Dragging one of several selected cards takes them all along.
+  const draggingSelection =
+    !!dragged &&
+    selection.length > 1 &&
+    selection.some((selected) => selected.id === dragged.id);
+  const canDrop = draggingSelection
+    ? selection.some((selected) => !statusIds.includes(selected.statusId))
+    : !!dragged && dragged.column !== name;
 
   const drop = async () => {
     const issue = boardDrag.state;
     boardDrag.setState(() => null);
-    if (!issue || issue.column === name) return;
-    try {
-      const transitions = await queryClient.fetchQuery(
-        transitionsOptions(issue.key),
-      );
-      // A column can hold several statuses; its first one wins.
-      const transition = statusIds
-        .map((id) => transitions.find((other) => other.to.id === id))
-        .find((other) => other !== undefined);
-      if (!transition) {
-        reportError(
-          `${issue.key} can't move to ${name} from its current status.`,
-        );
-        return;
-      }
-      startTransition(queryClient, issue, transition);
-    } catch (error) {
-      reportError(
-        `Couldn't move ${issue.key}: ${error instanceof Error ? error.message : String(error)}`,
-      );
+    if (!issue) return;
+    const group = draggingSelection
+      ? boardSelection.state.issues.filter(
+          (selected) => !statusIds.includes(selected.statusId),
+        )
+      : issue.column === name
+        ? []
+        : [issue];
+    if (!group.length) return;
+
+    const found = await Promise.all(
+      group.map(async (target) => {
+        try {
+          const transitions = await queryClient.fetchQuery(
+            transitionsOptions(target.key),
+          );
+          // A column can hold several statuses; its first one wins.
+          const transition = statusIds
+            .map((id) => transitions.find((other) => other.to.id === id))
+            .find((other) => other !== undefined);
+          if (!transition) {
+            reportError(
+              `${target.key} can't move to ${name} from its current status.`,
+            );
+            return null;
+          }
+          return { issue: target, transition };
+        } catch (error) {
+          reportError(
+            `Couldn't move ${target.key}: ${error instanceof Error ? error.message : String(error)}`,
+          );
+          return null;
+        }
+      }),
+    );
+    const moves = found.filter((move) => move !== null);
+    if (draggingSelection) {
+      clearSelection();
+      startBulkTransition(queryClient, moves);
+    } else if (moves[0]) {
+      startTransition(queryClient, moves[0].issue, moves[0].transition);
     }
   };
 
@@ -217,7 +251,9 @@ export const Column = ({
                   "absolute top-0 left-0 w-full",
                   issue.id === activeIssueId &&
                     "ring-2 ring-primary ring-offset-2 ring-offset-background",
-                  dragged?.id === issue.id && "opacity-50",
+                  (dragged?.id === issue.id ||
+                    (draggingSelection && selectedIds.has(issue.id))) &&
+                    "opacity-50",
                   selectedIds.has(issue.id) &&
                     "ring-2 ring-sky-500 ring-offset-2 ring-offset-background",
                 )}
