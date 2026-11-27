@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MyWorkRouteImport } from './routes/my-work'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as StandupRouteImport } from './routes/standup'
 import { Route as IssueIssueIdRouteImport } from './routes/issue/$issueId'
 import { Route as SetupAccountRouteImport } from './routes/setup/account'
 import { Route as SetupBoardRouteImport } from './routes/setup/board'
@@ -30,6 +31,11 @@ const MyWorkRoute = MyWorkRouteImport.update({
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StandupRoute = StandupRouteImport.update({
+  id: '/standup',
+  path: '/standup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IssueIssueIdRoute = IssueIssueIdRouteImport.update({
@@ -57,6 +63,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/my-work': typeof MyWorkRoute
   '/settings': typeof SettingsRoute
+  '/standup': typeof StandupRoute
   '/issue/$issueId': typeof IssueIssueIdRoute
   '/setup/account': typeof SetupAccountRoute
   '/setup/board': typeof SetupBoardRoute
@@ -66,6 +73,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/my-work': typeof MyWorkRoute
   '/settings': typeof SettingsRoute
+  '/standup': typeof StandupRoute
   '/issue/$issueId': typeof IssueIssueIdRoute
   '/setup/account': typeof SetupAccountRoute
   '/setup/board': typeof SetupBoardRoute
@@ -76,6 +84,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/my-work': typeof MyWorkRoute
   '/settings': typeof SettingsRoute
+  '/standup': typeof StandupRoute
   '/issue/$issueId': typeof IssueIssueIdRoute
   '/setup/account': typeof SetupAccountRoute
   '/setup/board': typeof SetupBoardRoute
@@ -87,6 +96,7 @@ export interface FileRouteTypes {
     | '/'
     | '/my-work'
     | '/settings'
+    | '/standup'
     | '/issue/$issueId'
     | '/setup/account'
     | '/setup/board'
@@ -96,6 +106,7 @@ export interface FileRouteTypes {
     | '/'
     | '/my-work'
     | '/settings'
+    | '/standup'
     | '/issue/$issueId'
     | '/setup/account'
     | '/setup/board'
@@ -105,6 +116,7 @@ export interface FileRouteTypes {
     | '/'
     | '/my-work'
     | '/settings'
+    | '/standup'
     | '/issue/$issueId'
     | '/setup/account'
     | '/setup/board'
@@ -115,6 +127,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   MyWorkRoute: typeof MyWorkRoute
   SettingsRoute: typeof SettingsRoute
+  StandupRoute: typeof StandupRoute
   IssueIssueIdRoute: typeof IssueIssueIdRoute
   SetupAccountRoute: typeof SetupAccountRoute
   SetupBoardRoute: typeof SetupBoardRoute
@@ -142,6 +155,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/standup': {
+      id: '/standup'
+      path: '/standup'
+      fullPath: '/standup'
+      preLoaderRoute: typeof StandupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/issue/$issueId': {
@@ -179,6 +199,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   MyWorkRoute: MyWorkRoute,
   SettingsRoute: SettingsRoute,
+  StandupRoute: StandupRoute,
   IssueIssueIdRoute: IssueIssueIdRoute,
   SetupAccountRoute: SetupAccountRoute,
   SetupBoardRoute: SetupBoardRoute,

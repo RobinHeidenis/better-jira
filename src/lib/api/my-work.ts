@@ -41,21 +41,25 @@ const pageSchema = z.object({
 });
 
 /** `customfield_10031` → `cf[10031]`, the form JQL accepts for any site. */
-const jqlField = (fieldId: string) =>
+export const jqlField = (fieldId: string) =>
   fieldId.replace(/^customfield_(\d+)$/, "cf[$1]");
 
 const MAX_PAGES = 5;
 
-/** Open tickets the current user is assignee or developer on. */
-const getMyIssues = async (
-  client: QueryClient,
-  developerField: string | null,
-) => {
-  const who = [
+/** Who the current user is on a ticket, as JQL. */
+export const mineJql = (developerField: string | null) =>
+  [
     "assignee = currentUser()",
     ...(developerField ? [`${jqlField(developerField)} = currentUser()`] : []),
   ].join(" OR ");
-  const jql = `(${who}) AND statusCategory != Done ORDER BY updated DESC`;
+
+/** Runs a JQL search and marks which roles the current user has on each. */
+export const searchWithRoles = async (
+  client: QueryClient,
+  jql: string,
+  developerField: string | null,
+  extraFields: string[] = [],
+) => {
   const fields = [
     "summary",
     "status",
@@ -65,6 +69,7 @@ const getMyIssues = async (
     "assignee",
     "updated",
     ...(developerField ? [developerField] : []),
+    ...extraFields,
   ].join(",");
 
   const issues: z.infer<typeof myIssueSchema>[] = [];
@@ -98,6 +103,14 @@ const getMyIssues = async (
     };
   });
 };
+
+/** Open tickets the current user is assignee or developer on. */
+const getMyIssues = (client: QueryClient, developerField: string | null) =>
+  searchWithRoles(
+    client,
+    `(${mineJql(developerField)}) AND statusCategory != Done ORDER BY updated DESC`,
+    developerField,
+  );
 
 export const myIssuesOptions = () => {
   const { developerField } = store.get();

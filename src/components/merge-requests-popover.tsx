@@ -143,8 +143,11 @@ const MergeRequestChecks = ({
 
 export const MergeRequestRow = ({
   mergeRequest,
+  note,
 }: {
   mergeRequest: MergeRequest;
+  /** Extra context in the meta line, like what the user did on it. */
+  note?: string;
 }) => {
   const state = STATE[mergeRequest.state];
   const isDraft = mergeRequest.draft && mergeRequest.state === "opened";
@@ -177,6 +180,12 @@ export const MergeRequestRow = ({
             </span>
             <span aria-hidden="true">·</span>
             <span>{timeAgo(mergeRequest.updated_at)}</span>
+            {note ? (
+              <>
+                <span aria-hidden="true">·</span>
+                <span className="text-foreground">{note}</span>
+              </>
+            ) : null}
             {/* Results cached before `project_id` was fetched lack it. */}
             {mergeRequest.state === "opened" && mergeRequest.project_id ? (
               <MergeRequestChecks mergeRequest={mergeRequest} />

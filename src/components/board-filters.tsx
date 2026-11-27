@@ -1,5 +1,6 @@
 import {
   RiBriefcaseLine,
+  RiChatVoiceLine,
   RiSearchLine,
   RiSettings3Line,
   RiUserStarLine,
@@ -47,6 +48,14 @@ export const BoardFilters = ({ search }: { search: ReactNode }) => {
         >
           <RiBriefcaseLine data-icon="inline-start" />
           My work
+        </Button>
+        <Button
+          variant="outline"
+          nativeButton={false}
+          render={<Link to="/standup" underlined={false} />}
+        >
+          <RiChatVoiceLine data-icon="inline-start" />
+          Standup
         </Button>
         <Button
           variant="outline"

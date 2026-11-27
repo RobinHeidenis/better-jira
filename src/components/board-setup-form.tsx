@@ -29,6 +29,7 @@ const DEVELOPER_STEP = "developerField";
 const STORY_POINTS_STEP = "storyPointsField";
 const REVIEW_STEP = "reviewColumn";
 const CHECKLIST_STEP = "checklistField";
+const START_DATE_STEP = "startDateField";
 
 const customFieldsOfType = (fields: JiraField[] | undefined, type: string) =>
   (fields ?? []).filter((field) => field.custom && field.schema?.type === type);
@@ -204,6 +205,24 @@ export const BoardSetupForm = ({
         defaultChecked: field.name.toLowerCase() === "checklist text",
       })),
     },
+    {
+      name: START_DATE_STEP,
+      required: false,
+      prompt: "Which field holds the date work should start?",
+      description:
+        "A date field. Standup lists your To Do tickets that have one. Skip this if you don't plan start dates.",
+      pending: isFieldsLoading,
+      failure: fieldsError
+        ? `Couldn't load Jira's fields: ${fieldsError.message}`
+        : undefined,
+      choices: customFieldsOfType(fields, "date").map((field) => ({
+        key: `start:${field.id}`,
+        value: field.id,
+        label: field.name,
+        description: field.id,
+        defaultChecked: field.name.toLowerCase() === "start date",
+      })),
+    },
   ];
 
   // The columns step can't be answered before its choices exist. The
@@ -215,7 +234,8 @@ export const BoardSetupForm = ({
     (activeStep === REVIEW_STEP && isLoading) ||
     ((activeStep === DEVELOPER_STEP ||
       activeStep === STORY_POINTS_STEP ||
-      activeStep === CHECKLIST_STEP) &&
+      activeStep === CHECKLIST_STEP ||
+      activeStep === START_DATE_STEP) &&
       isFieldsLoading);
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -238,6 +258,7 @@ export const BoardSetupForm = ({
       storyPointsField: stringAnswer(answers, STORY_POINTS_STEP),
       reviewColumn: stringAnswer(answers, REVIEW_STEP),
       checklistField: stringAnswer(answers, CHECKLIST_STEP),
+      startDateField: stringAnswer(answers, START_DATE_STEP),
       hiddenColumns: columns
         .map((column) => column.name)
         .filter((name) => !visible.has(name)),

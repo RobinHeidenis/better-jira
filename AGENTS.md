@@ -67,7 +67,8 @@ There is one file per resource in `src/lib/api/`. Each defines a Zod schema, a f
 - `/`: the board. Redirects to setup when the account or board isn't configured.
 - `/setup/account`, `/setup/board`, `/setup/gitlab`: setup wizards built on `src/components/ui/questionnaire.tsx`.
 - `/issue/$issueId`: issue detail. Tabs for the description, checklist, comments and history (`?tab=`), all rendered from ADF, plus a sidebar.
-- `/my-work`: the user's open tickets (`src/lib/api/my-work.ts`, assignee or developer via `cf[id]` JQL) and their GitLab merge requests to review (`reviewMergeRequestsOptions`, which needs the user id from `gitlabUserIdOptions`) or authored (`authoredMergeRequestsOptions`).
+- `/my-work`: the user's open tickets (`src/lib/api/my-work.ts`, assignee or developer via `cf[id]` JQL) and their GitLab merge requests to review (`reviewMergeRequestsOptions`, which needs the user id from `gitlabUserIdOptions`: tokens often can't read `/user`, so it falls back to the author of the user's own merge requests) or authored (`authoredMergeRequestsOptions`).
+- `/standup`: activity since the previous working day (`lastWorkingDay` in `src/lib/api/standup.ts`). Reviewed and merged merge requests come from GitLab (`reviewedMergeRequestsOptions` reads each candidate's notes, since an approval is a system note); tickets put on review use a `status CHANGED TO … BY currentUser()` JQL; planned work reads the `startDateField` setting.
 - `/settings`: edits the same settings as board setup in place and links to the account and GitLab wizards. A new setting goes in both places.
 
 ### ADF (Atlassian Document Format)
@@ -95,7 +96,7 @@ Zod node schemas are in `src/lib/adf/` (`block-nodes.ts`, `inline-nodes.ts`). `s
 
 ### Custom fields
 
-Custom field ids differ per Jira site. The developer, story points and checklist fields are picked during board setup and stored as `developerField`, `storyPointsField` and `checklistField`. The checklist is Issue Checklist Pro's text field, parsed in `src/lib/checklist.ts`. Ticking an item rewrites its line in a fresh copy of the field through API v2 (`src/lib/api/checklist.ts`), and the app syncs its checklist from the field. The app also writes the field back a few seconds later, which undoes any write made in between, so `src/lib/checklist-sync.ts` batches clicks and re-checks after each write. The status menu lists a fixed set of statuses in `src/components/checklist.tsx`, because the app has no API for its configured statuses. `src/lib/api/issues.ts` requests them by id and parses them out of the loose `fields` object (`issueDeveloper`, `issueStoryPoints`). When a setting is null, the UI hides that part.
+Custom field ids differ per Jira site. The developer, story points, checklist and start date fields are picked during board setup and stored as `developerField`, `storyPointsField`, `checklistField` and `startDateField`. The checklist is Issue Checklist Pro's text field, parsed in `src/lib/checklist.ts`. Ticking an item rewrites its line in a fresh copy of the field through API v2 (`src/lib/api/checklist.ts`), and the app syncs its checklist from the field. The app also writes the field back a few seconds later, which undoes any write made in between, so `src/lib/checklist-sync.ts` batches clicks and re-checks after each write. The status menu lists a fixed set of statuses in `src/components/checklist.tsx`, because the app has no API for its configured statuses. `src/lib/api/issues.ts` requests them by id and parses them out of the loose `fields` object (`issueDeveloper`, `issueStoryPoints`). When a setting is null, the UI hides that part.
 
 <!-- intent-skills:start -->
 ## Skill Loading

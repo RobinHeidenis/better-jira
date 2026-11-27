@@ -275,6 +275,18 @@ function SettingsPage() {
                 disabled={isFieldsPending}
               />
             </Row>
+            <Row
+              label="Start date"
+              description="A date field. Standup lists your To Do tickets that have one."
+            >
+              <Picker
+                options={fieldOptions(fields, "date")}
+                value={settings.startDateField}
+                onChange={(startDateField) => update({ startDateField })}
+                placeholder="None"
+                disabled={isFieldsPending}
+              />
+            </Row>
           </Section>
 
           <Separator />

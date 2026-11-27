@@ -5,6 +5,7 @@ import { useSelector } from "@tanstack/react-store";
 import { cn } from "cn";
 import { type ReactNode, useEffect } from "react";
 import { ErrorState } from "#/components/error-state";
+import { IssueRow } from "#/components/issue-row";
 import { MergeRequestRow } from "#/components/merge-requests-popover";
 import { useStatusTone } from "#/components/related-issues";
 import { useLaneOrder } from "#/components/transition-menu";
@@ -19,7 +20,7 @@ import {
 } from "#/lib/api/gitlab";
 import { type MyIssue, myIssuesOptions } from "#/lib/api/my-work";
 import { store } from "#/lib/store";
-import { isPopupOpen, timeAgo } from "#/lib/utils";
+import { isPopupOpen } from "#/lib/utils";
 
 export const Route = createFileRoute("/my-work")({
   // Everything here reads the browser-only settings store.
@@ -59,52 +60,6 @@ const Loading = () => (
     <Skeleton className="h-9 w-full" />
   </div>
 );
-
-const IssueRow = ({ issue }: { issue: MyIssue }) => {
-  const { fields } = issue;
-  return (
-    <li>
-      <Link
-        to="/issue/$issueId"
-        params={{ issueId: issue.key }}
-        underlined={false}
-        className="flex items-center gap-2.5 px-2 py-2 hover:bg-muted/60"
-      >
-        {fields.issuetype?.iconUrl ? (
-          <img
-            src={fields.issuetype.iconUrl}
-            alt={fields.issuetype.name}
-            className="size-4 shrink-0"
-          />
-        ) : null}
-        <span className="w-20 shrink-0 text-muted-foreground tabular-nums">
-          {issue.key}
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block truncate">{fields.summary}</span>
-          {fields.parent ? (
-            <span className="block truncate text-muted-foreground">
-              {fields.parent.fields.summary}
-            </span>
-          ) : null}
-        </span>
-        <span className="flex shrink-0 gap-1">
-          {issue.roles.map((role) => (
-            <span
-              key={role}
-              className="bg-muted px-1 text-muted-foreground first-letter:uppercase"
-            >
-              {role}
-            </span>
-          ))}
-        </span>
-        <span className="w-20 shrink-0 text-right text-muted-foreground">
-          {timeAgo(fields.updated)}
-        </span>
-      </Link>
-    </li>
-  );
-};
 
 const Tickets = () => {
   const { data, isPending, error, refetch } = useQuery(myIssuesOptions());
