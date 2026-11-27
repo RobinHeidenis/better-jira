@@ -4,6 +4,7 @@ import { cn } from "cn";
 import { type ReactNode, useState } from "react";
 import { currentUserOptions } from "#/lib/api/current-user";
 import { labelsOptions, prioritiesOptions } from "#/lib/api/edit";
+import { componentsOptions } from "#/lib/api/project-components";
 import { versionOptions } from "#/lib/api/versions";
 import { editIssue } from "#/lib/edit-issue";
 import { PeoplePicker, personEdit } from "./people-picker";
@@ -315,51 +316,59 @@ export const LabelsField = ({
   );
 };
 
-export const VersionsField = ({
+type Named = { id: string; name: string };
+
+/** A multi-select over a list field like fix versions or components. */
+const NamedListField = ({
   issueKey,
-  versions,
+  fieldId,
+  label,
+  current,
+  available,
 }: {
   issueKey: string;
-  versions: { id: string; name: string }[];
+  fieldId: "fixVersions" | "components";
+  label: string;
+  current: Named[];
+  available: Named[];
 }) => {
   const queryClient = useQueryClient();
-  const { data: unreleased } = useQuery(versionOptions());
-  // Released versions aren't offered, but the ones already set stay listed.
+  // Options no longer offered (like released versions) stay listed while set.
   const options = [
-    ...versions,
-    ...(unreleased ?? []).filter(
-      (version) => !versions.some((other) => other.id === version.id),
+    ...current,
+    ...available.filter(
+      (option) => !current.some((other) => other.id === option.id),
     ),
   ];
-  const current = versions.map((version) => version.id);
+  const ids = current.map((option) => option.id);
 
-  const save = (ids: string[]) => {
-    const added = ids.filter((id) => !current.includes(id));
-    const removed = current.filter((id) => !ids.includes(id));
+  const save = (next: string[]) => {
+    const added = next.filter((id) => !ids.includes(id));
+    const removed = ids.filter((id) => !next.includes(id));
     if (!added.length && !removed.length) return;
     void editIssue(
       queryClient,
       issueKey,
       {
         update: {
-          fixVersions: [
+          [fieldId]: [
             ...added.map((id) => ({ add: { id } })),
             ...removed.map((id) => ({ remove: { id } })),
           ],
         },
       },
       {
-        fixVersions: options
-          .filter((version) => ids.includes(version.id))
+        [fieldId]: options
+          .filter((option) => next.includes(option.id))
           .map(({ id, name }) => ({ id, name })),
       },
     );
   };
 
   return (
-    <Select multiple value={current} onValueChange={save}>
+    <Select multiple value={ids} onValueChange={save}>
       <SelectTrigger
-        aria-label="Edit fix versions"
+        aria-label={`Edit ${label}`}
         className={cn(
           "group/edit -mx-1.5 h-auto! w-[calc(100%+0.75rem)] min-w-0 cursor-pointer border-0 bg-transparent! px-1.5 py-0.5 hover:bg-muted/60!",
           "[&>svg]:opacity-0 hover:[&>svg]:opacity-100",
@@ -367,11 +376,11 @@ export const VersionsField = ({
       >
         <SelectValue>
           {() =>
-            versions.length ? (
+            current.length ? (
               <span className="flex flex-wrap gap-1">
-                {versions.map((version) => (
-                  <Badge key={version.id} variant="outline">
-                    {version.name}
+                {current.map((option) => (
+                  <Badge key={option.id} variant="outline">
+                    {option.name}
                   </Badge>
                 ))}
               </span>
@@ -383,13 +392,57 @@ export const VersionsField = ({
       </SelectTrigger>
       <SelectContent alignItemWithTrigger={false} className="max-h-80">
         <SelectGroup>
-          {options.map((version) => (
-            <SelectItem key={version.id} value={version.id}>
-              {version.name}
-            </SelectItem>
-          ))}
+          {options.length ? (
+            options.map((option) => (
+              <SelectItem key={option.id} value={option.id}>
+                {option.name}
+              </SelectItem>
+            ))
+          ) : (
+            <div className="px-2 py-1.5 text-muted-foreground">
+              Nothing to pick from
+            </div>
+          )}
         </SelectGroup>
       </SelectContent>
     </Select>
+  );
+};
+
+export const VersionsField = ({
+  issueKey,
+  versions,
+}: {
+  issueKey: string;
+  versions: Named[];
+}) => {
+  const { data: unreleased } = useQuery(versionOptions());
+  return (
+    <NamedListField
+      issueKey={issueKey}
+      fieldId="fixVersions"
+      label="fix versions"
+      current={versions}
+      available={unreleased ?? []}
+    />
+  );
+};
+
+export const ComponentsField = ({
+  issueKey,
+  components,
+}: {
+  issueKey: string;
+  components: Named[];
+}) => {
+  const { data: available } = useQuery(componentsOptions());
+  return (
+    <NamedListField
+      issueKey={issueKey}
+      fieldId="components"
+      label="components"
+      current={components}
+      available={available ?? []}
+    />
   );
 };

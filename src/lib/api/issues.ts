@@ -232,6 +232,10 @@ const jiraIssueSchema = jiraBoardIssueSchema.extend({
       .nullable(),
     created: z.string().optional(),
     updated: z.string().optional(),
+    components: z
+      .array(z.object({ id: z.string(), name: z.string() }))
+      .nullish()
+      .catch(null),
     issuelinks: z.array(issueLinkSchema).optional().catch(undefined),
     // A malformed attachment list shouldn't stop the issue from loading.
     attachment: z.array(attachmentSchema).nullish().catch(null),

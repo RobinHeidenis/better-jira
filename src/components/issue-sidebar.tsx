@@ -11,6 +11,7 @@ import { jiraIssueUrl } from "#/lib/jira-url";
 import { store } from "#/lib/store";
 import { initials, timeAgo } from "#/lib/utils";
 import {
+  ComponentsField,
   LabelsField,
   NumberField,
   PersonField,
@@ -29,6 +30,7 @@ type SidebarIssue = JiraBoardIssue & {
     created?: string;
     updated?: string;
     issuelinks?: JiraIssueLink[];
+    components?: { id: string; name: string }[] | null;
   };
 };
 
@@ -149,6 +151,12 @@ export const IssueSidebar = ({ issue }: { issue: SidebarIssue }) => {
           ) : null}
           <Field label="Fix versions">
             <VersionsField issueKey={issue.key} versions={versions} />
+          </Field>
+          <Field label="Components">
+            <ComponentsField
+              issueKey={issue.key}
+              components={fields.components ?? []}
+            />
           </Field>
           <Field label="Labels">
             <LabelsField issueKey={issue.key} labels={fields.labels} />
