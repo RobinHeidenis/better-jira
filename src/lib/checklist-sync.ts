@@ -1,6 +1,12 @@
 import { useSyncExternalStore } from "react";
 import { getChecklistText, putChecklistText } from "./api/checklist";
-import { type ItemRef, withItemStatus } from "./checklist";
+import {
+  countItems,
+  type GroupTarget,
+  type ItemRef,
+  withAddedItem,
+  withItemStatus,
+} from "./checklist";
 
 /**
  * Issue Checklist Pro reads its text field when it changes, then writes the
@@ -20,7 +26,20 @@ export type ChecklistChange = {
   writes?: number;
 };
 
-type State = { changes: ChecklistChange[]; error: string | null };
+export type ChecklistAddition = {
+  text: string;
+  group: GroupTarget;
+  /** Items with this text before it was added, to tell when it's in. */
+  before: number;
+  written?: boolean;
+  writes?: number;
+};
+
+type State = {
+  changes: ChecklistChange[];
+  additions: ChecklistAddition[];
+  error: string | null;
+};
 
 type Sync = {
   state: State;
@@ -36,7 +55,7 @@ const GATHER_MS = 800;
 const SETTLE_MS = 5000;
 const MAX_WRITES = 3;
 
-const EMPTY: State = { changes: [], error: null };
+const EMPTY: State = { changes: [], additions: [], error: null };
 const syncs = new Map<string, Sync>();
 
 const sameItem = (a: ItemRef, b: ItemRef) =>
@@ -55,11 +74,40 @@ const run = async (issueKey: string, sync: Sync) => {
   const errors: string[] = [];
   // What each change's status was when Jira last matched it.
   let checked = new Map<ChecklistChange, string>();
+  // Additions Jira has (or that gave up), so they can be dropped.
+  const added = new Set<ChecklistAddition>();
 
   try {
     for (;;) {
       const text = await getChecklistText(issueKey, sync.fieldId);
       let next = text;
+
+      // New items go in first, so a tick on one that isn't in Jira yet finds
+      // it below.
+      const toAdd: ChecklistAddition[] = [];
+      for (const addition of sync.state.additions) {
+        if (
+          addition.written &&
+          countItems(text, addition.text) > addition.before
+        ) {
+          added.add(addition);
+          continue;
+        }
+        added.delete(addition);
+        if ((addition.writes ?? 0) >= MAX_WRITES) {
+          errors.push(
+            `Jira kept undoing "${addition.text}". Try adding it again in a moment.`,
+          );
+          added.add(addition);
+          continue;
+        }
+        // Counted on Jira's own text, since the copy on screen can be stale.
+        if (!addition.written)
+          addition.before = countItems(next, addition.text);
+        next = withAddedItem(next, addition.group, addition.text);
+        toAdd.push(addition);
+      }
+
       checked = new Map(
         sync.state.changes.map((change) => [change, change.status]),
       );
@@ -90,9 +138,9 @@ const run = async (issueKey: string, sync: Sync) => {
         toWrite.push(change);
       }
 
-      if (!toWrite.length) break;
+      if (!toWrite.length && !toAdd.length) break;
       await putChecklistText(issueKey, sync.fieldId, next);
-      for (const change of toWrite) {
+      for (const change of [...toWrite, ...toAdd]) {
         change.written = true;
         change.writes = (change.writes ?? 0) + 1;
       }
@@ -103,6 +151,7 @@ const run = async (issueKey: string, sync: Sync) => {
     checked = new Map(
       sync.state.changes.map((change) => [change, change.status]),
     );
+    for (const addition of sync.state.additions) added.add(addition);
   }
 
   // Reload before dropping the changes, so the ticks don't flicker back.
@@ -111,10 +160,13 @@ const run = async (issueKey: string, sync: Sync) => {
     changes: sync.state.changes.filter(
       (change) => checked.get(change) !== change.status,
     ),
+    additions: sync.state.additions.filter((addition) => !added.has(addition)),
     error: errors.length ? errors.join(" ") : sync.state.error,
   });
   sync.running = false;
-  if (sync.state.changes.length) void run(issueKey, sync);
+  if (sync.state.changes.length || sync.state.additions.length) {
+    void run(issueKey, sync);
+  }
 };
 
 const syncFor = (issueKey: string) => {
@@ -164,6 +216,28 @@ export const queueChecklistChange = (
   sync.timer = setTimeout(() => void run(issueKey, sync), GATHER_MS);
 };
 
+export const queueChecklistAddition = (
+  issueKey: string,
+  fieldId: string,
+  reload: () => Promise<unknown>,
+  addition: { text: string; group: GroupTarget; currentText: string },
+) => {
+  const sync = syncFor(issueKey);
+  sync.fieldId = fieldId;
+  sync.reload = reload;
+  // Counted on the shown text, which already has earlier additions in it.
+  const before = countItems(addition.currentText, addition.text);
+  update(sync, {
+    additions: [
+      ...sync.state.additions,
+      { text: addition.text, group: addition.group, before },
+    ],
+    error: null,
+  });
+  clearTimeout(sync.timer);
+  sync.timer = setTimeout(() => void run(issueKey, sync), GATHER_MS);
+};
+
 export const dismissChecklistError = (issueKey: string) => {
   const sync = syncs.get(issueKey);
   if (sync) update(sync, { error: null });
@@ -182,10 +256,21 @@ export const useChecklistSync = (issueKey: string | undefined) =>
     () => EMPTY,
   );
 
-/** The text with unconfirmed changes applied. */
-export const withChanges = (text: string, changes: ChecklistChange[]) =>
-  changes.reduce(
-    (current, change) =>
-      withItemStatus(current, change.ref, change.status)?.text ?? current,
+/** The text with unconfirmed additions and changes applied. */
+export const withChanges = (
+  text: string,
+  { changes, additions }: Pick<State, "changes" | "additions">,
+) => {
+  const withAdditions = additions.reduce(
+    (current, addition) =>
+      countItems(current, addition.text) > addition.before
+        ? current
+        : withAddedItem(current, addition.group, addition.text),
     text,
   );
+  return changes.reduce(
+    (current, change) =>
+      withItemStatus(current, change.ref, change.status)?.text ?? current,
+    withAdditions,
+  );
+};

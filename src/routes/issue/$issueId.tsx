@@ -71,9 +71,10 @@ function RouteComponent() {
     issue && checklistField
       ? checklistText(issue.fields[checklistField])
       : null;
-  const checklist = rawChecklist
-    ? parseChecklist(withChanges(rawChecklist, checklistSync.changes))
+  const shownChecklist = rawChecklist
+    ? withChanges(rawChecklist, checklistSync)
     : null;
+  const checklist = shownChecklist ? parseChecklist(shownChecklist) : null;
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -214,6 +215,7 @@ function RouteComponent() {
                     <TabsContent value="checklist" className="mt-2">
                       <Checklist
                         checklist={checklist}
+                        text={shownChecklist ?? ""}
                         issueId={issueId}
                         issueKey={issue.key}
                         fieldId={checklistField}

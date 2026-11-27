@@ -210,6 +210,52 @@ export const withItemStatus = (text: string, ref: ItemRef, status: string) => {
   return { text: lines.join("\n"), previous: target.status };
 };
 
+/** How many items have exactly this text. */
+export const countItems = (text: string, itemText: string) => {
+  const checklist = parseChecklist(text);
+  return checklist
+    ? itemsOf(checklist).filter((item) => item.text === itemText).length
+    : 0;
+};
+
+/**
+ * A group by its position, with its title to check the position still holds
+ * after the text changed. Titles alone can repeat, and untitled groups share
+ * null.
+ */
+export type GroupTarget = { index: number; title: string | null };
+
+/** Adds an open item at the end of a group, or at the end without that group. */
+export const withAddedItem = (
+  text: string,
+  target: GroupTarget,
+  itemText: string,
+) => {
+  const line = `* [open] ${itemText}`;
+  const lines = text.split("\n");
+  const groups = parseChecklist(text)?.groups ?? [];
+  const group =
+    groups[target.index]?.title === target.title
+      ? groups[target.index]
+      : groups.find((other) => other.title === target.title);
+  if (!group) {
+    while (lines.length && !lines.at(-1)?.trim()) lines.pop();
+    return [...lines, line].join("\n");
+  }
+  // After the group's last item and the notes under it, which may follow
+  // blank lines; an empty group gets it right under its title.
+  let last = group.items.length
+    ? Math.max(...group.items.map((item) => item.id))
+    : group.id;
+  for (let at = last + 1; at < lines.length; at++) {
+    const content = lines[at]?.trim() ?? "";
+    if (content.startsWith(">>")) last = at;
+    else if (content) break;
+  }
+  lines.splice(last + 1, 0, line);
+  return lines.join("\n");
+};
+
 export type ChecklistChange = {
   text: string;
   /** null when the item was added. */

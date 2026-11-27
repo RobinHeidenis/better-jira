@@ -1,4 +1,5 @@
 import {
+  RiAddLine,
   RiArrowDownSLine,
   RiArrowRightSLine,
   RiCheckboxBlankLine,
@@ -16,10 +17,12 @@ import {
   type Checklist as ChecklistData,
   type ChecklistGroup,
   type ChecklistItem,
+  type GroupTarget,
   itemRef,
 } from "#/lib/checklist";
 import {
   dismissChecklistError,
+  queueChecklistAddition,
   queueChecklistChange,
 } from "#/lib/checklist-sync";
 import { store } from "#/lib/store";
@@ -84,6 +87,7 @@ const ItemIcon = ({ state }: { state: ChecklistItem["state"] }) => {
 type Editing = {
   statuses: { value: string; label: string }[];
   setStatus: (item: ChecklistItem, status: string) => void;
+  addItem: (group: GroupTarget, text: string) => void;
 };
 
 /** Absent when the checklist is read-only. */
@@ -163,7 +167,61 @@ const Item = ({ item }: { item: ChecklistItem }) => {
   );
 };
 
-const Group = ({ group }: { group: ChecklistGroup }) => {
+/** A row that turns into an input; Enter adds the item and stays open. */
+const AddItem = ({ group }: { group: GroupTarget }) => {
+  const editing = use(EditingContext);
+  const [adding, setAdding] = useState(false);
+  if (!editing) return null;
+
+  if (!adding) {
+    return (
+      <button
+        type="button"
+        onClick={() => setAdding(true)}
+        className="flex cursor-pointer items-center gap-2 py-1 text-muted-foreground hover:text-foreground"
+      >
+        <RiAddLine className="size-4" />
+        Add item
+      </button>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2 py-1">
+      <RiAddLine className="size-4 shrink-0 text-muted-foreground" />
+      <input
+        // biome-ignore lint/a11y/noAutofocus: opened on purpose by clicking "Add item"
+        autoFocus
+        aria-label={
+          group.title ? `Add an item to ${group.title}` : "Add an item"
+        }
+        placeholder="New item, Enter to add"
+        className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
+        onBlur={(event) => {
+          if (!event.currentTarget.value.trim()) setAdding(false);
+        }}
+        onKeyDown={(event) => {
+          const input = event.currentTarget;
+          // Enter also confirms a character in an input method.
+          if (event.nativeEvent.isComposing) return;
+          if (event.key === "Escape") {
+            event.preventDefault();
+            input.value = "";
+            setAdding(false);
+          } else if (event.key === "Enter") {
+            event.preventDefault();
+            // Line breaks would start a new line in the checklist's text.
+            const text = input.value.replace(/\s+/g, " ").trim();
+            if (text) editing.addItem(group, text);
+            input.value = "";
+          }
+        }}
+      />
+    </div>
+  );
+};
+
+const Group = ({ group, index }: { group: ChecklistGroup; index: number }) => {
   const [open, setOpen] = useState(true);
   const done = group.items.filter((item) => item.state === "done").length;
   const partial = group.items.filter((item) => item.state === "partial").length;
@@ -171,11 +229,14 @@ const Group = ({ group }: { group: ChecklistGroup }) => {
 
   if (!group.title) {
     return (
-      <ul>
-        {group.items.map((item) => (
-          <Item key={item.id} item={item} />
-        ))}
-      </ul>
+      <div>
+        <ul>
+          {group.items.map((item) => (
+            <Item key={item.id} item={item} />
+          ))}
+        </ul>
+        <AddItem group={{ index, title: null }} />
+      </div>
     );
   }
 
@@ -203,6 +264,9 @@ const Group = ({ group }: { group: ChecklistGroup }) => {
         ) : (
           <p className="py-1 pl-5 text-muted-foreground">No items</p>
         )}
+        <div className="pl-5">
+          <AddItem group={{ index, title: group.title }} />
+        </div>
       </CollapsibleContent>
     </Collapsible>
   );
@@ -231,11 +295,14 @@ export const Checklist = ({
   checklist,
   issueId,
   issueKey,
+  text,
   fieldId,
   error,
 }: {
   /** With changes not yet confirmed in Jira already applied. */
   checklist: ChecklistData;
+  /** The checklist's text the above was parsed from. */
+  text: string;
   /** The id or key the issue was loaded by, which keys its query. */
   issueId: string;
   issueKey: string;
@@ -244,6 +311,16 @@ export const Checklist = ({
 }) => {
   const queryClient = useQueryClient();
   const statuses = useSelector(store, (state) => state.checklistStatuses);
+  const reload = () =>
+    queryClient.invalidateQueries({
+      queryKey: issueOptions(issueId).queryKey,
+    });
+  const addItem = (group: GroupTarget, itemText: string) =>
+    queueChecklistAddition(issueKey, fieldId, reload, {
+      text: itemText,
+      group,
+      currentText: text,
+    });
   const setStatus = (item: ChecklistItem, status: string) => {
     if (item.status === status) return;
     queueChecklistChange(
@@ -266,7 +343,7 @@ export const Checklist = ({
   const partialTotal = partial.reduce((sum, [, count]) => sum + count, 0);
   return (
     <EditingContext
-      value={{ statuses: statusesOf(checklist, statuses), setStatus }}
+      value={{ statuses: statusesOf(checklist, statuses), setStatus, addItem }}
     >
       <div className="space-y-3">
         <div className="space-y-2">
@@ -314,8 +391,11 @@ export const Checklist = ({
           </p>
         ) : null}
         <div className="space-y-1">
-          {checklist.groups.map((group) => (
-            <Group key={group.id} group={group} />
+          {checklist.groups.map((group, index) => (
+            // Line numbers shift as items are added above, so they'd remount
+            // the group and reset it.
+            // biome-ignore lint/suspicious/noArrayIndexKey: groups keep their order, and titles can repeat
+            <Group key={index} group={group} index={index} />
           ))}
         </div>
       </div>
