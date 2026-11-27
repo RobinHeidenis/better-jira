@@ -21,7 +21,7 @@ import {
  * board has no column for go before it when they're still "To Do" (like
  * refinement), and after it otherwise (like "Won't fix").
  */
-const useLaneOrder = () => {
+export const useLaneOrder = () => {
   const boardId = useSelector(store, (state) => state.boardId);
   // Hidden columns still have a place in the workflow's order.
   const { data: board } = useQuery(boardConfigurationOptions(boardId, true));

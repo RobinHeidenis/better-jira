@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as MyWorkRouteImport } from './routes/my-work'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as IssueIssueIdRouteImport } from './routes/issue/$issueId'
 import { Route as SetupAccountRouteImport } from './routes/setup/account'
@@ -19,6 +20,11 @@ import { Route as SetupGitlabRouteImport } from './routes/setup/gitlab'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MyWorkRoute = MyWorkRouteImport.update({
+  id: '/my-work',
+  path: '/my-work',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsRoute = SettingsRouteImport.update({
@@ -49,6 +55,7 @@ const SetupGitlabRoute = SetupGitlabRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/my-work': typeof MyWorkRoute
   '/settings': typeof SettingsRoute
   '/issue/$issueId': typeof IssueIssueIdRoute
   '/setup/account': typeof SetupAccountRoute
@@ -57,6 +64,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/my-work': typeof MyWorkRoute
   '/settings': typeof SettingsRoute
   '/issue/$issueId': typeof IssueIssueIdRoute
   '/setup/account': typeof SetupAccountRoute
@@ -66,6 +74,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/my-work': typeof MyWorkRoute
   '/settings': typeof SettingsRoute
   '/issue/$issueId': typeof IssueIssueIdRoute
   '/setup/account': typeof SetupAccountRoute
@@ -76,6 +85,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/my-work'
     | '/settings'
     | '/issue/$issueId'
     | '/setup/account'
@@ -84,6 +94,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/my-work'
     | '/settings'
     | '/issue/$issueId'
     | '/setup/account'
@@ -92,6 +103,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/my-work'
     | '/settings'
     | '/issue/$issueId'
     | '/setup/account'
@@ -101,6 +113,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  MyWorkRoute: typeof MyWorkRoute
   SettingsRoute: typeof SettingsRoute
   IssueIssueIdRoute: typeof IssueIssueIdRoute
   SetupAccountRoute: typeof SetupAccountRoute
@@ -115,6 +128,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/my-work': {
+      id: '/my-work'
+      path: '/my-work'
+      fullPath: '/my-work'
+      preLoaderRoute: typeof MyWorkRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -157,6 +177,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  MyWorkRoute: MyWorkRoute,
   SettingsRoute: SettingsRoute,
   IssueIssueIdRoute: IssueIssueIdRoute,
   SetupAccountRoute: SetupAccountRoute,

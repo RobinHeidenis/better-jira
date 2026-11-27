@@ -224,3 +224,47 @@ export const mergeRequestDetailOptions = (projectId: number, iid: number) => {
         : false,
   });
 };
+
+const gitlabUserSchema = z.object({ id: z.number(), username: z.string() });
+
+export const gitlabUserOptions = () =>
+  queryOptions({
+    queryKey: ["gitlab-user"],
+    queryFn: () => request("/user", gitlabUserSchema),
+    staleTime: Number.POSITIVE_INFINITY,
+  });
+
+/**
+ * Open merge requests in the selected projects that the user reviews or
+ * wrote. GitLab answers these across every project, so the rest are dropped.
+ */
+export const myMergeRequestsOptions = (projectIds: number[]) =>
+  queryOptions({
+    queryKey: ["gitlab-my-merge-requests", projectIds],
+    queryFn: async ({ client }) => {
+      const user = await client.ensureQueryData(gitlabUserOptions());
+      const list = (filter: Record<string, string>) =>
+        request(
+          `/merge_requests?${new URLSearchParams({
+            state: "opened",
+            scope: "all",
+            per_page: "100",
+            ...filter,
+          })}`,
+          z.array(mergeRequestSchema),
+        );
+      const [toReview, mine] = await Promise.all([
+        list({ reviewer_id: String(user.id) }),
+        list({ author_id: String(user.id) }),
+      ]);
+      const inProjects = (mergeRequest: MergeRequest) =>
+        projectIds.includes(mergeRequest.project_id);
+      const newest = (a: MergeRequest, b: MergeRequest) =>
+        b.updated_at.localeCompare(a.updated_at);
+      return {
+        toReview: toReview.filter(inProjects).sort(newest),
+        mine: mine.filter(inProjects).sort(newest),
+      };
+    },
+    refetchInterval: 2 * 60 * 1000,
+  });

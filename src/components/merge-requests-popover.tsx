@@ -141,7 +141,11 @@ const MergeRequestChecks = ({
   );
 };
 
-const MergeRequestRow = ({ mergeRequest }: { mergeRequest: MergeRequest }) => {
+export const MergeRequestRow = ({
+  mergeRequest,
+}: {
+  mergeRequest: MergeRequest;
+}) => {
   const state = STATE[mergeRequest.state];
   const isDraft = mergeRequest.draft && mergeRequest.state === "opened";
   const { project, iid } = shortReference(mergeRequest.references.full);

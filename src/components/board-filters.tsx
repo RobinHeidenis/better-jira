@@ -1,4 +1,5 @@
 import {
+  RiBriefcaseLine,
   RiSearchLine,
   RiSettings3Line,
   RiUserStarLine,
@@ -41,6 +42,14 @@ export const BoardFilters = ({ search }: { search: ReactNode }) => {
         <Button
           variant="outline"
           className="ml-auto"
+          nativeButton={false}
+          render={<Link to="/my-work" underlined={false} />}
+        >
+          <RiBriefcaseLine data-icon="inline-start" />
+          My work
+        </Button>
+        <Button
+          variant="outline"
           title="Find any issue in Jira (Cmd/Ctrl+K)"
           onClick={() => issuePaletteOpen.setState(() => true)}
         >
