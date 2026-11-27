@@ -6,6 +6,7 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
+import { IssuePalette } from "#/components/issue-palette";
 import { ThemeProvider } from "#/components/theme-provider";
 import { TransitionHost } from "#/components/transition-dialog";
 import { Link } from "#/components/ui/link";
@@ -70,6 +71,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             {children}
             <SharedTooltip />
             <TransitionHost />
+            <IssuePalette />
           </TooltipProvider>
         </ThemeProvider>
         <TanStackDevtools

@@ -49,6 +49,8 @@ Your Jira and GitLab tokens stay in your browser's local storage. GitLab is call
 
 ## Keyboard shortcuts
 
+Anywhere, `Cmd/Ctrl+K` finds any ticket you can see in Jira, not just the ones on the board. Search by key, by number alone (for the board's project) or by text. With nothing typed, it lists the tickets you viewed most recently.
+
 On the board:
 
 | Key            | Action                                  |

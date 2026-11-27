@@ -80,6 +80,10 @@ Zod node schemas are in `src/lib/adf/` (`block-nodes.ts`, `inline-nodes.ts`). `s
 
 `src/lib/api/transitions.ts` loads an issue's transitions with their screen fields. `startTransition` in `src/lib/transition.ts` moves the issue straight away when the target lane's form asks for nothing, and otherwise opens the form in `TransitionHost` (`src/components/transition-dialog.tsx`, mounted in the root). The form's fields come from Jira. Per target status, the user can hide fields and save default values, stored in `transitionForms` in settings. Assignee fields offer only the people in the `assigneeShortlist` setting (when set), with "Someone else…" to show everyone. Moves update the cached board and issue first, then reload both. Dragging a card onto a column (`column.tsx`, native drag and drop) picks the transition into that column's first status that has one.
 
+### Finding issues
+
+`IssuePalette` (`src/components/issue-palette.tsx`, mounted in the root) opens on Cmd/Ctrl+K and searches all of Jira through `issueSearchOptions` (`src/lib/api/search.ts`): a key or bare number is looked up directly, and text runs a summary search and a full-text search, merged. An empty query lists `issueHistory()`.
+
 ### Editing issues
 
 `editIssue` in `src/lib/edit-issue.ts` saves an edit (`fields` to replace values, `update` for add/remove operations like labels) and shows it on the cached issue and board first. The sidebar's editors are in `src/components/issue-fields.tsx`; people are picked with `PeoplePicker` (`src/components/people-picker.tsx`), shared with transition forms.
