@@ -99,7 +99,7 @@ function RouteComponent() {
   return (
     <div className="h-screen w-full flex justify-center">
       {issue ? (
-        <Card className="w-7xl my-8 overflow-auto pt-0 [scrollbar-gutter:stable]">
+        <Card className="w-7xl my-8 overflow-x-auto overflow-y-scroll pt-0">
           <IssueKeyboard issueKey={issue.key} hasChecklist={!!checklist} />
           <CardContent>
             <div className="sticky top-0 z-10 flex items-center justify-between gap-2 bg-card pt-[var(--card-spacing)] pb-2">
