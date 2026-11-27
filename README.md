@@ -96,3 +96,7 @@ On a ticket:
 | `pnpm generate-routes` | Regenerate `src/routeTree.gen.ts`    |
 
 If you're working on the code, read [AGENTS.md](AGENTS.md) first. It covers the architecture and the project's rules.
+
+## Licence
+
+MIT, see [LICENSE](LICENSE).
