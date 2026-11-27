@@ -19,14 +19,14 @@ import { boardConfigurationOptions } from "#/lib/api/boards";
 import {
   type MergeRequest,
   mergedMergeRequestsOptions,
-  type ReviewedMergeRequest,
-  reviewedMergeRequestsOptions,
 } from "#/lib/api/gitlab";
 import { type MyIssue, myIssuesOptions } from "#/lib/api/my-work";
 import {
   lastWorkingDay,
   movedToReviewOptions,
   plannedTodosOptions,
+  type ReviewedTicket,
+  reviewedTicketsOptions,
 } from "#/lib/api/standup";
 import { store } from "#/lib/store";
 import { isPopupOpen } from "#/lib/utils";
@@ -107,15 +107,63 @@ const QueryList = <T,>({
   );
 };
 
-const reviewNote = (mergeRequest: ReviewedMergeRequest) =>
+const reviewNote = (review: { approved: boolean; comments: number }) =>
   [
-    mergeRequest.approved ? "Approved" : null,
-    mergeRequest.comments
-      ? `${mergeRequest.comments} ${mergeRequest.comments === 1 ? "comment" : "comments"}`
+    review.approved ? "Approved" : null,
+    review.comments
+      ? `${review.comments} ${review.comments === 1 ? "comment" : "comments"}`
       : null,
   ]
     .filter(Boolean)
     .join(", ");
+
+const Reviewed = ({
+  projectIds,
+  since,
+}: {
+  projectIds: number[];
+  since: Date;
+}) => {
+  const query = useQuery(
+    reviewedTicketsOptions(projectIds, since.toISOString()),
+  );
+  const tickets = {
+    ...query,
+    data: query.data?.tickets,
+  } as UseQueryResult<ReviewedTicket[]>;
+  const unlinked = query.data?.unlinked ?? [];
+  return (
+    <>
+      <QueryList title="Reviewed" query={tickets} empty="Nothing reviewed.">
+        {(items) =>
+          items.map((ticket) => (
+            <IssueRow
+              key={ticket.issue.id}
+              issue={ticket.issue}
+              date={reviewNote(ticket)}
+            />
+          ))
+        }
+      </QueryList>
+      {unlinked.length ? (
+        <div className="-mt-6 space-y-1">
+          <p className="text-muted-foreground">
+            Also reviewed, without a ticket:
+          </p>
+          <ul className="divide-y divide-border/60">
+            {unlinked.map((mergeRequest) => (
+              <MergeRequestRow
+                key={mergeRequest.id}
+                mergeRequest={mergeRequest}
+                note={reviewNote(mergeRequest)}
+              />
+            ))}
+          </ul>
+        </div>
+      ) : null}
+    </>
+  );
+};
 
 const GitLabSection = ({
   title,
@@ -179,10 +227,6 @@ function StandupPage() {
       .flatMap((column) => column.statuses.map((status) => status.id)),
   );
 
-  const reviewed = useQuery({
-    ...reviewedMergeRequestsOptions(projectIds, since.toISOString()),
-    enabled: hasGitlab,
-  });
   const merged = useQuery({
     ...mergedMergeRequestsOptions(projectIds, since.toISOString()),
     enabled: hasGitlab,
@@ -231,14 +275,7 @@ function StandupPage() {
           </div>
 
           {hasGitlab ? (
-            <GitLabSection
-              title="Reviewed"
-              query={reviewed as UseQueryResult<MergeRequest[]>}
-              empty="No merge requests reviewed."
-              note={(mergeRequest) =>
-                reviewNote(mergeRequest as ReviewedMergeRequest)
-              }
-            />
+            <Reviewed projectIds={projectIds} since={since} />
           ) : null}
 
           {reviewColumn ? (

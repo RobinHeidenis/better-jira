@@ -1,6 +1,10 @@
 import { queryOptions, skipToken } from "@tanstack/react-query";
 import { store } from "../store";
-import { jqlField, mineJql, searchWithRoles } from "./my-work";
+import {
+  type ReviewedMergeRequest,
+  reviewedMergeRequestsOptions,
+} from "./gitlab";
+import { jqlField, type MyIssue, mineJql, searchWithRoles } from "./my-work";
 import { refetchOnReturn } from "./refetch";
 
 /** Midnight at the start of the previous weekday: Friday on a Monday. */
@@ -51,6 +55,74 @@ export const plannedTodosOptions = () => {
           );
         }
       : skipToken,
+    refetchOnWindowFocus: refetchOnReturn,
+  });
+};
+
+/** Issue keys an MR names in its title or branch, like HR-123 or hr-123-fix. */
+const issueKeys = (mergeRequest: ReviewedMergeRequest) => {
+  const text = `${mergeRequest.title} ${mergeRequest.source_branch}`;
+  return [
+    ...new Set(
+      [...text.matchAll(/(?<![A-Za-z0-9])([A-Za-z][A-Za-z0-9_]*-\d+)/g)].map(
+        (match) => match[1].toUpperCase(),
+      ),
+    ),
+  ];
+};
+
+export type ReviewedTicket = {
+  issue: MyIssue;
+  approved: boolean;
+  comments: number;
+};
+
+/**
+ * The tickets behind the merge requests the user reviewed, with what they did
+ * across them. Reviews of merge requests that name no ticket stay as such.
+ */
+export const reviewedTicketsOptions = (projectIds: number[], since: string) => {
+  const { developerField } = store.get();
+  return queryOptions({
+    queryKey: ["standup", "reviewed-tickets", projectIds, since],
+    queryFn: async ({ client }) => {
+      const reviewed = await client.fetchQuery(
+        reviewedMergeRequestsOptions(projectIds, since),
+      );
+      const byKey = new Map<string, ReviewedMergeRequest[]>();
+      for (const mergeRequest of reviewed) {
+        for (const key of issueKeys(mergeRequest)) {
+          byKey.set(key, [...(byKey.get(key) ?? []), mergeRequest]);
+        }
+      }
+
+      // A key Jira doesn't know fails a whole JQL query, so each is looked up
+      // on its own and a miss (like a branch named "release-2") is dropped.
+      const found = await Promise.all(
+        [...byKey.keys()].map((key) =>
+          searchWithRoles(client, `key = "${key}"`, developerField).catch(
+            () => [],
+          ),
+        ),
+      );
+      const tickets: ReviewedTicket[] = found.flat().map((issue) => {
+        const mergeRequests = byKey.get(issue.key) ?? [];
+        return {
+          issue,
+          approved: mergeRequests.some((mergeRequest) => mergeRequest.approved),
+          comments: mergeRequests.reduce(
+            (total, mergeRequest) => total + mergeRequest.comments,
+            0,
+          ),
+        };
+      });
+      const foundKeys = new Set(tickets.map((ticket) => ticket.issue.key));
+      const unlinked = reviewed.filter(
+        (mergeRequest) =>
+          !issueKeys(mergeRequest).some((key) => foundKeys.has(key)),
+      );
+      return { tickets, unlinked };
+    },
     refetchOnWindowFocus: refetchOnReturn,
   });
 };

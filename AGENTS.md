@@ -68,7 +68,7 @@ There is one file per resource in `src/lib/api/`. Each defines a Zod schema, a f
 - `/setup/account`, `/setup/board`, `/setup/gitlab`: setup wizards built on `src/components/ui/questionnaire.tsx`.
 - `/issue/$issueId`: issue detail. Tabs for the description, checklist, comments and history (`?tab=`), all rendered from ADF, plus a sidebar.
 - `/my-work`: the user's open tickets (`src/lib/api/my-work.ts`, assignee or developer via `cf[id]` JQL) and their GitLab merge requests to review (`reviewMergeRequestsOptions`, which needs the user id from `gitlabUserIdOptions`, read from `/user`) or authored (`authoredMergeRequestsOptions`).
-- `/standup`: activity since the previous working day (`lastWorkingDay` in `src/lib/api/standup.ts`). Reviewed and merged merge requests come from GitLab (`reviewedMergeRequestsOptions` reads each candidate's notes, since an approval is a system note); tickets put on review use a `status CHANGED TO … BY currentUser()` JQL; planned work reads the `startDateField` setting.
+- `/standup`: activity since the previous working day (`lastWorkingDay` in `src/lib/api/standup.ts`). Reviewed tickets come from GitLab (`reviewedMergeRequestsOptions` reads each candidate's notes, since an approval is a system note) mapped to the Jira keys in each merge request's title or branch (`reviewedTicketsOptions`); merged merge requests come from GitLab too; tickets put on review use a `status CHANGED TO … BY currentUser()` JQL; planned work reads the `startDateField` setting.
 - `/settings`: edits the same settings as board setup in place and links to the account and GitLab wizards. A new setting goes in both places.
 
 ### ADF (Atlassian Document Format)
