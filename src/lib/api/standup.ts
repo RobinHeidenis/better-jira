@@ -1,7 +1,12 @@
-import { queryOptions, skipToken } from "@tanstack/react-query";
+import {
+  type QueryClient,
+  queryOptions,
+  skipToken,
+} from "@tanstack/react-query";
 import { store } from "../store";
 import {
-  type ReviewedMergeRequest,
+  type MergeRequest,
+  mergedMergeRequestsOptions,
   reviewedMergeRequestsOptions,
 } from "./gitlab";
 import { jqlField, type MyIssue, mineJql, searchWithRoles } from "./my-work";
@@ -60,7 +65,7 @@ export const plannedTodosOptions = () => {
 };
 
 /** Issue keys an MR names in its title or branch, like HR-123 or hr-123-fix. */
-const issueKeys = (mergeRequest: ReviewedMergeRequest) => {
+const issueKeys = (mergeRequest: MergeRequest) => {
   const text = `${mergeRequest.title} ${mergeRequest.source_branch}`;
   return [
     ...new Set(
@@ -71,58 +76,67 @@ const issueKeys = (mergeRequest: ReviewedMergeRequest) => {
   ];
 };
 
-export type ReviewedTicket = {
+export type TicketMergeRequests<T extends MergeRequest> = {
   issue: MyIssue;
-  approved: boolean;
-  comments: number;
+  mergeRequests: T[];
 };
 
 /**
- * The tickets behind the merge requests the user reviewed, with what they did
- * across them. Reviews of merge requests that name no ticket stay as such.
+ * Groups merge requests under the Jira tickets they name. Ones that name no
+ * ticket Jira knows come back as `unlinked`.
  */
-export const reviewedTicketsOptions = (projectIds: number[], since: string) => {
+const byTicket = async <T extends MergeRequest>(
+  client: QueryClient,
+  mergeRequests: T[],
+) => {
   const { developerField } = store.get();
-  return queryOptions({
-    queryKey: ["standup", "reviewed-tickets", projectIds, since],
-    queryFn: async ({ client }) => {
-      const reviewed = await client.fetchQuery(
-        reviewedMergeRequestsOptions(projectIds, since),
-      );
-      const byKey = new Map<string, ReviewedMergeRequest[]>();
-      for (const mergeRequest of reviewed) {
-        for (const key of issueKeys(mergeRequest)) {
-          byKey.set(key, [...(byKey.get(key) ?? []), mergeRequest]);
-        }
-      }
+  const byKey = new Map<string, T[]>();
+  for (const mergeRequest of mergeRequests) {
+    for (const key of issueKeys(mergeRequest)) {
+      byKey.set(key, [...(byKey.get(key) ?? []), mergeRequest]);
+    }
+  }
 
-      // A key Jira doesn't know fails a whole JQL query, so each is looked up
-      // on its own and a miss (like a branch named "release-2") is dropped.
-      const found = await Promise.all(
-        [...byKey.keys()].map((key) =>
-          searchWithRoles(client, `key = "${key}"`, developerField).catch(
-            () => [],
-          ),
+  // A key Jira doesn't know fails a whole JQL query, so each is looked up on
+  // its own and a miss (like a branch named "release-2") is dropped.
+  const found = await Promise.all(
+    [...byKey.keys()].map((key) =>
+      searchWithRoles(client, `key = "${key}"`, developerField).catch(() => []),
+    ),
+  );
+  const tickets: TicketMergeRequests<T>[] = found
+    .flat()
+    .map((issue) => ({ issue, mergeRequests: byKey.get(issue.key) ?? [] }));
+  const foundKeys = new Set(tickets.map((ticket) => ticket.issue.key));
+  const unlinked = mergeRequests.filter(
+    (mergeRequest) =>
+      !issueKeys(mergeRequest).some((key) => foundKeys.has(key)),
+  );
+  return { tickets, unlinked };
+};
+
+/** The tickets behind the merge requests the user reviewed. */
+export const reviewedTicketsOptions = (projectIds: number[], since: string) =>
+  queryOptions({
+    queryKey: ["standup", "reviewed-tickets", 2, projectIds, since],
+    queryFn: async ({ client }) =>
+      byTicket(
+        client,
+        await client.fetchQuery(
+          reviewedMergeRequestsOptions(projectIds, since),
         ),
-      );
-      const tickets: ReviewedTicket[] = found.flat().map((issue) => {
-        const mergeRequests = byKey.get(issue.key) ?? [];
-        return {
-          issue,
-          approved: mergeRequests.some((mergeRequest) => mergeRequest.approved),
-          comments: mergeRequests.reduce(
-            (total, mergeRequest) => total + mergeRequest.comments,
-            0,
-          ),
-        };
-      });
-      const foundKeys = new Set(tickets.map((ticket) => ticket.issue.key));
-      const unlinked = reviewed.filter(
-        (mergeRequest) =>
-          !issueKeys(mergeRequest).some((key) => foundKeys.has(key)),
-      );
-      return { tickets, unlinked };
-    },
+      ),
     refetchOnWindowFocus: refetchOnReturn,
   });
-};
+
+/** The tickets behind the user's merge requests merged since a moment. */
+export const mergedTicketsOptions = (projectIds: number[], since: string) =>
+  queryOptions({
+    queryKey: ["standup", "merged-tickets", projectIds, since],
+    queryFn: async ({ client }) =>
+      byTicket(
+        client,
+        await client.fetchQuery(mergedMergeRequestsOptions(projectIds, since)),
+      ),
+    refetchOnWindowFocus: refetchOnReturn,
+  });
