@@ -49,7 +49,7 @@ Atlassian sends no CORS headers, so every Jira call goes through the server func
 - `baseUrl` must pass `jiraBaseUrlSchema` (`src/lib/jira-url.ts`), which accepts only https `*.atlassian.net`. This is the SSRF guard on the proxy. Don't loosen it.
 - The server function is POST on purpose, so the token never lands in a URL.
 
-GitLab (`src/lib/api/gitlab.ts`) is called straight from the browser against `gitlab.com`.
+GitLab (`src/lib/api/gitlab.ts`) is called straight from the browser against `gitlab.com`, with a personal access token that has the `read_api` and `read_user` scopes.
 
 ### API modules
 
@@ -67,7 +67,7 @@ There is one file per resource in `src/lib/api/`. Each defines a Zod schema, a f
 - `/`: the board. Redirects to setup when the account or board isn't configured.
 - `/setup/account`, `/setup/board`, `/setup/gitlab`: setup wizards built on `src/components/ui/questionnaire.tsx`.
 - `/issue/$issueId`: issue detail. Tabs for the description, checklist, comments and history (`?tab=`), all rendered from ADF, plus a sidebar.
-- `/my-work`: the user's open tickets (`src/lib/api/my-work.ts`, assignee or developer via `cf[id]` JQL) and their GitLab merge requests to review (`reviewMergeRequestsOptions`, which needs the user id from `gitlabUserIdOptions`: tokens often can't read `/user`, so it falls back to the author of the user's own merge requests) or authored (`authoredMergeRequestsOptions`).
+- `/my-work`: the user's open tickets (`src/lib/api/my-work.ts`, assignee or developer via `cf[id]` JQL) and their GitLab merge requests to review (`reviewMergeRequestsOptions`, which needs the user id from `gitlabUserIdOptions`, read from `/user`) or authored (`authoredMergeRequestsOptions`).
 - `/standup`: activity since the previous working day (`lastWorkingDay` in `src/lib/api/standup.ts`). Reviewed and merged merge requests come from GitLab (`reviewedMergeRequestsOptions` reads each candidate's notes, since an approval is a system note); tickets put on review use a `status CHANGED TO … BY currentUser()` JQL; planned work reads the `startDateField` setting.
 - `/settings`: edits the same settings as board setup in place and links to the account and GitLab wizards. A new setting goes in both places.
 

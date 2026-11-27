@@ -27,7 +27,7 @@ It runs at http://localhost:3001. The first visit walks you through setup.
 
 1. **Account.** Your Jira Cloud URL (`https://yourcompany.atlassian.net`), your Atlassian email and an API token. Create the token at https://id.atlassian.com/manage-profile/security/api-tokens.
 2. **Board.** The board to show, which columns to hide, and optionally the custom fields your site uses for the developer, story points and the checklist.
-3. **GitLab** (optional). A personal access token with `read_api`, created at https://gitlab.com/-/user_settings/personal_access_tokens, and the projects to search for merge requests.
+3. **GitLab** (optional). A personal access token with the `read_api` and `read_user` scopes, created at https://gitlab.com/-/user_settings/personal_access_tokens, and the projects to search for merge requests.
 
 Everything except the account can be changed later in settings, behind the gear on the board.
 

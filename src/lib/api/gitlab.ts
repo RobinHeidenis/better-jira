@@ -242,48 +242,12 @@ export const mergeRequestDetailOptions = (projectId: number, iid: number) => {
   });
 };
 
-/**
- * The token owner's user id. `/user` needs the `read_user` scope, or the
- * "User: Read" permission on a fine-grained token, which a token made for
- * reading merge requests often lacks. "Created by me" works without either,
- * so the author of any of the user's merge requests is the last resort.
- */
+/** The token owner's user id. Needs the `read_user` scope. */
 export const gitlabUserIdOptions = () =>
   queryOptions({
-    queryKey: ["gitlab-user-id"],
-    queryFn: async () => {
-      const attempts = [
-        async () =>
-          (
-            await request(
-              "/personal_access_tokens/self",
-              z.object({ user_id: z.number() }),
-            )
-          ).user_id,
-        async () => (await request("/user", z.object({ id: z.number() }))).id,
-        async () => {
-          const [own] = await request(
-            "/merge_requests?scope=created_by_me&state=all&per_page=1",
-            z.array(mergeRequestSchema),
-          );
-          if (own?.author?.id === undefined) {
-            throw new Error(
-              'GitLab won\'t say who you are: give your token read_user (or "User: Read"), or open a merge request first.',
-            );
-          }
-          return own.author.id;
-        },
-      ];
-      let lastError: unknown;
-      for (const attempt of attempts) {
-        try {
-          return await attempt();
-        } catch (error) {
-          lastError = error;
-        }
-      }
-      throw lastError;
-    },
+    queryKey: ["gitlab-user-id", 2],
+    queryFn: async () =>
+      (await request("/user", z.object({ id: z.number() }))).id,
     staleTime: Number.POSITIVE_INFINITY,
     gcTime: Number.POSITIVE_INFINITY,
     retry: false,

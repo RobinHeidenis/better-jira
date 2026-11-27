@@ -92,8 +92,8 @@ function GitlabSetup() {
           <QuestionnaireItem name={TOKEN_STEP} required>
             <QuestionnaireTitle>What is your GitLab token?</QuestionnaireTitle>
             <QuestionnaireDescription>
-              A token with the <code>read_api</code> scope, which you can create
-              on your{" "}
+              A personal access token with the <code>read_api</code> and{" "}
+              <code>read_user</code> scopes, which you can create on your{" "}
               <Link
                 href="https://gitlab.com/-/user_settings/personal_access_tokens"
                 target="_blank"
